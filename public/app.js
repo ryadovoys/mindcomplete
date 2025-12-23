@@ -16,7 +16,6 @@ class PredictionManager {
     this.predictionEl = document.querySelector('.prediction');
     this.predictionAcceptEl = document.querySelector('.prediction-accept');
     this.predictionRemainEl = document.querySelector('.prediction-remain');
-    this.hint = document.querySelector('.hint');
 
     this.init();
   }
@@ -159,7 +158,6 @@ class PredictionManager {
     this.hoverOffset = 0;
     this.predictionAcceptEl.textContent = '';
     this.predictionRemainEl.textContent = '';
-    this.hint.classList.remove('visible');
     this.hideThinking();
   }
 
@@ -261,7 +259,6 @@ class PredictionManager {
     this.navigationOffset = 0; // Reset navigation when prediction updates
     this.hoverOffset = 0; // Reset hover when prediction updates
     this.updatePredictionDisplay();
-    this.hint.classList.add('visible');
   }
 
   updatePredictionDisplay() {

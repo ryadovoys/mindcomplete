@@ -45,10 +45,12 @@ html, body {
   border: none;
   color: var(--text-color);
   font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
   cursor: pointer;
-  opacity: 0.5;
+  opacity: 0.7;
   transition: opacity 0.2s;
-  padding: 8px 16px;
+  padding: 0;
   font-family: inherit;
 }
 
@@ -85,8 +87,14 @@ html, body {
 }
 
 .modal-content h2 {
-  margin: 0 0 24px 0;
+  margin: 0 0 16px 0;
   font-size: 24px;
+  font-weight: 600;
+}
+
+.modal-content h3 {
+  margin: 24px 0 12px 0;
+  font-size: 18px;
   font-weight: 600;
 }
 
@@ -94,6 +102,17 @@ html, body {
   margin: 0 0 16px 0;
   line-height: 1.6;
   opacity: 0.8;
+}
+
+.modal-content ol {
+  margin: 0 0 16px 0;
+  padding-left: 24px;
+  line-height: 1.8;
+  opacity: 0.8;
+}
+
+.modal-content ol li {
+  margin-bottom: 8px;
 }
 
 .modal-content p:last-of-type {
@@ -225,38 +244,9 @@ html, body {
   pointer-events: none;
 }
 
-/* Hint at the bottom */
-.hint {
-  grid-column: 4 / 10;
-  position: fixed;
-  bottom: 48px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.hint.visible {
-  opacity: 1;
-}
-
-.hint-text {
-  color: var(--hint-color);
-  font-size: 14px;
-}
-
-.hint kbd {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-family: inherit;
-}
-
 /* Responsive adjustments */
 @media (max-width: 1024px) {
-  .editor-wrapper,
-  .hint {
+  .editor-wrapper {
     grid-column: 1 / 13;
     max-width: none;
     min-width: 0;
@@ -274,7 +264,6 @@ html, body {
 
   .about-btn {
     font-size: 12px;
-    padding: 6px 12px;
   }
 
   .modal-content {
@@ -282,8 +271,7 @@ html, body {
     max-width: calc(100vw - 48px);
   }
 
-  .editor-wrapper,
-  .hint {
+  .editor-wrapper {
     grid-column: 1 / 13;
   }
 
