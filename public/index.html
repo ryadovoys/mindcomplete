@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mindcomplete</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="logo">MINDCOMPLETE</div>
+    <button class="about-btn">About</button>
+  </header>
+
+  <div class="container">
+    <div class="editor-wrapper">
+      <!-- Ghost layer (behind): shows user text + prediction -->
+      <div class="ghost-layer" aria-hidden="true">
+        <span class="user-text-mirror"></span><span class="thinking-indicator">Continuing<span class="dots"></span></span><span class="prediction"><span class="prediction-accept"></span><span class="prediction-remain"></span></span>
+      </div>
+      <!-- Editable layer (front): user types here -->
+      <div
+        class="editor"
+        contenteditable="true"
+        data-placeholder="Start typing here..."
+        spellcheck="false"
+      ></div>
+    </div>
+    <div class="hint">
+      <span class="hint-text">Click or hover + <kbd>TAB</kbd> to accept suggestion</span>
+    </div>
+  </div>
+
+  <!-- About Modal -->
+  <div class="modal" id="about-modal">
+    <div class="modal-content">
+      <button class="modal-close">&times;</button>
+      <h2>About Mindcomplete</h2>
+      <p>An AI-powered writing tool that completes your thoughts as you type. Pause for a moment, and the AI will suggest how to continue your paragraph, matching your tone and style.</p>
+      <p>Hover over the suggestion to see what will be accepted, then click or press TAB to add it to your text. Keep writing naturally while AI helps extend your ideas.</p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
