@@ -24,7 +24,7 @@ export default async function handler(req, res) {
         'X-Title': 'Mindcomplete'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-haiku-4.5',
+        model: 'xiaomi/mimo-v2-flash:free',
         stream: true,
         messages: [
           {
