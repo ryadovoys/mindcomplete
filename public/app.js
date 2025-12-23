@@ -362,6 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Copy button functionality
   const copyBtn = document.querySelector('.copy-btn');
+  const clearBtn = document.querySelector('.clear-btn');
   const editor = document.querySelector('.editor');
 
   copyBtn.addEventListener('click', async () => {
@@ -381,5 +382,13 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       console.error('Failed to copy:', err);
     }
+  });
+
+  // Clear button functionality
+  clearBtn.addEventListener('click', () => {
+    editor.textContent = '';
+    editor.focus();
+    // Trigger input event to clear any predictions
+    editor.dispatchEvent(new Event('input'));
   });
 });

@@ -46,7 +46,7 @@ html, body {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .logo {
@@ -86,7 +86,14 @@ html, body {
   font-size: 20px;
 }
 
-.copy-btn {
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.copy-btn,
+.clear-btn {
   background: transparent;
   border: none;
   color: var(--text-color);
@@ -103,11 +110,13 @@ html, body {
   gap: 6px;
 }
 
-.copy-btn:hover {
+.copy-btn:hover,
+.clear-btn:hover {
   opacity: 1;
 }
 
-.copy-btn .material-symbols-outlined {
+.copy-btn .material-symbols-outlined,
+.clear-btn .material-symbols-outlined {
   font-size: 18px;
 }
 
@@ -140,36 +149,22 @@ html, body {
 }
 
 .modal-content h2 {
-  margin: 0 0 16px 0;
-  font-size: 24px;
-  font-weight: 600;
+  display: none;
 }
 
 .modal-content h3 {
-  margin: 24px 0 12px 0;
-  font-size: 18px;
-  font-weight: 600;
+  display: none;
 }
 
 .modal-content p {
-  margin: 0 0 16px 0;
-  line-height: 1.6;
-  opacity: 0.8;
+  margin: 0;
+  line-height: 1.4;
+  opacity: 0.9;
+  font-size: 18pt;
 }
 
 .modal-content ol {
-  margin: 0 0 16px 0;
-  padding-left: 24px;
-  line-height: 1.8;
-  opacity: 0.8;
-}
-
-.modal-content ol li {
-  margin-bottom: 8px;
-}
-
-.modal-content p:last-of-type {
-  margin-bottom: 0;
+  display: none;
 }
 
 .modal-close {
@@ -312,19 +307,25 @@ html, body {
   }
 
   .logo {
-    font-size: 12px;
+    font-size: 16px;
   }
 
   .info-btn .material-symbols-outlined {
-    font-size: 18px;
+    font-size: 20px;
   }
 
-  .copy-btn {
-    font-size: 12px;
+  .header-actions {
+    gap: 12px;
   }
 
-  .copy-btn .material-symbols-outlined {
+  .copy-btn,
+  .clear-btn {
     font-size: 16px;
+  }
+
+  .copy-btn .material-symbols-outlined,
+  .clear-btn .material-symbols-outlined {
+    font-size: 18px;
   }
 
   .modal {
@@ -336,7 +337,23 @@ html, body {
     height: 100vh;
     max-width: 100vw;
     border-radius: 0;
+    background: var(--bg-color);
+    border: none;
     padding: 60px 20px 20px 20px;
+  }
+
+  .modal-content h2 {
+    display: none;
+  }
+
+  .modal-content h3 {
+    display: none;
+  }
+
+  .modal-content p,
+  .modal-content ol {
+    font-size: 18pt;
+    line-height: 1.4;
   }
 
   .modal-close {
