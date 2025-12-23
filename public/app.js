@@ -333,12 +333,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Modal handling
   const modal = document.getElementById('about-modal');
-  const aboutBtn = document.querySelector('.about-btn');
+  const logo = document.querySelector('.logo');
+  const infoBtn = document.querySelector('.info-btn');
   const modalClose = document.querySelector('.modal-close');
 
-  aboutBtn.addEventListener('click', () => {
-    modal.classList.add('visible');
-  });
+  // Open modal from logo or info button
+  const openModal = () => modal.classList.add('visible');
+  logo.addEventListener('click', openModal);
+  infoBtn.addEventListener('click', openModal);
 
   modalClose.addEventListener('click', () => {
     modal.classList.remove('visible');
@@ -355,6 +357,29 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && modal.classList.contains('visible')) {
       modal.classList.remove('visible');
+    }
+  });
+
+  // Copy button functionality
+  const copyBtn = document.querySelector('.copy-btn');
+  const editor = document.querySelector('.editor');
+
+  copyBtn.addEventListener('click', async () => {
+    const text = editor.textContent;
+    if (!text) return;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      // Visual feedback
+      copyBtn.style.opacity = '1';
+      const originalText = copyBtn.innerHTML;
+      copyBtn.innerHTML = '<span class="material-symbols-outlined">check</span>COPIED';
+      setTimeout(() => {
+        copyBtn.innerHTML = originalText;
+        copyBtn.style.opacity = '';
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
     }
   });
 });
