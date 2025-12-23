@@ -271,16 +271,25 @@ html, body {
     max-width: calc(100vw - 48px);
   }
 
-  .editor-wrapper {
-    grid-column: 1 / 13;
+  .container {
+    padding: 80px 16px 24px 16px;
   }
 
-  .container {
-    padding: 24px 16px;
+  .editor-wrapper {
+    grid-column: 1 / 13;
+    padding-top: 0;
+    align-items: flex-start;
+    width: 100%;
   }
 
   .editor,
   .ghost-layer {
     font-size: 18pt;
+    text-align: left;
+    width: 100%;
+  }
+
+  .ghost-layer {
+    top: 0;
   }
 }
