@@ -255,7 +255,7 @@ html, body {
 
 @media (max-width: 768px) {
   .header {
-    padding: 16px 24px;
+    padding: 16px 20px;
   }
 
   .logo {
@@ -272,7 +272,7 @@ html, body {
   }
 
   .container {
-    padding: 80px 16px 24px 16px;
+    padding: 80px 20px 24px 20px;
   }
 
   .editor-wrapper {
