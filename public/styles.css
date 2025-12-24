@@ -318,6 +318,7 @@ body {
 @media (max-width: 768px) {
   .header {
     padding: 20px;
+    background: var(--bg-color);
   }
 
 
