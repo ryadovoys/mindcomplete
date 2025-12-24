@@ -66,6 +66,7 @@ class PredictionManager {
 
     // Handle drag selection on prediction
     this.predictionEl.addEventListener('mouseup', (e) => this.onPredictionMouseUp(e));
+    this.predictionEl.addEventListener('touchend', (e) => this.onPredictionTouchEnd(e));
 
     // Focus editor on page load
     this.editor.focus();
@@ -163,7 +164,8 @@ class PredictionManager {
 
     // If SELECT mode is active, handle differently
     if (this.selectModeActive) {
-      this.handleSelectModeClick(e);
+      const offset = this.getOffsetFromMouseEvent(e);
+      this.handleSelectModeSelection(offset, { x: e.clientX, y: e.clientY });
       return;
     }
 
@@ -186,32 +188,76 @@ class PredictionManager {
     }
   }
 
+  onPredictionTouchEnd(e) {
+    if (e.changedTouches && e.changedTouches.length) {
+      const touch = e.changedTouches[0];
+      const coords = { x: touch.clientX, y: touch.clientY };
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (this.selectModeActive) {
+        const offset = this.getOffsetFromPoint(coords.x, coords.y);
+        this.handleSelectModeSelection(offset, coords);
+        return;
+      }
+
+      const offset = this.getOffsetFromPoint(coords.x, coords.y);
+      if (offset !== null) {
+        this.hoverOffset = offset;
+        this.navigationOffset = 0;
+        this.acceptPrediction();
+      }
+    }
+  }
+
   getOffsetFromMouseEvent(e) {
-    // Get the click/hover position
-    const range = document.caretRangeFromPoint(e.clientX, e.clientY);
+    return this.getOffsetFromPoint(e.clientX, e.clientY);
+  }
+
+  getOffsetFromPoint(x, y) {
+    const range = this.createRangeFromPoint(x, y);
+    return this.getOffsetFromRange(range);
+  }
+
+  createRangeFromPoint(x, y) {
+    if (typeof x !== 'number' || typeof y !== 'number') return null;
+
+    if (document.caretRangeFromPoint) {
+      return document.caretRangeFromPoint(x, y);
+    }
+
+    if (document.caretPositionFromPoint) {
+      const pos = document.caretPositionFromPoint(x, y);
+      if (!pos) return null;
+      const range = document.createRange();
+      range.setStart(pos.offsetNode, pos.offset);
+      range.collapse(true);
+      return range;
+    }
+
+    return null;
+  }
+
+  getOffsetFromRange(range) {
     if (!range) return null;
 
-    let offset = 0;
+    const container = range.startContainer;
     const preLength = this.predictionPreEl?.textContent.length || 0;
     const acceptLength = this.predictionAcceptEl.textContent.length;
+    let offset = 0;
 
-    // Check if in accept part
-    if (range.startContainer === this.predictionPreEl?.firstChild ||
-        range.startContainer === this.predictionPreEl) {
+    const inNode = (node) => node && (container === node || container === node.firstChild);
+
+    if (inNode(this.predictionPreEl)) {
       offset = range.startOffset;
-    }
-    else if (range.startContainer === this.predictionAcceptEl.firstChild ||
-             range.startContainer === this.predictionAcceptEl) {
+    } else if (inNode(this.predictionAcceptEl)) {
       offset = preLength + range.startOffset;
-    }
-    // Check if in remain part
-    else if (range.startContainer === this.predictionRemainEl.firstChild ||
-             range.startContainer === this.predictionRemainEl) {
+    } else if (inNode(this.predictionRemainEl)) {
       offset = preLength + acceptLength + range.startOffset;
-    }
-    // Somewhere else in prediction container
-    else if (range.startContainer === this.predictionEl) {
+    } else if (container === this.predictionEl) {
       offset = range.startOffset === 0 ? 0 : this.currentPrediction.length;
+    } else {
+      return null;
     }
 
     if (offset >= 0 && offset <= this.currentPrediction.length) {
@@ -552,22 +598,20 @@ class PredictionManager {
     if (burgerIcon) burgerIcon.textContent = 'menu';
   }
 
-  handleSelectModeClick(e) {
-    const offset = this.getOffsetFromMouseEvent(e);
+  handleSelectModeSelection(offset, coords) {
     if (offset === null) return;
 
     if (this.selectStartOffset === null) {
-      // First click - set start point
+      // First tap/click - set start point
       this.selectStartOffset = offset;
       this.selectPreviewOffset = null;
       this.updatePredictionDisplay();
 
-      if (this.isMobile) {
-        // Show vertical line on mobile
-        this.showStartLine(e);
+      if (this.isMobile && coords) {
+        this.showStartLineAtPoint(coords.x, coords.y);
       }
     } else {
-      // Second click - set end point and accept
+      // Second tap/click - set end point and accept
       this.selectEndOffset = offset;
 
       // Ensure start < end
@@ -582,10 +626,11 @@ class PredictionManager {
     }
   }
 
-  showStartLine(e) {
+  showStartLineAtPoint(x, y) {
     // Calculate position for vertical line indicator
+    if (!this.selectStartLine) return;
     const predictionRect = this.predictionEl.getBoundingClientRect();
-    const range = document.caretRangeFromPoint(e.clientX, e.clientY);
+    const range = this.createRangeFromPoint(x, y);
 
     if (range) {
       const rangeRect = range.getBoundingClientRect();
@@ -745,10 +790,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ABOUT
-  aboutMenuBtn.addEventListener('click', () => {
-    closeMenu();
-    modal.classList.add('visible');
-  });
+  if (aboutMenuBtn) {
+    aboutMenuBtn.addEventListener('click', () => {
+      closeMenu();
+      modal.classList.add('visible');
+    });
+  }
 
   // Close menu with Escape key
   document.addEventListener('keydown', (e) => {
