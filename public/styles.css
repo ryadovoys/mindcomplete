@@ -237,11 +237,8 @@ body {
   display: block;
 }
 
-body.select-mode-active {
-  cursor: crosshair;
-}
-
 body.select-mode-active .prediction {
+  cursor: pointer;
   touch-action: none;
 }
 
@@ -329,8 +326,8 @@ body.select-mode-active .prediction {
   display: flex;
   align-items: flex-start;
   padding-top: 20vh;
-  max-width: 900px;
-  min-width: 600px;
+  width: 100%;
+  max-width: 700px;
   margin: 0 auto;
 }
 

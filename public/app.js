@@ -17,6 +17,8 @@ class PredictionManager {
     this.selectTouchActive = false;
     this.pointerSelecting = false;
     this.selectionReady = false;
+    this.selectionFixed = false; // True after second click (stop hover updates)
+    this.hoverWordEnd = null; // End of hovered word (before first click)
     this.isMobile = this.detectMobile();
 
     this.editor = document.querySelector('.editor');
@@ -69,10 +71,9 @@ class PredictionManager {
     this.predictionEl.addEventListener('pointermove', (e) => this.onPredictionHover(e));
     this.predictionEl.addEventListener('pointerleave', () => this.onPredictionLeave());
 
-    // Handle drag selection on prediction (using pointer events for capture support)
+    // Handle selection on prediction (using pointer events)
     this.predictionEl.addEventListener('pointerup', (e) => this.onPredictionMouseUp(e));
     this.predictionEl.addEventListener('pointerdown', (e) => this.onPredictionMouseDown(e));
-    this.predictionEl.addEventListener('lostpointercapture', (e) => this.onLostPointerCapture(e));
     this.predictionEl.addEventListener('touchstart', (e) => this.onPredictionTouchStart(e), { passive: false });
     this.predictionEl.addEventListener('touchmove', (e) => this.onPredictionTouchMove(e), { passive: false });
     this.predictionEl.addEventListener('touchend', (e) => this.onPredictionTouchEnd(e), { passive: false });
@@ -129,40 +130,33 @@ class PredictionManager {
   }
 
   onPredictionHover(e) {
-    if (this.pointerSelecting && this.selectModeActive && !this.isMobile) {
-      const offset = this.getOffsetFromMouseEvent(e);
-      if (offset !== null) {
-        this.selectPreviewOffset = offset;
-        this.hoverOffset = 0;
-        this.navigationOffset = 0;
-        this.updatePredictionDisplay();
-        this.setSelectionReady(this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset);
-      }
-      return;
-    }
-
     if (this.selectModeActive) {
-      if (this.selectStartOffset === null) {
-        this.predictionEl.classList.remove('select-mode-hover');
-        return;
-      }
-
-      if (!this.isMobile) {
+      // Desktop: show word-based preview
+      if (!this.isMobile && !this.selectionFixed) {
         const offset = this.getOffsetFromMouseEvent(e);
         if (offset !== null) {
-          if (offset === this.selectStartOffset) {
-            this.selectPreviewOffset = null;
-            this.predictionEl.classList.remove('select-mode-hover');
+          const wordBounds = this.getWordBoundaries(offset);
+          if (wordBounds) {
+            if (this.selectStartOffset === null) {
+              // Before first click - preview the word that will be selected
+              this.selectPreviewOffset = wordBounds.start;
+              this.hoverWordEnd = wordBounds.end;
+            } else {
+              // After first click - extend selection to include the hovered word
+              this.hoverWordEnd = null;
+              if (wordBounds.end <= this.selectStartOffset) {
+                this.selectPreviewOffset = wordBounds.start;
+              } else {
+                this.selectPreviewOffset = wordBounds.end;
+              }
+            }
+            this.hoverOffset = 0;
+            this.navigationOffset = 0;
             this.updatePredictionDisplay();
-            return;
           }
-          this.selectPreviewOffset = offset;
-          this.hoverOffset = 0;
-          this.navigationOffset = 0;
-          this.updatePredictionDisplay();
-          this.predictionEl.classList.add('select-mode-hover');
         }
       }
+      return;
     } else {
       // Normal hover behavior
       const offset = this.getOffsetFromMouseEvent(e);
@@ -175,12 +169,12 @@ class PredictionManager {
 
   onPredictionLeave() {
     if (this.selectModeActive) {
-      if (this.pointerSelecting && !this.isMobile) return;
-      this.predictionEl.classList.remove('select-mode-hover');
       this.hoverOffset = 0;
       this.navigationOffset = 0;
-      if (!this.isMobile) {
+      // Clear hover preview before first click
+      if (this.selectStartOffset === null) {
         this.selectPreviewOffset = null;
+        this.hoverWordEnd = null;
       }
       this.updatePredictionDisplay();
     } else {
@@ -194,53 +188,46 @@ class PredictionManager {
   }
 
   onPredictionMouseDown(e) {
+    // Desktop: do nothing on mousedown, handle clicks in mouseup
     if (this.isMobile || e.button !== 0) return;
     if (!this.selectModeActive) return;
-    const offset = this.getOffsetFromMouseEvent(e);
-    if (offset === null) return;
     e.preventDefault();
-    this.pointerSelecting = true;
-    this.selectStartOffset = offset;
-    this.selectPreviewOffset = offset;
-    this.updatePredictionDisplay();
-    this.setSelectionReady(false);
-
-    // Add document-level pointerup listener for reliable release detection
-    this.boundPointerUp = (ev) => this.onDocumentPointerUp(ev);
-    document.addEventListener('pointerup', this.boundPointerUp, true);
-  }
-
-  onDocumentPointerUp(e) {
-    // Remove the listener
-    if (this.boundPointerUp) {
-      document.removeEventListener('pointerup', this.boundPointerUp, true);
-      this.boundPointerUp = null;
-    }
-
-    if (!this.pointerSelecting || !this.selectModeActive || this.isMobile) return;
-
-    this.pointerSelecting = false;
-    // Try to get offset from release point
-    const offset = this.getOffsetFromMouseEvent(e);
-    if (offset !== null) {
-      this.selectPreviewOffset = offset;
-    }
-    // Finalize with whatever preview offset we have
-    this.updatePredictionDisplay();
-    this.setSelectionReady(this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset);
-  }
-
-  onLostPointerCapture(e) {
-    // No longer needed - using document listener instead
   }
 
   onPredictionMouseUp(e) {
-    // Document listener handles drag selection end
-    if (this.pointerSelecting && this.selectModeActive && !this.isMobile) {
+    // Desktop select mode: two-click selection (word-based)
+    if (!this.isMobile && this.selectModeActive) {
+      const offset = this.getOffsetFromMouseEvent(e);
+      if (offset === null) return;
+
+      const wordBounds = this.getWordBoundaries(offset);
+      if (!wordBounds) return;
+
+      if (this.selectStartOffset === null) {
+        // First click - set start to beginning of clicked word
+        this.selectStartOffset = wordBounds.start;
+        this.selectPreviewOffset = wordBounds.end; // Select the first word immediately
+        this.hoverWordEnd = null; // Clear hover preview state
+        this.selectionFixed = false; // Allow hover to update preview
+        this.updatePredictionDisplay();
+        this.setSelectionReady(true);
+      } else if (!this.selectionFixed) {
+        // Second click - fix the end point
+        if (wordBounds.end <= this.selectStartOffset) {
+          // Clicking before start - extend backwards
+          this.selectPreviewOffset = this.selectStartOffset;
+          this.selectStartOffset = wordBounds.start;
+        } else {
+          this.selectPreviewOffset = wordBounds.end;
+        }
+        this.selectionFixed = true; // Stop hover updates
+        this.updatePredictionDisplay();
+        this.setSelectionReady(this.selectStartOffset !== this.selectPreviewOffset);
+      }
       return;
     }
 
-    // If SELECT mode is active, handle differently
+    // If SELECT mode is active (mobile), handle differently
     if (this.selectModeActive) {
       const offset = this.getOffsetFromMouseEvent(e);
       this.handleSelectModeSelection(offset);
@@ -273,13 +260,16 @@ class PredictionManager {
     const offset = this.getOffsetFromPoint(touch.clientX, touch.clientY);
     if (offset === null) return;
 
+    const wordBounds = this.getWordBoundaries(offset);
+    if (!wordBounds) return;
+
     e.preventDefault();
     this.selectTouchActive = true;
-    this.selectStartOffset = offset;
-    this.selectPreviewOffset = offset;
+    this.selectStartOffset = wordBounds.start;
+    this.selectPreviewOffset = wordBounds.end;
     this.updatePredictionDisplay();
-    this.showStartLineForOffset(offset);
-    this.setSelectionReady(false);
+    this.showStartLineForOffset(wordBounds.start);
+    this.setSelectionReady(true);
   }
 
   onPredictionTouchMove(e) {
@@ -289,10 +279,18 @@ class PredictionManager {
     const offset = this.getOffsetFromPoint(touch.clientX, touch.clientY);
     if (offset === null) return;
 
+    const wordBounds = this.getWordBoundaries(offset);
+    if (!wordBounds) return;
+
     e.preventDefault();
-    this.selectPreviewOffset = offset;
+    // Extend selection to include the touched word
+    if (wordBounds.end <= this.selectStartOffset) {
+      this.selectPreviewOffset = wordBounds.start;
+    } else {
+      this.selectPreviewOffset = wordBounds.end;
+    }
     this.updatePredictionDisplay();
-    this.setSelectionReady(this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset);
+    this.setSelectionReady(this.selectStartOffset !== this.selectPreviewOffset);
   }
 
   onPredictionTouchEnd(e) {
@@ -305,17 +303,20 @@ class PredictionManager {
       e.stopPropagation();
 
       const offset = this.getOffsetFromPoint(coords.x, coords.y);
-      const finalOffset = offset !== null ? offset : this.selectPreviewOffset;
       this.selectTouchActive = false;
 
-      if (finalOffset !== null) {
-        this.selectPreviewOffset = finalOffset;
-        this.updatePredictionDisplay();
-        this.setSelectionReady(this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset);
-      } else {
-        this.setSelectionReady(false);
+      if (offset !== null) {
+        const wordBounds = this.getWordBoundaries(offset);
+        if (wordBounds) {
+          if (wordBounds.end <= this.selectStartOffset) {
+            this.selectPreviewOffset = wordBounds.start;
+          } else {
+            this.selectPreviewOffset = wordBounds.end;
+          }
+        }
       }
-
+      this.updatePredictionDisplay();
+      this.setSelectionReady(this.selectStartOffset !== this.selectPreviewOffset);
       return;
     }
 
@@ -391,6 +392,29 @@ class PredictionManager {
       return offset;
     }
     return null;
+  }
+
+  // Get word boundaries at a given character offset
+  getWordBoundaries(offset) {
+    if (!this.currentPrediction || offset < 0 || offset > this.currentPrediction.length) {
+      return null;
+    }
+
+    const text = this.currentPrediction;
+
+    // Find word start (go backwards to find space or start)
+    let wordStart = offset;
+    while (wordStart > 0 && !/\s/.test(text[wordStart - 1])) {
+      wordStart--;
+    }
+
+    // Find word end (go forwards to find space or end)
+    let wordEnd = offset;
+    while (wordEnd < text.length && !/\s/.test(text[wordEnd])) {
+      wordEnd++;
+    }
+
+    return { start: wordStart, end: wordEnd };
   }
 
   resolveNodeForOffset(rawOffset) {
@@ -579,6 +603,14 @@ class PredictionManager {
     this.userTextMirror.textContent = userText;
 
     if (this.selectModeActive) {
+      // Before first click - show hovered word preview
+      if (this.selectStartOffset === null && this.selectPreviewOffset !== null && this.hoverWordEnd !== null) {
+        this.predictionPreEl.textContent = this.currentPrediction.slice(0, this.selectPreviewOffset);
+        this.predictionAcceptEl.textContent = this.currentPrediction.slice(this.selectPreviewOffset, this.hoverWordEnd);
+        this.predictionRemainEl.textContent = this.currentPrediction.slice(this.hoverWordEnd);
+        return;
+      }
+      // After first click - show selection range
       if (this.selectStartOffset !== null && this.selectPreviewOffset !== null) {
         const start = Math.min(this.selectStartOffset, this.selectPreviewOffset);
         const end = Math.max(this.selectStartOffset, this.selectPreviewOffset);
@@ -703,6 +735,7 @@ class PredictionManager {
     this.selectPreviewOffset = null;
     this.selectTouchActive = false;
     this.pointerSelecting = false;
+    this.selectionFixed = false;
     this.setSelectionReady(false);
 
     // Visual feedback
@@ -730,6 +763,7 @@ class PredictionManager {
     this.selectPreviewOffset = null;
     this.selectTouchActive = false;
     this.pointerSelecting = false;
+    this.selectionFixed = false;
     this.setSelectionReady(false);
 
     // Clear visual feedback
