@@ -34,6 +34,9 @@ class PredictionManager {
     this.predictionEl.addEventListener('mousemove', (e) => this.onPredictionHover(e));
     this.predictionEl.addEventListener('mouseleave', () => this.onPredictionLeave());
 
+    // Handle drag selection on prediction
+    this.predictionEl.addEventListener('mouseup', (e) => this.onPredictionMouseUp(e));
+
     // Focus editor on page load
     this.editor.focus();
   }
@@ -86,15 +89,28 @@ class PredictionManager {
   }
 
   onPredictionClick(e) {
+    // Click handling is now done in mouseup to distinguish from drag selection
+  }
+
+  onPredictionMouseUp(e) {
     e.preventDefault();
     e.stopPropagation();
 
-    const offset = this.getOffsetFromMouseEvent(e);
-    if (offset !== null) {
-      // Set the offset and accept immediately
-      this.hoverOffset = offset;
-      this.navigationOffset = 0;
-      this.acceptPrediction();
+    const selection = window.getSelection();
+    const selectedText = selection.toString();
+
+    // Check if user selected text (drag) vs just clicked
+    if (selectedText.length > 0) {
+      // User dragged to select text - accept the selected portion
+      this.acceptSelectedText(selection);
+    } else {
+      // User just clicked - accept up to click point (original behavior)
+      const offset = this.getOffsetFromMouseEvent(e);
+      if (offset !== null) {
+        this.hoverOffset = offset;
+        this.navigationOffset = 0;
+        this.acceptPrediction();
+      }
     }
   }
 
@@ -280,6 +296,58 @@ class PredictionManager {
       this.predictionAcceptEl.textContent = acceptPart;
       this.predictionRemainEl.textContent = remainPart;
     }
+  }
+
+  acceptSelectedText(selection) {
+    if (!this.currentPrediction || !selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    const selectedText = selection.toString();
+
+    // Find the start and end offsets of the selection within the prediction
+    let startOffset = 0;
+    let endOffset = 0;
+
+    // Calculate offsets based on which elements contain the selection
+    const startContainer = range.startContainer;
+    const endContainer = range.endContainer;
+
+    // Helper to get offset in prediction text
+    const getOffsetInPrediction = (container, offset) => {
+      if (container === this.predictionAcceptEl.firstChild || container === this.predictionAcceptEl) {
+        return offset;
+      } else if (container === this.predictionRemainEl.firstChild || container === this.predictionRemainEl) {
+        return this.predictionAcceptEl.textContent.length + offset;
+      }
+      return 0;
+    };
+
+    startOffset = getOffsetInPrediction(startContainer, range.startOffset);
+    endOffset = getOffsetInPrediction(endContainer, range.endOffset);
+
+    // Accept only the selected portion
+    const textToAccept = this.currentPrediction.slice(startOffset, endOffset);
+
+    // Append to editor
+    this.editor.textContent += textToAccept;
+    this.moveCursorToEnd();
+
+    // Keep only the part after the selection
+    if (endOffset < this.currentPrediction.length) {
+      this.currentPrediction = this.currentPrediction.slice(endOffset);
+      this.navigationOffset = 0;
+      this.hoverOffset = 0;
+      this.userTextMirror.textContent = this.editor.textContent;
+      this.updatePredictionDisplay();
+    } else {
+      // Selected to the end - clear everything
+      this.userTextMirror.textContent = this.editor.textContent;
+      this.clearPrediction();
+      this.onInput();
+    }
+
+    // Clear the selection
+    selection.removeAllRanges();
   }
 
   acceptPrediction() {
