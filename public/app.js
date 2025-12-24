@@ -1,6 +1,6 @@
 class PredictionManager {
   constructor(options = {}) {
-    this.debounceMs = options.debounceMs || 300;
+    this.debounceMs = options.debounceMs || 1000;
     this.minTextLength = options.minTextLength || 10;
     this.debounceTimer = null;
     this.abortController = null;
