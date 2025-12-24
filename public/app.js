@@ -165,7 +165,7 @@ class PredictionManager {
     // If SELECT mode is active, handle differently
     if (this.selectModeActive) {
       const offset = this.getOffsetFromMouseEvent(e);
-      this.handleSelectModeSelection(offset, { x: e.clientX, y: e.clientY });
+      this.handleSelectModeSelection(offset);
       return;
     }
 
@@ -197,7 +197,7 @@ class PredictionManager {
 
       if (this.selectModeActive) {
         const offset = this.getOffsetFromPoint(coords.x, coords.y);
-        this.handleSelectModeSelection(offset, coords);
+        this.handleSelectModeSelection(offset);
         return;
       }
 
@@ -264,6 +264,47 @@ class PredictionManager {
       return offset;
     }
     return null;
+  }
+
+  resolveNodeForOffset(rawOffset) {
+    if (!this.currentPrediction) return null;
+    const totalLength = this.currentPrediction.length;
+    const offset = Math.max(0, Math.min(rawOffset, totalLength));
+
+    const preLength = this.predictionPreEl?.textContent.length || 0;
+    const acceptLength = this.predictionAcceptEl.textContent.length;
+
+    let node;
+    let localOffset = offset;
+
+    if (offset <= preLength) {
+      node = this.predictionPreEl.firstChild || this.predictionPreEl;
+    } else if (offset <= preLength + acceptLength) {
+      node = this.predictionAcceptEl.firstChild || this.predictionAcceptEl;
+      localOffset = offset - preLength;
+    } else {
+      node = this.predictionRemainEl.firstChild || this.predictionRemainEl;
+      localOffset = offset - preLength - acceptLength;
+    }
+
+    if (!node) return null;
+    const maxOffset = node.nodeType === Node.TEXT_NODE
+      ? node.textContent.length
+      : node.childNodes.length;
+
+    return {
+      node,
+      offset: Math.max(0, Math.min(localOffset, maxOffset))
+    };
+  }
+
+  getRangeForOffset(offset) {
+    const resolved = this.resolveNodeForOffset(offset);
+    if (!resolved) return null;
+    const range = document.createRange();
+    range.setStart(resolved.node, resolved.offset);
+    range.collapse(true);
+    return range;
   }
 
   isCursorAtEnd() {
@@ -598,7 +639,7 @@ class PredictionManager {
     if (burgerIcon) burgerIcon.textContent = 'menu';
   }
 
-  handleSelectModeSelection(offset, coords) {
+  handleSelectModeSelection(offset) {
     if (offset === null) return;
 
     if (this.selectStartOffset === null) {
@@ -607,8 +648,8 @@ class PredictionManager {
       this.selectPreviewOffset = null;
       this.updatePredictionDisplay();
 
-      if (this.isMobile && coords) {
-        this.showStartLineAtPoint(coords.x, coords.y);
+      if (this.isMobile) {
+        this.showStartLineForOffset(offset);
       }
     } else {
       // Second tap/click - set end point and accept
@@ -626,21 +667,19 @@ class PredictionManager {
     }
   }
 
-  showStartLineAtPoint(x, y) {
-    // Calculate position for vertical line indicator
+  showStartLineForOffset(offset) {
     if (!this.selectStartLine) return;
+    const range = this.getRangeForOffset(offset);
+    if (!range) return;
+
     const predictionRect = this.predictionEl.getBoundingClientRect();
-    const range = this.createRangeFromPoint(x, y);
+    const rangeRect = range.getBoundingClientRect();
+    const leftOffset = rangeRect.left - predictionRect.left;
+    const topOffset = rangeRect.top - predictionRect.top;
 
-    if (range) {
-      const rangeRect = range.getBoundingClientRect();
-      const leftOffset = rangeRect.left - predictionRect.left;
-      const topOffset = rangeRect.top - predictionRect.top;
-
-      this.selectStartLine.style.left = `${leftOffset}px`;
-      this.selectStartLine.style.top = `${topOffset}px`;
-      this.selectStartLine.classList.add('visible');
-    }
+    this.selectStartLine.style.left = `${leftOffset}px`;
+    this.selectStartLine.style.top = `${topOffset}px`;
+    this.selectStartLine.classList.add('visible');
   }
 
   acceptSelectModeRange(startOffset, endOffset) {
