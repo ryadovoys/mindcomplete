@@ -149,6 +149,7 @@ class PredictionManager {
       this.abortController.abort();
       this.abortController = null;
     }
+    this.hideThinking();
   }
 
   clearPrediction() {
@@ -157,10 +158,14 @@ class PredictionManager {
     this.hoverOffset = 0;
     this.predictionAcceptEl.textContent = '';
     this.predictionRemainEl.textContent = '';
+    this.hideThinking();
   }
 
   async requestPrediction(text) {
     this.abortController = new AbortController();
+
+    // Show thinking indicator after a delay (only if request is still pending)
+    this.showThinkingDelayed();
 
     try {
       const response = await fetch('/api/predict', {
@@ -179,6 +184,7 @@ class PredictionManager {
       if (error.name !== 'AbortError') {
         console.error('Prediction error:', error);
       }
+      this.hideThinking();
     }
   }
 
@@ -208,6 +214,7 @@ class PredictionManager {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let prediction = '';
+    let firstChunk = true;
 
     try {
       while (true) {
@@ -226,6 +233,11 @@ class PredictionManager {
               const parsed = JSON.parse(data);
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
+                // Hide thinking indicator on first content
+                if (firstChunk) {
+                  this.hideThinking();
+                  firstChunk = false;
+                }
                 prediction += content;
                 this.updatePrediction(prediction);
               }
