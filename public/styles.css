@@ -5,7 +5,7 @@
 }
 
 :root {
-  --bg-color: #000;
+  --bg-color: #0F0A10;
   --text-color: #fff;
   --ghost-color: rgba(255, 255, 255, 0.4);
   --placeholder-color: rgba(255, 255, 255, 0.3);
@@ -51,7 +51,7 @@ body {
 }
 
 .logo {
-  height: 22px;
+  height: 26px;
   width: auto;
   display: block;
   cursor: pointer;
@@ -109,8 +109,8 @@ body {
   -webkit-backdrop-filter: blur(8px);
   border: none;
   border-radius: 8px;
-  height: 36px;
-  width: 36px;
+  height: 48px;
+  width: 48px;
   color: var(--text-color);
   cursor: pointer;
   transition: all 0.2s;
@@ -168,7 +168,7 @@ body {
   opacity: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
   position: absolute;
-  top: calc(20px + 36px + 4px);
+  top: calc(20px + 48px + 4px);
   right: 20px;
 }
 .menu-overlay.menu-ready .menu-content {
@@ -432,7 +432,7 @@ body.select-mode-active .prediction-accept {
   outline: none;
   white-space: pre-wrap;
   word-wrap: break-word;
-  caret-color: var(--text-color);
+  caret-color: #F183FF;
 }
 
 .editor:empty::before {
@@ -488,9 +488,22 @@ body.selection-ready .select-confirm-btn {
     background: var(--bg-color);
   }
 
-.header-actions {
-  gap: 12px;
-}
+  .header-actions {
+    gap: 12px;
+  }
+
+  .logo {
+    height: 26px;
+  }
+
+  .burger-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 400;
+    height: 48px;
+    width: 48px;
+  }
 
   /* Menu overlay adjustments for mobile */
   .menu-overlay {
@@ -501,6 +514,8 @@ body.selection-ready .select-confirm-btn {
     min-width: 150px;
     right: 20px;
     left: auto;
+    top: auto;
+    bottom: calc(20px + 48px + 4px);
   }
 
   .menu-item {
