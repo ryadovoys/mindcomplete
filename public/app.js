@@ -93,6 +93,16 @@ class PredictionManager {
   }
 
   onKeyDown(e) {
+    if (e.key === 'Enter' && this.selectModeActive) {
+      e.preventDefault();
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount) {
+        this.acceptSelectedText(selection);
+        this.disableSelectMode();
+      }
+      return;
+    }
+
     if (e.key === 'Tab' && this.currentPrediction) {
       e.preventDefault();
       this.acceptPrediction();
@@ -164,6 +174,9 @@ class PredictionManager {
 
     // If SELECT mode is active, handle differently
     if (this.selectModeActive) {
+      if (this.isMobile) {
+        return;
+      }
       const offset = this.getOffsetFromMouseEvent(e);
       this.handleSelectModeSelection(offset);
       return;
@@ -192,6 +205,10 @@ class PredictionManager {
     if (e.changedTouches && e.changedTouches.length) {
       const touch = e.changedTouches[0];
       const coords = { x: touch.clientX, y: touch.clientY };
+      if (this.selectModeActive && this.isMobile) {
+        return;
+      }
+
       e.preventDefault();
       e.stopPropagation();
 
@@ -264,47 +281,6 @@ class PredictionManager {
       return offset;
     }
     return null;
-  }
-
-  resolveNodeForOffset(rawOffset) {
-    if (!this.currentPrediction) return null;
-    const totalLength = this.currentPrediction.length;
-    const offset = Math.max(0, Math.min(rawOffset, totalLength));
-
-    const preLength = this.predictionPreEl?.textContent.length || 0;
-    const acceptLength = this.predictionAcceptEl.textContent.length;
-
-    let node;
-    let localOffset = offset;
-
-    if (offset <= preLength) {
-      node = this.predictionPreEl.firstChild || this.predictionPreEl;
-    } else if (offset <= preLength + acceptLength) {
-      node = this.predictionAcceptEl.firstChild || this.predictionAcceptEl;
-      localOffset = offset - preLength;
-    } else {
-      node = this.predictionRemainEl.firstChild || this.predictionRemainEl;
-      localOffset = offset - preLength - acceptLength;
-    }
-
-    if (!node) return null;
-    const maxOffset = node.nodeType === Node.TEXT_NODE
-      ? node.textContent.length
-      : node.childNodes.length;
-
-    return {
-      node,
-      offset: Math.max(0, Math.min(localOffset, maxOffset))
-    };
-  }
-
-  getRangeForOffset(offset) {
-    const resolved = this.resolveNodeForOffset(offset);
-    if (!resolved) return null;
-    const range = document.createRange();
-    range.setStart(resolved.node, resolved.offset);
-    range.collapse(true);
-    return range;
   }
 
   isCursorAtEnd() {
@@ -507,16 +483,24 @@ class PredictionManager {
 
     // Helper to get offset in prediction text
     const getOffsetInPrediction = (container, offset) => {
-      if (container === this.predictionAcceptEl.firstChild || container === this.predictionAcceptEl) {
+      const preLen = this.predictionPreEl?.textContent.length || 0;
+      const acceptLen = this.predictionAcceptEl?.textContent.length || 0;
+
+      if (container === this.predictionPreEl?.firstChild || container === this.predictionPreEl) {
         return offset;
-      } else if (container === this.predictionRemainEl.firstChild || container === this.predictionRemainEl) {
-        return this.predictionAcceptEl.textContent.length + offset;
+      } else if (container === this.predictionAcceptEl?.firstChild || container === this.predictionAcceptEl) {
+        return preLen + offset;
+      } else if (container === this.predictionRemainEl?.firstChild || container === this.predictionRemainEl) {
+        return preLen + acceptLen + offset;
       }
-      return 0;
+      return null;
     };
 
     startOffset = getOffsetInPrediction(startContainer, range.startOffset);
     endOffset = getOffsetInPrediction(endContainer, range.endOffset);
+    if (startOffset === null || endOffset === null) {
+      return;
+    }
 
     // Accept only the selected portion
     const textToAccept = this.currentPrediction.slice(startOffset, endOffset);
@@ -640,6 +624,10 @@ class PredictionManager {
   }
 
   handleSelectModeSelection(offset) {
+    if (this.isMobile) {
+      return;
+    }
+
     if (offset === null) return;
 
     if (this.selectStartOffset === null) {
@@ -648,9 +636,6 @@ class PredictionManager {
       this.selectPreviewOffset = null;
       this.updatePredictionDisplay();
 
-      if (this.isMobile) {
-        this.showStartLineForOffset(offset);
-      }
     } else {
       // Second tap/click - set end point and accept
       this.selectEndOffset = offset;
@@ -665,21 +650,6 @@ class PredictionManager {
       // Exit SELECT mode
       this.disableSelectMode();
     }
-  }
-
-  showStartLineForOffset(offset) {
-    if (!this.selectStartLine) return;
-    const range = this.getRangeForOffset(offset);
-    if (!range) return;
-
-    const predictionRect = this.predictionEl.getBoundingClientRect();
-    const rangeRect = range.getBoundingClientRect();
-    const leftOffset = rangeRect.left - predictionRect.left;
-    const topOffset = rangeRect.top - predictionRect.top;
-
-    this.selectStartLine.style.left = `${leftOffset}px`;
-    this.selectStartLine.style.top = `${topOffset}px`;
-    this.selectStartLine.classList.add('visible');
   }
 
   acceptSelectModeRange(startOffset, endOffset) {
