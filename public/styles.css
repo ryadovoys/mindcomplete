@@ -140,17 +140,16 @@ body {
 .menu-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0);
+  background: rgba(0, 0, 0, 0.3);
   z-index: 200;
   pointer-events: none;
   opacity: 0;
-  transition: background 0.2s ease, opacity 0.2s ease;
+  transition: opacity 0.2s ease;
 }
 
 .menu-overlay.visible {
   pointer-events: auto;
   opacity: 1;
-  background: rgba(0, 0, 0, 0.3);
 }
 
 .menu-content {
@@ -166,14 +165,15 @@ body {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
   transform-origin: top right;
   transform: translateY(-6px);
-  transition: transform 0.2s ease;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
   position: absolute;
   top: calc(20px + 36px + 4px);
   right: 20px;
 }
-
-.menu-overlay.visible .menu-content {
+.menu-overlay.menu-ready .menu-content {
   transform: translateY(0);
+  opacity: 1;
 }
 
 

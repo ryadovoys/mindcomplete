@@ -961,14 +961,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const selectMenuBtn = document.querySelector('.select-menu-btn');
   const aboutMenuBtn = document.querySelector('.about-menu-btn');
   const editor = document.querySelector('.editor');
+  let menuReadyTimeout = null;
 
   const openMenu = () => {
     menuOverlay.classList.add('visible');
     if (burgerIcon) burgerIcon.textContent = 'close';
+    if (menuReadyTimeout) {
+      clearTimeout(menuReadyTimeout);
+    }
+    menuReadyTimeout = setTimeout(() => {
+      menuOverlay.classList.add('menu-ready');
+      menuReadyTimeout = null;
+    }, 120);
   };
 
   const closeMenu = () => {
     if (!menuOverlay.classList.contains('visible')) return;
+    if (menuReadyTimeout) {
+      clearTimeout(menuReadyTimeout);
+      menuReadyTimeout = null;
+    }
+    menuOverlay.classList.remove('menu-ready');
     menuOverlay.classList.remove('visible');
     if (!predictionManager.selectModeActive && burgerIcon) {
       burgerIcon.textContent = 'menu';
