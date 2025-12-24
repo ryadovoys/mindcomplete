@@ -522,12 +522,13 @@ body.selection-ready .select-confirm-btn {
 
   .burger-btn {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
+    bottom: 40px;
+    left: 50%;
     z-index: 400;
-    height: 60px;
-    width: 60px;
+    height: 90px;
+    width: 90px;
     border-radius: 999px;
+    transform: translateX(-50%);
   }
 
   /* Menu overlay adjustments for mobile */
@@ -537,10 +538,16 @@ body.selection-ready .select-confirm-btn {
 
   .menu-content {
     min-width: 150px;
-    right: 30px;
-    left: auto;
+    right: auto;
+    left: 50%;
     top: auto;
-    bottom: calc(30px + 60px + 8px);
+    bottom: calc(40px + 90px + 5px);
+    transform-origin: bottom center;
+    transform: translate(-50%, 12px);
+  }
+
+  .menu-overlay.menu-ready .menu-content {
+    transform: translate(-50%, 0);
   }
 
   .menu-item {
