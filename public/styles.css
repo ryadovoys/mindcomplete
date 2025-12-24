@@ -413,6 +413,30 @@ body.mobile-touch:not(.select-mode-active) .prediction * {
   color: var(--ghost-color);
 }
 
+.prediction-remain {
+  display: inline;
+}
+
+.prediction-remain.motion-rise .word-rise {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: rise-set 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+
+@keyframes rise-set {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 body.select-mode-active .prediction-accept {
   color: #fff;
   background: transparent;

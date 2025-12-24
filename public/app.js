@@ -1,3 +1,5 @@
+const ENABLE_RISE_AND_SET = true; // Flip to false to return to classic streaming
+
 class PredictionManager {
   constructor(options = {}) {
     this.debounceMs = options.debounceMs || 1000;
@@ -33,6 +35,8 @@ class PredictionManager {
     this.predictionPreEl = document.querySelector('.prediction-pre');
     this.predictionAcceptEl = document.querySelector('.prediction-accept');
     this.predictionRemainEl = document.querySelector('.prediction-remain');
+    this.enableRiseMotion = ENABLE_RISE_AND_SET;
+    this.motionRemainText = '';
 
     // SELECT mode DOM elements
     this.selectModeIndicator = null;
@@ -543,7 +547,7 @@ class PredictionManager {
     this.selectPreviewOffset = null;
     this.predictionPreEl.textContent = '';
     this.predictionAcceptEl.textContent = '';
-    this.predictionRemainEl.textContent = '';
+    this.useClassicRemain('');
     this.hideThinking();
   }
 
@@ -660,7 +664,7 @@ class PredictionManager {
       if (this.selectStartOffset === null && this.selectPreviewOffset !== null && this.hoverWordEnd !== null) {
         this.predictionPreEl.textContent = this.currentPrediction.slice(0, this.selectPreviewOffset);
         this.predictionAcceptEl.textContent = this.currentPrediction.slice(this.selectPreviewOffset, this.hoverWordEnd);
-        this.predictionRemainEl.textContent = this.currentPrediction.slice(this.hoverWordEnd);
+        this.useClassicRemain(this.currentPrediction.slice(this.hoverWordEnd));
         return;
       }
       // After first click - show selection range
@@ -670,17 +674,17 @@ class PredictionManager {
         if (start === end) {
           this.predictionPreEl.textContent = '';
           this.predictionAcceptEl.textContent = '';
-          this.predictionRemainEl.textContent = this.currentPrediction;
+          this.useClassicRemain(this.currentPrediction);
           return;
         }
         this.predictionPreEl.textContent = this.currentPrediction.slice(0, start);
         this.predictionAcceptEl.textContent = this.currentPrediction.slice(start, end);
-        this.predictionRemainEl.textContent = this.currentPrediction.slice(end);
+        this.useClassicRemain(this.currentPrediction.slice(end));
         return;
       }
       this.predictionPreEl.textContent = '';
       this.predictionAcceptEl.textContent = '';
-      this.predictionRemainEl.textContent = this.currentPrediction;
+      this.useClassicRemain(this.currentPrediction);
       return;
     }
 
@@ -692,15 +696,57 @@ class PredictionManager {
     if (activeOffset === 0) {
       // No navigation/hover - show all in remain color
       this.predictionAcceptEl.textContent = '';
-      this.predictionRemainEl.textContent = this.currentPrediction;
+      this.renderRemain(this.currentPrediction, true);
     } else {
       // Split into accept (white) and remain (dimmer)
       const acceptPart = this.currentPrediction.slice(0, activeOffset);
       const remainPart = this.currentPrediction.slice(activeOffset);
 
       this.predictionAcceptEl.textContent = acceptPart;
-      this.predictionRemainEl.textContent = remainPart;
+      this.renderRemain(remainPart, false);
     }
+  }
+
+  useClassicRemain(text) {
+    this.predictionRemainEl.classList.remove('motion-rise');
+    this.predictionRemainEl.textContent = text;
+    this.motionRemainText = text;
+  }
+
+  renderRemain(text, allowMotion) {
+    if (!this.enableRiseMotion || !allowMotion) {
+      this.useClassicRemain(text);
+      return;
+    }
+
+    this.predictionRemainEl.classList.add('motion-rise');
+    this.applyRiseMotion(text);
+  }
+
+  applyRiseMotion(targetText) {
+    const previous = this.motionRemainText || '';
+
+    if (!targetText.startsWith(previous)) {
+      this.useClassicRemain(targetText);
+      return;
+    }
+
+    const newSegment = targetText.slice(previous.length);
+    if (!newSegment) return;
+
+    const tokens = newSegment.match(/\S+|\s+/g) || [];
+    tokens.forEach((token) => {
+      if (/^\s+$/.test(token)) {
+        this.predictionRemainEl.appendChild(document.createTextNode(token));
+      } else {
+        const span = document.createElement('span');
+        span.textContent = token;
+        span.className = 'word-rise';
+        this.predictionRemainEl.appendChild(span);
+      }
+    });
+
+    this.motionRemainText = targetText;
   }
 
   acceptSelectedText(selection) {
