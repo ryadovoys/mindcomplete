@@ -14,6 +14,7 @@ class PredictionManager {
     this.selectStartOffset = null;
     this.selectEndOffset = null;
     this.selectPreviewOffset = null;
+    this.selectTouchActive = false;
     this.isMobile = this.detectMobile();
 
     this.editor = document.querySelector('.editor');
@@ -66,7 +67,9 @@ class PredictionManager {
 
     // Handle drag selection on prediction
     this.predictionEl.addEventListener('mouseup', (e) => this.onPredictionMouseUp(e));
-    this.predictionEl.addEventListener('touchend', (e) => this.onPredictionTouchEnd(e));
+    this.predictionEl.addEventListener('touchstart', (e) => this.onPredictionTouchStart(e), { passive: false });
+    this.predictionEl.addEventListener('touchmove', (e) => this.onPredictionTouchMove(e), { passive: false });
+    this.predictionEl.addEventListener('touchend', (e) => this.onPredictionTouchEnd(e), { passive: false });
 
     // Focus editor on page load
     this.editor.focus();
@@ -198,26 +201,71 @@ class PredictionManager {
     }
   }
 
-  onPredictionTouchEnd(e) {
-    if (e.changedTouches && e.changedTouches.length) {
-      const touch = e.changedTouches[0];
-      const coords = { x: touch.clientX, y: touch.clientY };
+  onPredictionTouchStart(e) {
+    if (!this.selectModeActive || !this.isMobile) return;
+    if (!e.touches || !e.touches.length) return;
+    const touch = e.touches[0];
+    const offset = this.getOffsetFromPoint(touch.clientX, touch.clientY);
+    if (offset === null) return;
 
+    e.preventDefault();
+    this.selectTouchActive = true;
+    this.selectStartOffset = offset;
+    this.selectPreviewOffset = offset;
+    this.updatePredictionDisplay();
+    this.showStartLineForOffset(offset);
+  }
+
+  onPredictionTouchMove(e) {
+    if (!this.selectModeActive || !this.isMobile || !this.selectTouchActive) return;
+    if (!e.touches || !e.touches.length) return;
+    const touch = e.touches[0];
+    const offset = this.getOffsetFromPoint(touch.clientX, touch.clientY);
+    if (offset === null) return;
+
+    e.preventDefault();
+    this.selectPreviewOffset = offset;
+    this.updatePredictionDisplay();
+  }
+
+  onPredictionTouchEnd(e) {
+    if (!e.changedTouches || !e.changedTouches.length) return;
+    const touch = e.changedTouches[0];
+    const coords = { x: touch.clientX, y: touch.clientY };
+
+    if (this.selectModeActive && this.isMobile && this.selectTouchActive) {
       e.preventDefault();
       e.stopPropagation();
 
-      if (this.selectModeActive) {
-        const offset = this.getOffsetFromPoint(coords.x, coords.y);
-        this.handleSelectModeSelection(offset);
-        return;
+      const offset = this.getOffsetFromPoint(coords.x, coords.y);
+      const finalOffset = offset !== null ? offset : this.selectPreviewOffset;
+      this.selectTouchActive = false;
+
+      if (this.selectStartOffset !== null && finalOffset !== null && finalOffset !== this.selectStartOffset) {
+        const start = Math.min(this.selectStartOffset, finalOffset);
+        const end = Math.max(this.selectStartOffset, finalOffset);
+        this.acceptSelectModeRange(start, end);
       }
 
+      this.disableSelectMode();
+      return;
+    }
+
+    if (this.selectModeActive) {
+      e.preventDefault();
+      e.stopPropagation();
       const offset = this.getOffsetFromPoint(coords.x, coords.y);
-      if (offset !== null) {
-        this.hoverOffset = offset;
-        this.navigationOffset = 0;
-        this.acceptPrediction();
-      }
+      this.handleSelectModeSelection(offset);
+      return;
+    }
+
+    const offset = this.getOffsetFromPoint(coords.x, coords.y);
+    if (offset !== null) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.hoverOffset = offset;
+      this.navigationOffset = 0;
+      this.acceptPrediction();
     }
   }
 
@@ -613,6 +661,7 @@ class PredictionManager {
     this.selectStartOffset = null;
     this.selectEndOffset = null;
     this.selectPreviewOffset = null;
+    this.selectTouchActive = false;
 
     // Visual feedback
     document.body.classList.add('select-mode-active');
@@ -637,6 +686,7 @@ class PredictionManager {
     this.selectStartOffset = null;
     this.selectEndOffset = null;
     this.selectPreviewOffset = null;
+    this.selectTouchActive = false;
 
     // Clear visual feedback
     document.body.classList.remove('select-mode-active');
@@ -666,10 +716,6 @@ class PredictionManager {
       this.selectStartOffset = offset;
       this.selectPreviewOffset = null;
       this.updatePredictionDisplay();
-
-      if (this.isMobile) {
-        this.showStartLineForOffset(offset);
-      }
 
     } else {
       // Second tap/click - set end point and accept
