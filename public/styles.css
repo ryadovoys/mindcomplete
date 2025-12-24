@@ -150,6 +150,7 @@ body {
 .menu-overlay.visible {
   pointer-events: auto;
   opacity: 1;
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .menu-content {
@@ -191,14 +192,7 @@ body {
   display: flex;
   align-items: center;
   width: 100%;
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
-}
-
-.menu-overlay.visible .menu-item {
-  opacity: 1;
-  transform: translateY(0);
+  transition: background 0.2s ease;
 }
 
 .menu-item:hover {
@@ -248,15 +242,7 @@ body.select-mode-active {
 }
 
 body.select-mode-active .prediction {
-  background: rgba(66, 133, 244, 0.05);
-  border-radius: 4px;
-  padding: 0 4px;
-  margin: 0 -4px;
-}
-
-.prediction.select-mode-hover .prediction-accept {
-  background: rgba(66, 133, 244, 0.15);
-  border-radius: 4px;
+  touch-action: none;
 }
 
 /* Modal */
@@ -447,26 +433,7 @@ body.select-mode-active .prediction-accept {
   pointer-events: none;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-  .editor-wrapper {
-    grid-column: 1 / -1;
-    max-width: 100%;
-    width: 100%;
-    min-width: 0;
-  }
-}
-
-@media (max-width: 768px) {
-  .header {
-    padding: 20px;
-    background: var(--bg-color);
-  }
-
-.header-actions {
-  gap: 12px;
-}
-
+/* Select confirm button - applies to all screen sizes */
 .select-confirm-btn {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(8px);
@@ -491,6 +458,30 @@ body.select-mode-active .prediction-accept {
 
 .select-confirm-btn:hover {
   opacity: 1;
+}
+
+body.selection-ready .select-confirm-btn {
+  display: flex;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .editor-wrapper {
+    grid-column: 1 / -1;
+    max-width: 100%;
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 20px;
+    background: var(--bg-color);
+  }
+
+.header-actions {
+  gap: 12px;
 }
 
   /* Menu overlay adjustments for mobile */
@@ -570,7 +561,4 @@ body.select-mode-active .prediction-accept {
   .ghost-layer {
     top: 0;
   }
-}
-body.selection-ready .select-confirm-btn {
-  display: flex;
 }

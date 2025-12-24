@@ -66,12 +66,13 @@ class PredictionManager {
     this.predictionEl.addEventListener('click', (e) => this.onPredictionClick(e));
 
     // Handle hover on prediction
-    this.predictionEl.addEventListener('mousemove', (e) => this.onPredictionHover(e));
-    this.predictionEl.addEventListener('mouseleave', () => this.onPredictionLeave());
+    this.predictionEl.addEventListener('pointermove', (e) => this.onPredictionHover(e));
+    this.predictionEl.addEventListener('pointerleave', () => this.onPredictionLeave());
 
-    // Handle drag selection on prediction
-    this.predictionEl.addEventListener('mouseup', (e) => this.onPredictionMouseUp(e));
-    this.predictionEl.addEventListener('mousedown', (e) => this.onPredictionMouseDown(e));
+    // Handle drag selection on prediction (using pointer events for capture support)
+    this.predictionEl.addEventListener('pointerup', (e) => this.onPredictionMouseUp(e));
+    this.predictionEl.addEventListener('pointerdown', (e) => this.onPredictionMouseDown(e));
+    this.predictionEl.addEventListener('lostpointercapture', (e) => this.onLostPointerCapture(e));
     this.predictionEl.addEventListener('touchstart', (e) => this.onPredictionTouchStart(e), { passive: false });
     this.predictionEl.addEventListener('touchmove', (e) => this.onPredictionTouchMove(e), { passive: false });
     this.predictionEl.addEventListener('touchend', (e) => this.onPredictionTouchEnd(e), { passive: false });
@@ -84,7 +85,6 @@ class PredictionManager {
         this.confirmSelectSelection();
       });
       this.selectConfirmBtn.disabled = true;
-      this.selectConfirmBtn.classList.toggle('mobile-only', !this.isMobile);
     }
   }
 
@@ -204,20 +204,39 @@ class PredictionManager {
     this.selectPreviewOffset = offset;
     this.updatePredictionDisplay();
     this.setSelectionReady(false);
+
+    // Add document-level pointerup listener for reliable release detection
+    this.boundPointerUp = (ev) => this.onDocumentPointerUp(ev);
+    document.addEventListener('pointerup', this.boundPointerUp, true);
+  }
+
+  onDocumentPointerUp(e) {
+    // Remove the listener
+    if (this.boundPointerUp) {
+      document.removeEventListener('pointerup', this.boundPointerUp, true);
+      this.boundPointerUp = null;
+    }
+
+    if (!this.pointerSelecting || !this.selectModeActive || this.isMobile) return;
+
+    this.pointerSelecting = false;
+    // Try to get offset from release point
+    const offset = this.getOffsetFromMouseEvent(e);
+    if (offset !== null) {
+      this.selectPreviewOffset = offset;
+    }
+    // Finalize with whatever preview offset we have
+    this.updatePredictionDisplay();
+    this.setSelectionReady(this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset);
+  }
+
+  onLostPointerCapture(e) {
+    // No longer needed - using document listener instead
   }
 
   onPredictionMouseUp(e) {
-    e.preventDefault();
-    e.stopPropagation();
-
+    // Document listener handles drag selection end
     if (this.pointerSelecting && this.selectModeActive && !this.isMobile) {
-      this.pointerSelecting = false;
-      const offset = this.getOffsetFromMouseEvent(e);
-      if (offset !== null) {
-        this.selectPreviewOffset = offset;
-      }
-      this.updatePredictionDisplay();
-      this.setSelectionReady(this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset);
       return;
     }
 
@@ -743,18 +762,11 @@ class PredictionManager {
       this.updatePredictionDisplay();
       this.setSelectionReady(false);
 
-    } else if (this.isMobile) {
-      // Update end point and wait for confirmation on mobile
+    } else {
+      // Update end point and wait for confirmation (same for mobile and desktop)
       this.selectPreviewOffset = offset;
       this.updatePredictionDisplay();
       this.setSelectionReady(this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset);
-    } else {
-      // Desktop/tablet: accept immediately
-      this.selectEndOffset = offset;
-      const start = Math.min(this.selectStartOffset, this.selectEndOffset);
-      const end = Math.max(this.selectStartOffset, this.selectEndOffset);
-      this.acceptSelectModeRange(start, end);
-      this.disableSelectMode();
     }
   }
 
