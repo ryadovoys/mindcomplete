@@ -15,6 +15,7 @@ class PredictionManager {
     this.selectEndOffset = null;
     this.selectPreviewOffset = null;
     this.selectTouchActive = false;
+    this.pointerSelecting = false;
     this.selectionReady = false;
     this.isMobile = this.detectMobile();
 
@@ -70,6 +71,7 @@ class PredictionManager {
 
     // Handle drag selection on prediction
     this.predictionEl.addEventListener('mouseup', (e) => this.onPredictionMouseUp(e));
+    this.predictionEl.addEventListener('mousedown', (e) => this.onPredictionMouseDown(e));
     this.predictionEl.addEventListener('touchstart', (e) => this.onPredictionTouchStart(e), { passive: false });
     this.predictionEl.addEventListener('touchmove', (e) => this.onPredictionTouchMove(e), { passive: false });
     this.predictionEl.addEventListener('touchend', (e) => this.onPredictionTouchEnd(e), { passive: false });
@@ -82,6 +84,7 @@ class PredictionManager {
         this.confirmSelectSelection();
       });
       this.selectConfirmBtn.disabled = true;
+      this.selectConfirmBtn.classList.toggle('mobile-only', !this.isMobile);
     }
   }
 
@@ -126,15 +129,25 @@ class PredictionManager {
   }
 
   onPredictionHover(e) {
+    if (this.pointerSelecting && this.selectModeActive && !this.isMobile) {
+      const offset = this.getOffsetFromMouseEvent(e);
+      if (offset !== null) {
+        this.selectPreviewOffset = offset;
+        this.hoverOffset = 0;
+        this.navigationOffset = 0;
+        this.updatePredictionDisplay();
+        this.setSelectionReady(this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset);
+      }
+      return;
+    }
+
     if (this.selectModeActive) {
       if (this.selectStartOffset === null) {
-        // Ignore hover until the user picks a starting point
         this.predictionEl.classList.remove('select-mode-hover');
         return;
       }
 
       if (!this.isMobile) {
-        // In SELECT mode with start point set (desktop only)
         const offset = this.getOffsetFromMouseEvent(e);
         if (offset !== null) {
           if (offset === this.selectStartOffset) {
@@ -162,10 +175,13 @@ class PredictionManager {
 
   onPredictionLeave() {
     if (this.selectModeActive) {
+      if (this.pointerSelecting && !this.isMobile) return;
       this.predictionEl.classList.remove('select-mode-hover');
       this.hoverOffset = 0;
       this.navigationOffset = 0;
-      this.selectPreviewOffset = null;
+      if (!this.isMobile) {
+        this.selectPreviewOffset = null;
+      }
       this.updatePredictionDisplay();
     } else {
       this.hoverOffset = 0;
@@ -174,12 +190,36 @@ class PredictionManager {
   }
 
   onPredictionClick(e) {
-    // Click handling is now done in mouseup to distinguish from drag selection
+    // Click handling is now done in mouse/touch events to distinguish from drag selection
+  }
+
+  onPredictionMouseDown(e) {
+    if (this.isMobile || e.button !== 0) return;
+    if (!this.selectModeActive) return;
+    const offset = this.getOffsetFromMouseEvent(e);
+    if (offset === null) return;
+    e.preventDefault();
+    this.pointerSelecting = true;
+    this.selectStartOffset = offset;
+    this.selectPreviewOffset = offset;
+    this.updatePredictionDisplay();
+    this.setSelectionReady(false);
   }
 
   onPredictionMouseUp(e) {
     e.preventDefault();
     e.stopPropagation();
+
+    if (this.pointerSelecting && this.selectModeActive && !this.isMobile) {
+      this.pointerSelecting = false;
+      const offset = this.getOffsetFromMouseEvent(e);
+      if (offset !== null) {
+        this.selectPreviewOffset = offset;
+      }
+      this.updatePredictionDisplay();
+      this.setSelectionReady(this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset);
+      return;
+    }
 
     // If SELECT mode is active, handle differently
     if (this.selectModeActive) {
@@ -563,45 +603,19 @@ class PredictionManager {
     if (!this.currentPrediction || !selection.rangeCount) return;
 
     const range = selection.getRangeAt(0);
-    const selectedText = selection.toString();
+    const startOffset = this.getOffsetFromRange(range);
+    if (startOffset === null) return;
 
-    // Find the start and end offsets of the selection within the prediction
-    let startOffset = 0;
-    let endOffset = 0;
+    const cloned = range.cloneRange();
+    cloned.collapse(true);
+    cloned.setEnd(range.endContainer, range.endOffset);
+    const selectedTextLength = cloned.toString().length;
+    const endOffset = startOffset + selectedTextLength;
 
-    // Calculate offsets based on which elements contain the selection
-    const startContainer = range.startContainer;
-    const endContainer = range.endContainer;
-
-    // Helper to get offset in prediction text
-    const getOffsetInPrediction = (container, offset) => {
-      const preLen = this.predictionPreEl?.textContent.length || 0;
-      const acceptLen = this.predictionAcceptEl?.textContent.length || 0;
-
-      if (container === this.predictionPreEl?.firstChild || container === this.predictionPreEl) {
-        return offset;
-      } else if (container === this.predictionAcceptEl?.firstChild || container === this.predictionAcceptEl) {
-        return preLen + offset;
-      } else if (container === this.predictionRemainEl?.firstChild || container === this.predictionRemainEl) {
-        return preLen + acceptLen + offset;
-      }
-      return null;
-    };
-
-    startOffset = getOffsetInPrediction(startContainer, range.startOffset);
-    endOffset = getOffsetInPrediction(endContainer, range.endOffset);
-    if (startOffset === null || endOffset === null) {
-      return;
-    }
-
-    // Accept only the selected portion
     const textToAccept = this.currentPrediction.slice(startOffset, endOffset);
-
-    // Append to editor
     this.editor.textContent += textToAccept;
     this.moveCursorToEnd();
 
-    // Keep only the part after the selection
     if (endOffset < this.currentPrediction.length) {
       this.currentPrediction = this.currentPrediction.slice(endOffset);
       this.navigationOffset = 0;
@@ -609,13 +623,11 @@ class PredictionManager {
       this.userTextMirror.textContent = this.editor.textContent;
       this.updatePredictionDisplay();
     } else {
-      // Selected to the end - clear everything
       this.userTextMirror.textContent = this.editor.textContent;
       this.clearPrediction();
       this.onInput();
     }
 
-    // Clear the selection
     selection.removeAllRanges();
   }
 
@@ -671,6 +683,7 @@ class PredictionManager {
     this.selectEndOffset = null;
     this.selectPreviewOffset = null;
     this.selectTouchActive = false;
+    this.pointerSelecting = false;
     this.setSelectionReady(false);
 
     // Visual feedback
@@ -697,6 +710,7 @@ class PredictionManager {
     this.selectEndOffset = null;
     this.selectPreviewOffset = null;
     this.selectTouchActive = false;
+    this.pointerSelecting = false;
     this.setSelectionReady(false);
 
     // Clear visual feedback
@@ -725,15 +739,22 @@ class PredictionManager {
     if (this.selectStartOffset === null) {
       // First tap/click - set start point
       this.selectStartOffset = offset;
-      this.selectPreviewOffset = offset;
+      this.selectPreviewOffset = this.isMobile ? offset : null;
       this.updatePredictionDisplay();
       this.setSelectionReady(false);
 
-    } else {
-      // Update end point and wait for confirmation
+    } else if (this.isMobile) {
+      // Update end point and wait for confirmation on mobile
       this.selectPreviewOffset = offset;
       this.updatePredictionDisplay();
       this.setSelectionReady(this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset);
+    } else {
+      // Desktop/tablet: accept immediately
+      this.selectEndOffset = offset;
+      const start = Math.min(this.selectStartOffset, this.selectEndOffset);
+      const end = Math.max(this.selectStartOffset, this.selectEndOffset);
+      this.acceptSelectModeRange(start, end);
+      this.disableSelectMode();
     }
   }
 
