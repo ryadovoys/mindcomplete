@@ -404,7 +404,7 @@ body.mobile-touch:not(.select-mode-active) .prediction {
 
 .prediction-pre,
 .prediction-remain {
-  color: var(--ghost-color);
+  color: #F183FF;
 }
 
 .prediction-remain {
@@ -523,6 +523,23 @@ body.selection-ready .select-confirm-btn {
     width: 60px;
     border-radius: 999px;
     transform: none;
+  }
+
+  .select-confirm-btn {
+    position: fixed;
+    bottom: calc(40px + 60px + 10px);
+    right: 40px;
+    height: 60px;
+    width: 60px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 401;
+  }
+
+  .select-confirm-btn .material-symbols-outlined {
+    font-size: 40px;
   }
 
   /* Menu overlay adjustments for mobile */
