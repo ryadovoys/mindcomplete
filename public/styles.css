@@ -26,9 +26,9 @@ body {
 .material-symbols-outlined {
   font-variation-settings:
     'FILL' 0,
-    'wght' 400,
+    'wght' 200,
     'GRAD' 0,
-    'opsz' 24;
+    'opsz' 40;
 }
 
 /* Header */
@@ -51,7 +51,7 @@ body {
 }
 
 .logo {
-  height: 26px;
+  height: 32px;
   width: auto;
   display: block;
   cursor: pointer;
@@ -125,7 +125,7 @@ body {
 }
 
 .burger-btn .material-symbols-outlined {
-  font-size: 32px;
+  font-size: 40px;
   opacity: 0.6;
   transition: opacity 0.2s, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -398,12 +398,6 @@ body.mobile-touch:not(.select-mode-active) .prediction {
   touch-action: pan-y;
 }
 
-body.mobile-touch:not(.select-mode-active) .prediction,
-body.mobile-touch:not(.select-mode-active) .prediction * {
-  -webkit-user-select: none;
-  user-select: none;
-}
-
 .prediction-accept {
   color: rgba(255, 255, 255, 1);
 }
@@ -517,7 +511,7 @@ body.selection-ready .select-confirm-btn {
   }
 
   .logo {
-    height: 26px;
+    height: 32px;
   }
 
   .burger-btn {
@@ -525,8 +519,8 @@ body.selection-ready .select-confirm-btn {
     bottom: 40px;
     right: 40px;
     z-index: 400;
-    height: 90px;
-    width: 90px;
+    height: 60px;
+    width: 60px;
     border-radius: 999px;
     transform: none;
   }
@@ -541,7 +535,7 @@ body.selection-ready .select-confirm-btn {
     right: 40px;
     left: auto;
     top: auto;
-    bottom: calc(40px + 90px + 4px);
+    bottom: calc(40px + 60px + 4px);
     transform-origin: top right;
     transform: translateY(-6px);
   }
