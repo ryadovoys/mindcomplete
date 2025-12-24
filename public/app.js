@@ -429,26 +429,32 @@ class PredictionManager {
     const container = range.startContainer;
     const preLength = this.predictionPreEl?.textContent.length || 0;
     const acceptLength = this.predictionAcceptEl.textContent.length;
-    let offset = 0;
+    const offsetWithin = (node, base = 0) => {
+      try {
+        const clone = range.cloneRange();
+        clone.setStart(node, 0);
+        return base + clone.toString().length;
+      } catch (err) {
+        return null;
+      }
+    };
 
-    const inNode = (node) => node && (container === node || container === node.firstChild);
+    let offset = null;
 
-    if (inNode(this.predictionPreEl)) {
-      offset = range.startOffset;
-    } else if (inNode(this.predictionAcceptEl)) {
-      offset = preLength + range.startOffset;
-    } else if (inNode(this.predictionRemainEl)) {
-      offset = preLength + acceptLength + range.startOffset;
+    if (this.predictionPreEl && (this.predictionPreEl === container || this.predictionPreEl.contains(container))) {
+      offset = offsetWithin(this.predictionPreEl, 0);
+    } else if (this.predictionAcceptEl && (this.predictionAcceptEl === container || this.predictionAcceptEl.contains(container))) {
+      offset = offsetWithin(this.predictionAcceptEl, preLength);
+    } else if (this.predictionRemainEl && (this.predictionRemainEl === container || this.predictionRemainEl.contains(container))) {
+      offset = offsetWithin(this.predictionRemainEl, preLength + acceptLength);
     } else if (container === this.predictionEl) {
       offset = range.startOffset === 0 ? 0 : this.currentPrediction.length;
-    } else {
-      return null;
     }
 
-    if (offset >= 0 && offset <= this.currentPrediction.length) {
-      return offset;
-    }
-    return null;
+    if (offset === null) return null;
+
+    const clamped = Math.max(0, Math.min(offset, this.currentPrediction.length));
+    return clamped;
   }
 
   // Get word boundaries at a given character offset

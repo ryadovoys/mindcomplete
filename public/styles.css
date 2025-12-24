@@ -125,7 +125,7 @@ body {
 }
 
 .burger-btn .material-symbols-outlined {
-  font-size: 20px;
+  font-size: 32px;
   opacity: 0.6;
   transition: opacity 0.2s, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -523,12 +523,12 @@ body.selection-ready .select-confirm-btn {
   .burger-btn {
     position: fixed;
     bottom: 40px;
-    left: 50%;
+    right: 40px;
     z-index: 400;
     height: 90px;
     width: 90px;
     border-radius: 999px;
-    transform: translateX(-50%);
+    transform: none;
   }
 
   /* Menu overlay adjustments for mobile */
@@ -538,16 +538,16 @@ body.selection-ready .select-confirm-btn {
 
   .menu-content {
     min-width: 150px;
-    right: auto;
-    left: 50%;
+    right: 40px;
+    left: auto;
     top: auto;
-    bottom: calc(40px + 90px + 5px);
-    transform-origin: bottom center;
-    transform: translate(-50%, 12px);
+    bottom: calc(40px + 90px + 4px);
+    transform-origin: top right;
+    transform: translateY(-6px);
   }
 
   .menu-overlay.menu-ready .menu-content {
-    transform: translate(-50%, 0);
+    transform: translateY(0);
   }
 
   .menu-item {
