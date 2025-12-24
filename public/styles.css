@@ -47,7 +47,7 @@ body {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 12px;
 }
 
 .logo {
@@ -55,29 +55,6 @@ body {
   width: auto;
   display: block;
   cursor: pointer;
-}
-
-.info-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-color);
-  cursor: pointer;
-  opacity: 0.5;
-  transition: opacity 0.2s;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-}
-
-.info-btn:hover {
-  opacity: 1;
-}
-
-.info-btn .material-symbols-outlined {
-  font-size: 16px;
 }
 
 .header-actions {
@@ -123,6 +100,165 @@ body {
 .copy-btn:hover .material-symbols-outlined,
 .clear-btn:hover .material-symbols-outlined {
   opacity: 1;
+}
+
+/* Burger Menu Button */
+.burger-btn {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: none;
+  border-radius: 8px;
+  height: 36px;
+  width: 36px;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.burger-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.burger-btn .material-symbols-outlined {
+  font-size: 20px;
+  opacity: 0.6;
+  transition: opacity 0.2s, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.burger-btn:hover .material-symbols-outlined {
+  opacity: 1;
+}
+
+
+/* Menu Overlay */
+
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.menu-overlay.visible {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.menu-content {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+  transform-origin: top right;
+  transform: translateY(-6px);
+  opacity: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  position: absolute;
+  top: calc(20px + 36px + 4px);
+  right: 20px;
+}
+
+.menu-overlay.visible .menu-content {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+
+.menu-item {
+  background: rgba(0, 0, 0, 0);
+  border: none;
+  border-radius: 8px;
+  height: 36px;
+  padding: 0 16px;
+  color: var(--text-color);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.menu-overlay.visible .menu-item {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.menu-item.select-menu-btn.active {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.menu-label {
+  letter-spacing: 0.3px;
+}
+
+
+/* SELECT Mode Indicators */
+.select-mode-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  display: none;
+}
+
+.select-mode-indicator.active {
+  display: block;
+}
+
+.select-start-line {
+  position: absolute;
+  width: 2px;
+  height: 28.8pt;
+  background: rgba(66, 133, 244, 0.6);
+  display: none;
+  box-shadow: 0 0 8px rgba(66, 133, 244, 0.4);
+  border-radius: 1px;
+}
+
+.select-start-line.visible {
+  display: block;
+}
+
+body.select-mode-active {
+  cursor: crosshair;
+}
+
+body.select-mode-active .prediction {
+  background: rgba(66, 133, 244, 0.05);
+  border-radius: 4px;
+  padding: 0 4px;
+  margin: 0 -4px;
+}
+
+.prediction.select-mode-hover .prediction-accept {
+  background: rgba(66, 133, 244, 0.15);
+  border-radius: 4px;
 }
 
 /* Modal */
@@ -280,6 +416,7 @@ body {
   color: rgba(255, 255, 255, 1);
 }
 
+.prediction-pre,
 .prediction-remain {
   color: var(--ghost-color);
 }
@@ -321,10 +458,29 @@ body {
     background: var(--bg-color);
   }
 
-
-
   .header-actions {
     gap: 12px;
+  }
+
+  /* Menu overlay adjustments for mobile */
+  .menu-overlay {
+    padding: 0;
+  }
+
+  .menu-content {
+    min-width: 150px;
+    right: 20px;
+    left: auto;
+  }
+
+  .menu-item {
+    height: 36px;
+    font-size: 15px;
+  }
+
+  /* SELECT mode line height for mobile font size */
+  .select-start-line {
+    height: 21.6pt;
   }
 
 

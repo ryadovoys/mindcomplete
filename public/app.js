@@ -9,18 +9,48 @@ class PredictionManager {
     this.navigationOffset = 0; // How many chars into prediction we've navigated (clicked)
     this.hoverOffset = 0; // Hover position (temporary)
 
+    // SELECT mode state
+    this.selectModeActive = false;
+    this.selectStartOffset = null;
+    this.selectEndOffset = null;
+    this.selectPreviewOffset = null;
+    this.isMobile = this.detectMobile();
+
     this.editor = document.querySelector('.editor');
     this.ghostLayer = document.querySelector('.ghost-layer');
     this.userTextMirror = document.querySelector('.user-text-mirror');
     this.thinkingIndicator = document.querySelector('.thinking-indicator');
     this.predictionEl = document.querySelector('.prediction');
+    this.predictionPreEl = document.querySelector('.prediction-pre');
     this.predictionAcceptEl = document.querySelector('.prediction-accept');
     this.predictionRemainEl = document.querySelector('.prediction-remain');
+
+    // SELECT mode DOM elements
+    this.selectModeIndicator = null;
+    this.selectStartLine = null;
 
     this.init();
   }
 
+  detectMobile() {
+    // Check for mobile devices
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+    const isMobileWidth = window.matchMedia('(max-width: 768px)').matches;
+
+    // Listen for resize events
+    window.addEventListener('resize', () => {
+      this.isMobile = window.matchMedia('(max-width: 768px)').matches;
+    });
+
+    return isMobileUA || isMobileWidth;
+  }
+
   init() {
+    // Get SELECT mode DOM elements
+    this.selectModeIndicator = document.querySelector('.select-mode-indicator');
+    this.selectStartLine = document.querySelector('.select-start-line');
+
     // Handle input events
     this.editor.addEventListener('input', () => this.onInput());
 
@@ -76,16 +106,51 @@ class PredictionManager {
   }
 
   onPredictionHover(e) {
-    const offset = this.getOffsetFromMouseEvent(e);
-    if (offset !== null) {
-      this.hoverOffset = offset;
-      this.updatePredictionDisplay();
+    if (this.selectModeActive) {
+      if (this.selectStartOffset === null) {
+        // Ignore hover until the user picks a starting point
+        this.predictionEl.classList.remove('select-mode-hover');
+        return;
+      }
+
+      if (!this.isMobile) {
+        // In SELECT mode with start point set (desktop only)
+        const offset = this.getOffsetFromMouseEvent(e);
+        if (offset !== null) {
+          if (offset === this.selectStartOffset) {
+            this.selectPreviewOffset = null;
+            this.predictionEl.classList.remove('select-mode-hover');
+            this.updatePredictionDisplay();
+            return;
+          }
+          this.selectPreviewOffset = offset;
+          this.hoverOffset = 0;
+          this.navigationOffset = 0;
+          this.updatePredictionDisplay();
+          this.predictionEl.classList.add('select-mode-hover');
+        }
+      }
+    } else {
+      // Normal hover behavior
+      const offset = this.getOffsetFromMouseEvent(e);
+      if (offset !== null) {
+        this.hoverOffset = offset;
+        this.updatePredictionDisplay();
+      }
     }
   }
 
   onPredictionLeave() {
-    this.hoverOffset = 0;
-    this.updatePredictionDisplay();
+    if (this.selectModeActive) {
+      this.predictionEl.classList.remove('select-mode-hover');
+      this.hoverOffset = 0;
+      this.navigationOffset = 0;
+      this.selectPreviewOffset = null;
+      this.updatePredictionDisplay();
+    } else {
+      this.hoverOffset = 0;
+      this.updatePredictionDisplay();
+    }
   }
 
   onPredictionClick(e) {
@@ -96,6 +161,13 @@ class PredictionManager {
     e.preventDefault();
     e.stopPropagation();
 
+    // If SELECT mode is active, handle differently
+    if (this.selectModeActive) {
+      this.handleSelectModeClick(e);
+      return;
+    }
+
+    // Normal mode - existing behavior
     const selection = window.getSelection();
     const selectedText = selection.toString();
 
@@ -120,17 +192,22 @@ class PredictionManager {
     if (!range) return null;
 
     let offset = 0;
+    const preLength = this.predictionPreEl?.textContent.length || 0;
+    const acceptLength = this.predictionAcceptEl.textContent.length;
 
     // Check if in accept part
-    if (range.startContainer === this.predictionAcceptEl.firstChild ||
-        range.startContainer === this.predictionAcceptEl) {
+    if (range.startContainer === this.predictionPreEl?.firstChild ||
+        range.startContainer === this.predictionPreEl) {
       offset = range.startOffset;
+    }
+    else if (range.startContainer === this.predictionAcceptEl.firstChild ||
+             range.startContainer === this.predictionAcceptEl) {
+      offset = preLength + range.startOffset;
     }
     // Check if in remain part
     else if (range.startContainer === this.predictionRemainEl.firstChild ||
              range.startContainer === this.predictionRemainEl) {
-      const acceptLength = this.predictionAcceptEl.textContent.length;
-      offset = acceptLength + range.startOffset;
+      offset = preLength + acceptLength + range.startOffset;
     }
     // Somewhere else in prediction container
     else if (range.startContainer === this.predictionEl) {
@@ -172,6 +249,8 @@ class PredictionManager {
     this.currentPrediction = '';
     this.navigationOffset = 0;
     this.hoverOffset = 0;
+    this.selectPreviewOffset = null;
+    this.predictionPreEl.textContent = '';
     this.predictionAcceptEl.textContent = '';
     this.predictionRemainEl.textContent = '';
     this.hideThinking();
@@ -274,12 +353,39 @@ class PredictionManager {
     this.currentPrediction = text;
     this.navigationOffset = 0; // Reset navigation when prediction updates
     this.hoverOffset = 0; // Reset hover when prediction updates
+    this.selectPreviewOffset = null;
+    if (!this.selectModeActive) {
+      this.selectStartOffset = null;
+    }
     this.updatePredictionDisplay();
   }
 
   updatePredictionDisplay() {
     const userText = this.editor.textContent;
     this.userTextMirror.textContent = userText;
+
+    if (this.selectModeActive) {
+      if (this.selectStartOffset !== null && this.selectPreviewOffset !== null) {
+        const start = Math.min(this.selectStartOffset, this.selectPreviewOffset);
+        const end = Math.max(this.selectStartOffset, this.selectPreviewOffset);
+        if (start === end) {
+          this.predictionPreEl.textContent = '';
+          this.predictionAcceptEl.textContent = '';
+          this.predictionRemainEl.textContent = this.currentPrediction;
+          return;
+        }
+        this.predictionPreEl.textContent = this.currentPrediction.slice(0, start);
+        this.predictionAcceptEl.textContent = this.currentPrediction.slice(start, end);
+        this.predictionRemainEl.textContent = this.currentPrediction.slice(end);
+        return;
+      }
+      this.predictionPreEl.textContent = '';
+      this.predictionAcceptEl.textContent = '';
+      this.predictionRemainEl.textContent = this.currentPrediction;
+      return;
+    }
+
+    this.predictionPreEl.textContent = '';
 
     // Use hoverOffset if hovering, otherwise use navigationOffset (clicked position)
     const activeOffset = this.hoverOffset || this.navigationOffset;
@@ -393,22 +499,143 @@ class PredictionManager {
     selection.removeAllRanges();
     selection.addRange(range);
   }
+
+  // SELECT MODE METHODS
+
+  enableSelectMode() {
+    this.selectModeActive = true;
+    this.selectStartOffset = null;
+    this.selectEndOffset = null;
+    this.selectPreviewOffset = null;
+
+    // Visual feedback
+    document.body.classList.add('select-mode-active');
+    this.selectModeIndicator.classList.add('active');
+
+    // Clear any hover highlights from normal mode
+    this.hoverOffset = 0;
+    this.navigationOffset = 0;
+    this.updatePredictionDisplay();
+
+    // Update menu button state
+    const selectBtn = document.querySelector('.select-menu-btn');
+    if (selectBtn) selectBtn.classList.add('active');
+
+    // Change burger button to X
+    const burgerIcon = document.querySelector('.burger-btn .material-symbols-outlined');
+    if (burgerIcon) burgerIcon.textContent = 'close';
+  }
+
+  disableSelectMode() {
+    this.selectModeActive = false;
+    this.selectStartOffset = null;
+    this.selectEndOffset = null;
+    this.selectPreviewOffset = null;
+
+    // Clear visual feedback
+    document.body.classList.remove('select-mode-active');
+    this.selectModeIndicator.classList.remove('active');
+    this.selectStartLine.classList.remove('visible');
+    this.predictionEl.classList.remove('select-mode-hover');
+
+    // Reset display to normal
+    this.hoverOffset = 0;
+    this.navigationOffset = 0;
+    this.updatePredictionDisplay();
+
+    // Update menu button state
+    const selectBtn = document.querySelector('.select-menu-btn');
+    if (selectBtn) selectBtn.classList.remove('active');
+
+    // Change burger button back to menu icon
+    const burgerIcon = document.querySelector('.burger-btn .material-symbols-outlined');
+    if (burgerIcon) burgerIcon.textContent = 'menu';
+  }
+
+  handleSelectModeClick(e) {
+    const offset = this.getOffsetFromMouseEvent(e);
+    if (offset === null) return;
+
+    if (this.selectStartOffset === null) {
+      // First click - set start point
+      this.selectStartOffset = offset;
+      this.selectPreviewOffset = null;
+      this.updatePredictionDisplay();
+
+      if (this.isMobile) {
+        // Show vertical line on mobile
+        this.showStartLine(e);
+      }
+    } else {
+      // Second click - set end point and accept
+      this.selectEndOffset = offset;
+
+      // Ensure start < end
+      const start = Math.min(this.selectStartOffset, this.selectEndOffset);
+      const end = Math.max(this.selectStartOffset, this.selectEndOffset);
+
+      // Accept the selected range
+      this.acceptSelectModeRange(start, end);
+
+      // Exit SELECT mode
+      this.disableSelectMode();
+    }
+  }
+
+  showStartLine(e) {
+    // Calculate position for vertical line indicator
+    const predictionRect = this.predictionEl.getBoundingClientRect();
+    const range = document.caretRangeFromPoint(e.clientX, e.clientY);
+
+    if (range) {
+      const rangeRect = range.getBoundingClientRect();
+      const leftOffset = rangeRect.left - predictionRect.left;
+      const topOffset = rangeRect.top - predictionRect.top;
+
+      this.selectStartLine.style.left = `${leftOffset}px`;
+      this.selectStartLine.style.top = `${topOffset}px`;
+      this.selectStartLine.classList.add('visible');
+    }
+  }
+
+  acceptSelectModeRange(startOffset, endOffset) {
+    if (!this.currentPrediction) return;
+
+    // Extract the selected text
+    const textToAccept = this.currentPrediction.slice(startOffset, endOffset);
+
+    // Append to editor
+    this.editor.textContent += textToAccept;
+    this.moveCursorToEnd();
+
+    // Keep only the part after selection
+    if (endOffset < this.currentPrediction.length) {
+      this.currentPrediction = this.currentPrediction.slice(endOffset);
+      this.navigationOffset = 0;
+      this.hoverOffset = 0;
+      this.userTextMirror.textContent = this.editor.textContent;
+      this.updatePredictionDisplay();
+    } else {
+      // Selected to the end - clear everything
+      this.userTextMirror.textContent = this.editor.textContent;
+      this.clearPrediction();
+      this.onInput();
+    }
+  }
 }
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  new PredictionManager();
+  const predictionManager = new PredictionManager();
 
   // Modal handling
   const modal = document.getElementById('about-modal');
   const logo = document.querySelector('.logo');
-  const infoBtn = document.querySelector('.info-btn');
   const modalClose = document.querySelector('.modal-close');
 
-  // Open modal from logo or info button
+  // Open modal from logo
   const openModal = () => modal.classList.add('visible');
   logo.addEventListener('click', openModal);
-  infoBtn.addEventListener('click', openModal);
 
   modalClose.addEventListener('click', () => {
     modal.classList.remove('visible');
@@ -428,36 +655,106 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Copy button functionality
-  const copyBtn = document.querySelector('.copy-btn');
-  const clearBtn = document.querySelector('.clear-btn');
+  // BURGER MENU FUNCTIONALITY
+  const burgerBtn = document.querySelector('.burger-btn');
+  const burgerIcon = burgerBtn.querySelector('.material-symbols-outlined');
+  const menuOverlay = document.querySelector('.menu-overlay');
+  const copyMenuBtn = document.querySelector('.copy-menu-btn');
+  const clearMenuBtn = document.querySelector('.clear-menu-btn');
+  const selectMenuBtn = document.querySelector('.select-menu-btn');
+  const aboutMenuBtn = document.querySelector('.about-menu-btn');
   const editor = document.querySelector('.editor');
 
-  copyBtn.addEventListener('click', async () => {
+  const openMenu = () => {
+    menuOverlay.classList.add('visible');
+    if (burgerIcon) burgerIcon.textContent = 'close';
+  };
+
+  const closeMenu = () => {
+    if (!menuOverlay.classList.contains('visible')) return;
+    menuOverlay.classList.remove('visible');
+    if (!predictionManager.selectModeActive && burgerIcon) {
+      burgerIcon.textContent = 'menu';
+    }
+  };
+
+  // Open menu or exit SELECT mode
+  burgerBtn.addEventListener('click', () => {
+    if (predictionManager.selectModeActive) {
+      predictionManager.disableSelectMode();
+      if (burgerIcon) burgerIcon.textContent = 'menu';
+      return;
+    }
+
+    if (menuOverlay.classList.contains('visible')) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  });
+
+  // Close menu when clicking overlay background
+  menuOverlay.addEventListener('click', (e) => {
+    if (e.target === menuOverlay) {
+      closeMenu();
+    }
+  });
+
+  // COPY functionality
+  copyMenuBtn.addEventListener('click', async () => {
     const text = editor.textContent;
-    if (!text) return;
+    if (!text) {
+      closeMenu();
+      return;
+    }
 
     try {
       await navigator.clipboard.writeText(text);
       // Visual feedback
-      copyBtn.style.opacity = '1';
-      const originalText = copyBtn.innerHTML;
-      copyBtn.innerHTML = '<span class="material-symbols-outlined">check</span>COPIED';
+      const copyLabel = copyMenuBtn.querySelector('.menu-label');
+      const originalText = copyLabel ? copyLabel.textContent : 'Copy';
+      if (copyLabel) copyLabel.textContent = 'Copied';
+
       setTimeout(() => {
-        copyBtn.innerHTML = originalText;
-        copyBtn.style.opacity = '';
-      }, 2000);
+        if (copyLabel) copyLabel.textContent = originalText;
+        closeMenu();
+      }, 800);
     } catch (err) {
       console.error('Failed to copy:', err);
+      closeMenu();
     }
   });
 
-  // Clear button functionality
-  clearBtn.addEventListener('click', () => {
+  // CLEAR functionality
+  clearMenuBtn.addEventListener('click', () => {
     editor.textContent = '';
     editor.focus();
     // Trigger input event to clear any predictions
     editor.dispatchEvent(new Event('input'));
+    closeMenu();
+  });
+
+  // SELECT mode toggle
+  selectMenuBtn.addEventListener('click', () => {
+    if (predictionManager.selectModeActive) {
+      predictionManager.disableSelectMode();
+    } else {
+      predictionManager.enableSelectMode();
+    }
+    closeMenu();
+  });
+
+  // ABOUT
+  aboutMenuBtn.addEventListener('click', () => {
+    closeMenu();
+    modal.classList.add('visible');
+  });
+
+  // Close menu with Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && menuOverlay.classList.contains('visible')) {
+      closeMenu();
+    }
   });
 });
 

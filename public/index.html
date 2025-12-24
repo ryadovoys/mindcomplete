@@ -21,29 +21,42 @@
   <header class="header">
     <div class="header-left">
       <img class="logo" src="mindcomplete-logo.png" alt="Mindcomplete logo">
-      <button class="info-btn" aria-label="About">
-        <span class="material-symbols-outlined">info</span>
-      </button>
     </div>
     <div class="header-actions">
-      <button class="clear-btn">
-        <span class="material-symbols-outlined">delete</span>
-        CLEAR
-      </button>
-      <button class="copy-btn">
-        <span class="material-symbols-outlined">content_copy</span>
-        COPY
+      <button class="burger-btn" aria-label="Menu">
+        <span class="material-symbols-outlined">menu</span>
       </button>
     </div>
   </header>
+
+  <!-- Burger Menu Overlay -->
+  <div class="menu-overlay">
+    <div class="menu-content">
+      <button class="menu-item copy-menu-btn">
+        <span class="menu-label">Copy</span>
+      </button>
+      <button class="menu-item clear-menu-btn">
+        <span class="menu-label">Clear</span>
+      </button>
+      <button class="menu-item select-menu-btn">
+        <span class="menu-label">Select</span>
+      </button>
+      <button class="menu-item about-menu-btn">
+        <span class="menu-label">About</span>
+      </button>
+    </div>
+  </div>
 
   <div class="container">
     <div class="editor-wrapper">
       <!-- Ghost layer (behind): shows user text + prediction -->
       <div class="ghost-layer" aria-hidden="true">
         <span class="user-text-mirror"></span><span class="thinking-indicator">typing<span
-            class="dots"></span></span><span class="prediction"><span class="prediction-accept"></span><span
-            class="prediction-remain"></span></span>
+            class="dots"></span></span><span class="prediction"><span class="prediction-pre"></span><span
+            class="prediction-accept"></span><span class="prediction-remain"></span></span>
+        <div class="select-mode-indicator">
+          <span class="select-start-line"></span>
+        </div>
       </div>
       <!-- Editable layer (front): user types here -->
       <div class="editor" contenteditable="true" data-placeholder="What's on your mind" spellcheck="false"></div>
