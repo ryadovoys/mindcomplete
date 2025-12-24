@@ -421,6 +421,13 @@ body.select-mode-active .prediction {
   color: var(--ghost-color);
 }
 
+body.select-mode-active .prediction-accept {
+  background: rgba(255, 255, 255, 1);
+  color: #000;
+  border-radius: 6px;
+  padding: 0 3px;
+}
+
 /* Editable layer - on top */
 .editor {
   position: relative;
@@ -458,9 +465,39 @@ body.select-mode-active .prediction {
     background: var(--bg-color);
   }
 
-  .header-actions {
-    gap: 12px;
-  }
+.header-actions {
+  gap: 12px;
+}
+
+.select-confirm-btn {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: none;
+  border-radius: 8px;
+  height: 36px;
+  width: 36px;
+  color: var(--text-color);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  opacity: 0.6;
+  transition: opacity 0.2s, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.select-confirm-btn .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.select-confirm-btn:hover {
+  opacity: 1;
+}
+
+body.selection-ready .select-confirm-btn {
+  display: flex;
+}
 
   /* Menu overlay adjustments for mobile */
   .menu-overlay {

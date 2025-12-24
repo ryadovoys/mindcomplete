@@ -15,6 +15,7 @@ class PredictionManager {
     this.selectEndOffset = null;
     this.selectPreviewOffset = null;
     this.selectTouchActive = false;
+    this.selectionReady = false;
     this.isMobile = this.detectMobile();
 
     this.editor = document.querySelector('.editor');
@@ -29,6 +30,7 @@ class PredictionManager {
     // SELECT mode DOM elements
     this.selectModeIndicator = null;
     this.selectStartLine = null;
+    this.selectConfirmBtn = null;
 
     this.init();
   }
@@ -51,6 +53,7 @@ class PredictionManager {
     // Get SELECT mode DOM elements
     this.selectModeIndicator = document.querySelector('.select-mode-indicator');
     this.selectStartLine = document.querySelector('.select-start-line');
+    this.selectConfirmBtn = document.querySelector('.select-confirm-btn');
 
     // Handle input events
     this.editor.addEventListener('input', () => this.onInput());
@@ -73,6 +76,13 @@ class PredictionManager {
 
     // Focus editor on page load
     this.editor.focus();
+
+    if (this.selectConfirmBtn) {
+      this.selectConfirmBtn.addEventListener('click', () => {
+        this.confirmSelectSelection();
+      });
+      this.selectConfirmBtn.disabled = true;
+    }
   }
 
   onInput() {
@@ -98,11 +108,7 @@ class PredictionManager {
   onKeyDown(e) {
     if (e.key === 'Enter' && this.selectModeActive) {
       e.preventDefault();
-      const selection = window.getSelection();
-      if (selection && selection.rangeCount) {
-        this.acceptSelectedText(selection);
-        this.disableSelectMode();
-      }
+      this.confirmSelectSelection();
       return;
     }
 
@@ -214,6 +220,7 @@ class PredictionManager {
     this.selectPreviewOffset = offset;
     this.updatePredictionDisplay();
     this.showStartLineForOffset(offset);
+    this.setSelectionReady(false);
   }
 
   onPredictionTouchMove(e) {
@@ -226,6 +233,7 @@ class PredictionManager {
     e.preventDefault();
     this.selectPreviewOffset = offset;
     this.updatePredictionDisplay();
+    this.setSelectionReady(this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset);
   }
 
   onPredictionTouchEnd(e) {
@@ -241,13 +249,14 @@ class PredictionManager {
       const finalOffset = offset !== null ? offset : this.selectPreviewOffset;
       this.selectTouchActive = false;
 
-      if (this.selectStartOffset !== null && finalOffset !== null && finalOffset !== this.selectStartOffset) {
-        const start = Math.min(this.selectStartOffset, finalOffset);
-        const end = Math.max(this.selectStartOffset, finalOffset);
-        this.acceptSelectModeRange(start, end);
+      if (finalOffset !== null) {
+        this.selectPreviewOffset = finalOffset;
+        this.updatePredictionDisplay();
+        this.setSelectionReady(this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset);
+      } else {
+        this.setSelectionReady(false);
       }
 
-      this.disableSelectMode();
       return;
     }
 
@@ -662,6 +671,7 @@ class PredictionManager {
     this.selectEndOffset = null;
     this.selectPreviewOffset = null;
     this.selectTouchActive = false;
+    this.setSelectionReady(false);
 
     // Visual feedback
     document.body.classList.add('select-mode-active');
@@ -687,6 +697,7 @@ class PredictionManager {
     this.selectEndOffset = null;
     this.selectPreviewOffset = null;
     this.selectTouchActive = false;
+    this.setSelectionReady(false);
 
     // Clear visual feedback
     document.body.classList.remove('select-mode-active');
@@ -714,22 +725,39 @@ class PredictionManager {
     if (this.selectStartOffset === null) {
       // First tap/click - set start point
       this.selectStartOffset = offset;
-      this.selectPreviewOffset = null;
+      this.selectPreviewOffset = offset;
       this.updatePredictionDisplay();
+      this.setSelectionReady(false);
 
     } else {
-      // Second tap/click - set end point and accept
-      this.selectEndOffset = offset;
+      // Update end point and wait for confirmation
+      this.selectPreviewOffset = offset;
+      this.updatePredictionDisplay();
+      this.setSelectionReady(this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset);
+    }
+  }
 
-      // Ensure start < end
-      const start = Math.min(this.selectStartOffset, this.selectEndOffset);
-      const end = Math.max(this.selectStartOffset, this.selectEndOffset);
+  confirmSelectSelection() {
+    if (!this.selectModeActive) return;
+    if (this.selectStartOffset === null || this.selectPreviewOffset === null) return;
+    if (this.selectPreviewOffset === this.selectStartOffset) return;
 
-      // Accept the selected range
-      this.acceptSelectModeRange(start, end);
+    const start = Math.min(this.selectStartOffset, this.selectPreviewOffset);
+    const end = Math.max(this.selectStartOffset, this.selectPreviewOffset);
+    this.acceptSelectModeRange(start, end);
+    this.disableSelectMode();
+  }
 
-      // Exit SELECT mode
-      this.disableSelectMode();
+  setSelectionReady(isReady) {
+    const ready = isReady && this.selectModeActive;
+    this.selectionReady = ready;
+    if (ready) {
+      document.body.classList.add('selection-ready');
+    } else {
+      document.body.classList.remove('selection-ready');
+    }
+    if (this.selectConfirmBtn) {
+      this.selectConfirmBtn.disabled = !ready;
     }
   }
 
