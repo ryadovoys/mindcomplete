@@ -12,7 +12,8 @@
   --hint-color: rgba(255, 255, 255, 0.2);
 }
 
-html, body {
+html,
+body {
   height: 100%;
   background: var(--bg-color);
   color: var(--text-color);
@@ -24,10 +25,10 @@ html, body {
 
 .material-symbols-outlined {
   font-variation-settings:
-  'FILL' 0,
-  'wght' 400,
-  'GRAD' 0,
-  'opsz' 24;
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
 }
 
 /* Header */
@@ -39,7 +40,7 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 48px;
+  padding: 20px;
   z-index: 100;
 }
 
@@ -50,8 +51,8 @@ html, body {
 }
 
 .logo {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 400;
   letter-spacing: 0.5px;
   color: var(--text-color);
   opacity: 0.7;
@@ -83,7 +84,7 @@ html, body {
 }
 
 .info-btn .material-symbols-outlined {
-  font-size: 20px;
+  font-size: 16px;
 }
 
 .header-actions {
@@ -94,30 +95,41 @@ html, body {
 
 .copy-btn,
 .clear-btn {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: none;
+  border-radius: 8px;
+  height: 36px;
+  padding: 0 16px;
   color: var(--text-color);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.5px;
   cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-  padding: 0;
+  transition: all 0.2s;
   font-family: inherit;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
 }
 
 .copy-btn:hover,
 .clear-btn:hover {
-  opacity: 1;
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .copy-btn .material-symbols-outlined,
 .clear-btn .material-symbols-outlined {
-  font-size: 18px;
+  font-size: 16px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.copy-btn:hover .material-symbols-outlined,
+.clear-btn:hover .material-symbols-outlined {
+  opacity: 1;
 }
 
 /* Modal */
@@ -242,16 +254,24 @@ html, body {
 }
 
 @keyframes dots {
-  0%, 25% {
+
+  0%,
+  25% {
     content: '.';
   }
-  26%, 50% {
+
+  26%,
+  50% {
     content: '..';
   }
-  51%, 75% {
+
+  51%,
+  75% {
     content: '...';
   }
-  76%, 100% {
+
+  76%,
+  100% {
     content: '';
   }
 }
@@ -295,38 +315,25 @@ html, body {
 /* Responsive adjustments */
 @media (max-width: 1024px) {
   .editor-wrapper {
-    grid-column: 1 / 13;
-    max-width: none;
+    grid-column: 1 / -1;
+    max-width: 100%;
+    width: 100%;
     min-width: 0;
   }
 }
 
 @media (max-width: 768px) {
   .header {
-    padding: 16px 20px;
+    padding: 20px;
   }
 
-  .logo {
-    font-size: 16px;
-  }
 
-  .info-btn .material-symbols-outlined {
-    font-size: 20px;
-  }
 
   .header-actions {
     gap: 12px;
   }
 
-  .copy-btn,
-  .clear-btn {
-    font-size: 16px;
-  }
 
-  .copy-btn .material-symbols-outlined,
-  .clear-btn .material-symbols-outlined {
-    font-size: 18px;
-  }
 
   .modal {
     padding: 0;
