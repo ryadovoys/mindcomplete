@@ -19,7 +19,11 @@ class PredictionManager {
     this.selectionReady = false;
     this.selectionFixed = false; // True after second click (stop hover updates)
     this.hoverWordEnd = null; // End of hovered word (before first click)
+    this.touchStartX = null;
+    this.touchStartY = null;
+    this.touchMoved = false;
     this.isMobile = this.detectMobile();
+    this.updateMobileBodyClass();
 
     this.editor = document.querySelector('.editor');
     this.ghostLayer = document.querySelector('.ghost-layer');
@@ -39,17 +43,25 @@ class PredictionManager {
   }
 
   detectMobile() {
-    // Check for mobile devices
+    // Check for mobile devices via UA or viewport width
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-    const isMobileWidth = window.matchMedia('(max-width: 768px)').matches;
+    const matchesWidth = () => window.matchMedia('(max-width: 768px)').matches;
+    const isMobileWidth = matchesWidth();
 
-    // Listen for resize events
+    // Listen for resize events to keep class in sync with viewport
     window.addEventListener('resize', () => {
-      this.isMobile = window.matchMedia('(max-width: 768px)').matches;
+      const widthMatch = matchesWidth();
+      this.isMobile = isMobileUA || widthMatch;
+      this.updateMobileBodyClass();
     });
 
     return isMobileUA || isMobileWidth;
+  }
+
+  updateMobileBodyClass() {
+    if (!document.body) return;
+    document.body.classList.toggle('mobile-touch', Boolean(this.isMobile));
   }
 
   init() {
@@ -130,6 +142,7 @@ class PredictionManager {
   }
 
   onPredictionHover(e) {
+    if (e && e.pointerType && e.pointerType !== 'mouse') return;
     if (this.selectModeActive) {
       // Desktop: show word-based preview
       if (!this.isMobile && !this.selectionFixed) {
@@ -158,10 +171,15 @@ class PredictionManager {
       }
       return;
     } else {
-      // Normal hover behavior
+      // Normal mode: word-based hover
       const offset = this.getOffsetFromMouseEvent(e);
       if (offset !== null) {
-        this.hoverOffset = offset;
+        const wordBounds = this.getWordBoundaries(offset);
+        if (wordBounds) {
+          this.hoverOffset = wordBounds.end; // Highlight up to end of word
+        } else {
+          this.hoverOffset = offset;
+        }
         this.updatePredictionDisplay();
       }
     }
@@ -189,12 +207,13 @@ class PredictionManager {
 
   onPredictionMouseDown(e) {
     // Desktop: do nothing on mousedown, handle clicks in mouseup
-    if (this.isMobile || e.button !== 0) return;
+    if ((e.pointerType && e.pointerType !== 'mouse') || this.isMobile || e.button !== 0) return;
     if (!this.selectModeActive) return;
     e.preventDefault();
   }
 
   onPredictionMouseUp(e) {
+    if (e.pointerType && e.pointerType !== 'mouse') return;
     // Desktop select mode: two-click selection (word-based)
     if (!this.isMobile && this.selectModeActive) {
       const offset = this.getOffsetFromMouseEvent(e);
@@ -234,7 +253,7 @@ class PredictionManager {
       return;
     }
 
-    // Normal mode - existing behavior
+    // Normal mode - word-based selection
     const selection = window.getSelection();
     const selectedText = selection.toString();
 
@@ -243,10 +262,15 @@ class PredictionManager {
       // User dragged to select text - accept the selected portion
       this.acceptSelectedText(selection);
     } else {
-      // User just clicked - accept up to click point (original behavior)
+      // User just clicked - accept up to end of clicked word
       const offset = this.getOffsetFromMouseEvent(e);
       if (offset !== null) {
-        this.hoverOffset = offset;
+        const wordBounds = this.getWordBoundaries(offset);
+        if (wordBounds) {
+          this.hoverOffset = wordBounds.end; // Accept to end of word
+        } else {
+          this.hoverOffset = offset;
+        }
         this.navigationOffset = 0;
         this.acceptPrediction();
       }
@@ -254,9 +278,14 @@ class PredictionManager {
   }
 
   onPredictionTouchStart(e) {
-    if (!this.selectModeActive || !this.isMobile) return;
-    if (!e.touches || !e.touches.length) return;
+    if (!this.isMobile || !e.touches || !e.touches.length) return;
     const touch = e.touches[0];
+    this.touchStartX = touch.clientX;
+    this.touchStartY = touch.clientY;
+    this.touchMoved = false;
+
+    if (!this.selectModeActive) return;
+
     const offset = this.getOffsetFromPoint(touch.clientX, touch.clientY);
     if (offset === null) return;
 
@@ -273,9 +302,19 @@ class PredictionManager {
   }
 
   onPredictionTouchMove(e) {
-    if (!this.selectModeActive || !this.isMobile || !this.selectTouchActive) return;
-    if (!e.touches || !e.touches.length) return;
+    if (!this.isMobile || !e.touches || !e.touches.length) return;
     const touch = e.touches[0];
+
+    if (this.touchStartX !== null && this.touchStartY !== null) {
+      const deltaX = Math.abs(touch.clientX - this.touchStartX);
+      const deltaY = Math.abs(touch.clientY - this.touchStartY);
+      if (deltaX > 5 || deltaY > 5) {
+        this.touchMoved = true;
+      }
+    }
+
+    if (!this.selectModeActive || !this.selectTouchActive) return;
+
     const offset = this.getOffsetFromPoint(touch.clientX, touch.clientY);
     if (offset === null) return;
 
@@ -294,9 +333,13 @@ class PredictionManager {
   }
 
   onPredictionTouchEnd(e) {
-    if (!e.changedTouches || !e.changedTouches.length) return;
+    if (!this.isMobile || !e.changedTouches || !e.changedTouches.length) return;
     const touch = e.changedTouches[0];
     const coords = { x: touch.clientX, y: touch.clientY };
+    const gestureMoved = this.touchMoved;
+    this.touchStartX = null;
+    this.touchStartY = null;
+    this.touchMoved = false;
 
     if (this.selectModeActive && this.isMobile && this.selectTouchActive) {
       e.preventDefault();
@@ -328,11 +371,21 @@ class PredictionManager {
       return;
     }
 
+    if (gestureMoved) {
+      return;
+    }
+
+    // Normal mode - word-based touch
     const offset = this.getOffsetFromPoint(coords.x, coords.y);
     if (offset !== null) {
       e.preventDefault();
       e.stopPropagation();
-      this.hoverOffset = offset;
+      const wordBounds = this.getWordBoundaries(offset);
+      if (wordBounds) {
+        this.hoverOffset = wordBounds.end; // Accept to end of word
+      } else {
+        this.hoverOffset = offset;
+      }
       this.navigationOffset = 0;
       this.acceptPrediction();
     }

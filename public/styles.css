@@ -390,7 +390,18 @@ body.select-mode-active .prediction {
   color: var(--ghost-color);
   display: block;
   pointer-events: auto;
-  cursor: text;
+  cursor: pointer;
+}
+
+body.mobile-touch:not(.select-mode-active) .prediction {
+  cursor: default;
+  touch-action: pan-y;
+}
+
+body.mobile-touch:not(.select-mode-active) .prediction,
+body.mobile-touch:not(.select-mode-active) .prediction * {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .prediction-accept {
