@@ -21,7 +21,9 @@ class PredictionManager {
     this.selectionFixed = false;
     this.hoverWordEnd = null;
     this.touchStartX = null;
+    this.touchStartX = null;
     this.touchStartY = null;
+    this.touchStartOffset = null;
     this.touchMoved = false;
     this.touchOnPrediction = false;
     this.isMobile = this.detectMobile();
@@ -427,6 +429,7 @@ class PredictionManager {
 
     this.touchStartX = x;
     this.touchStartY = y;
+    this.touchStartOffset = offsetAtStart;
     this.touchMoved = false;
     this.touchOnPrediction = true;
 
@@ -489,6 +492,7 @@ class PredictionManager {
     // Save touchStart coords before reset (more accurate for tap detection on mobile)
     const startX = this.touchStartX;
     const startY = this.touchStartY;
+    const startOffset = this.touchStartOffset;
 
     const touch = e.changedTouches?.[0];
     if (!touch) return;
@@ -498,7 +502,9 @@ class PredictionManager {
 
     // Reset state
     this.touchStartX = null;
+
     this.touchStartY = null;
+    this.touchStartOffset = null;
     this.touchMoved = false;
     this.touchOnPrediction = false;
 
@@ -535,8 +541,9 @@ class PredictionManager {
     // Normal mode - ignore if finger moved
     if (gestureMoved) return;
 
-    // Normal mode - use touchStart coords for accurate tap detection on mobile
-    const offset = this.getOffsetFromPoint(startX ?? coords.x, startY ?? coords.y);
+    // Normal mode - use saved offset from touchStart (most reliable)
+    // This fixes the bug where touchend coordinates drift or map to wrong range
+    const offset = startOffset;
     if (offset !== null) {
       const wordBounds = this.getWordBoundaries(offset);
       if (wordBounds) {
