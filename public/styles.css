@@ -482,8 +482,7 @@ body.select-mode-active .prediction {
   font-size: 24pt;
   line-height: 1.2;
   white-space: pre-wrap;
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  word-break: normal;
   hyphens: none;
   pointer-events: none;
   z-index: 1;
@@ -595,8 +594,7 @@ body.select-mode-active .prediction-accept {
   background: transparent;
   outline: none;
   white-space: pre-wrap;
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  word-break: normal;
   hyphens: none;
   caret-color: #F183FF;
   font-weight: 300;
@@ -754,8 +752,7 @@ body.selection-ready .select-confirm-btn {
     font-size: 18pt;
     text-align: left;
     width: 100%;
-    word-break: keep-all;
-    overflow-wrap: break-word;
+    word-break: normal;
     hyphens: none;
   }
 
