@@ -414,6 +414,11 @@ class PredictionManager {
     const x = touch.clientX;
     const y = touch.clientY;
 
+    if (!this.isPointWithinPrediction(x, y)) {
+      this.touchOnPrediction = false;
+      return;
+    }
+
     const offsetAtStart = this.getOffsetFromPoint(x, y);
     if (offsetAtStart === null) {
       this.touchOnPrediction = false;
@@ -551,6 +556,17 @@ class PredictionManager {
       return precise;
     }
     return this.approximateOffsetFromPoint(x, y);
+  }
+
+  isPointWithinPrediction(x, y) {
+    if (!this.inlinePredictionEl) return false;
+    const range = document.createRange();
+    range.selectNodeContents(this.inlinePredictionEl);
+    const rects = Array.from(range.getClientRects());
+    range.detach?.();
+    return rects.some((rect) =>
+      x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
+    );
   }
 
   createRangeFromPoint(x, y) {
