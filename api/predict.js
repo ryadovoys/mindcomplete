@@ -1,3 +1,9 @@
+const CONFIG = {
+  MAX_TOKENS: 400,
+  TEMPERATURE: 0.7,
+  MODEL: 'xiaomi/mimo-v2-flash:free',
+};
+
 export default async function handler(req, res) {
   // Only allow POST requests
   if (req.method !== 'POST') {
@@ -24,7 +30,7 @@ export default async function handler(req, res) {
         'X-Title': 'Mindcomplete'
       },
       body: JSON.stringify({
-        model: 'xiaomi/mimo-v2-flash:free',
+        model: CONFIG.MODEL,
         stream: true,
         messages: [
           {
@@ -36,8 +42,8 @@ export default async function handler(req, res) {
             content: text
           }
         ],
-        max_tokens: 400,
-        temperature: 0.7
+        max_tokens: CONFIG.MAX_TOKENS,
+        temperature: CONFIG.TEMPERATURE
       })
     });
 

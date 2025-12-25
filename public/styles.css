@@ -63,7 +63,7 @@ body {
 }
 
 .logo {
-  height: 34px;
+  height: 28px;
   width: auto;
   display: block;
   cursor: pointer;
@@ -435,14 +435,14 @@ body.select-mode-active .inline-prediction {
 }
 
 .editor-wrapper {
-  grid-column: 1 / 10;
+  grid-column: 1 / -1;
   position: relative;
   display: flex;
   align-items: flex-start;
   padding-top: 20vh;
   width: 100%;
   max-width: 700px;
-  margin: 0;
+  margin: 0 auto;
 }
 
 /* Inline prediction - appears directly in editor */
@@ -561,7 +561,7 @@ body.selection-ready .select-confirm-btn {
   }
 
   .logo {
-    height: 34px;
+    height: 21px;
   }
 
   .burger-btn {

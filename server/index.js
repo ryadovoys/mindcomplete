@@ -4,6 +4,12 @@ import 'dotenv/config';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
+const CONFIG = {
+  MAX_TOKENS: 400,
+  TEMPERATURE: 0.7,
+  MODEL: 'xiaomi/mimo-v2-flash:free',
+};
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -35,7 +41,7 @@ app.post('/api/predict', async (req, res) => {
         'X-Title': 'Mindcomplete'
       },
       body: JSON.stringify({
-        model: 'xiaomi/mimo-v2-flash:free',
+        model: CONFIG.MODEL,
         stream: true,
         messages: [
           {
@@ -47,8 +53,8 @@ app.post('/api/predict', async (req, res) => {
             content: text
           }
         ],
-        max_tokens: 400,
-        temperature: 0.7
+        max_tokens: CONFIG.MAX_TOKENS,
+        temperature: CONFIG.TEMPERATURE
       })
     });
 

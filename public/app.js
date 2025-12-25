@@ -1,9 +1,16 @@
 const ENABLE_RISE_AND_SET = false; // Disabled for inline prediction mode
 
+const CONFIG = {
+  DEBOUNCE_MS: 1000,
+  MIN_TEXT_LENGTH: 10,
+  MOBILE_BREAKPOINT_PX: 768,
+  TOUCH_MOVE_THRESHOLD_PX: 5,
+};
+
 class PredictionManager {
   constructor(options = {}) {
-    this.debounceMs = options.debounceMs || 1000;
-    this.minTextLength = options.minTextLength || 10;
+    this.debounceMs = options.debounceMs || CONFIG.DEBOUNCE_MS;
+    this.minTextLength = options.minTextLength || CONFIG.MIN_TEXT_LENGTH;
     this.debounceTimer = null;
     this.abortController = null;
     this.currentPrediction = '';
@@ -20,7 +27,6 @@ class PredictionManager {
     this.selectionReady = false;
     this.selectionFixed = false;
     this.hoverWordEnd = null;
-    this.touchStartX = null;
     this.touchStartX = null;
     this.touchStartY = null;
     this.touchStartOffset = null;
@@ -54,7 +60,7 @@ class PredictionManager {
   detectMobile() {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-    const matchesWidth = () => window.matchMedia('(max-width: 768px)').matches;
+    const matchesWidth = () => window.matchMedia(`(max-width: ${CONFIG.MOBILE_BREAKPOINT_PX}px)`).matches;
     const isMobileWidth = matchesWidth();
 
     window.addEventListener('resize', () => {
@@ -206,17 +212,16 @@ class PredictionManager {
     this.removeInlinePrediction();
     this.saveCurrentSelection();
 
-    const text = this.getEditorText();
-
     // Cancel any pending prediction
     this.cancelPending();
 
-    // Only request prediction if we have enough text
-    if (text.trim().length >= this.minTextLength) {
-      this.debounceTimer = setTimeout(() => {
+    // Debounce prediction request - get FRESH text when timer fires
+    this.debounceTimer = setTimeout(() => {
+      const text = this.getEditorText();
+      if (text.trim().length >= this.minTextLength) {
         this.requestPrediction(text);
-      }, this.debounceMs);
-    }
+      }
+    }, this.debounceMs);
   }
 
   onKeyDown(e) {
@@ -415,15 +420,25 @@ class PredictionManager {
     const touch = e.touches[0];
     const x = touch.clientX;
     const y = touch.clientY;
+    const mode = this.selectModeActive ? 'SELECT' : 'NORMAL';
 
-    if (!this.isPointWithinPrediction(x, y)) {
+    console.log(`[TouchStart:${mode}] coords=(${x.toFixed(0)}, ${y.toFixed(0)})`);
+
+    const withinPrediction = this.isPointWithinPrediction(x, y);
+    console.log(`[TouchStart:${mode}] withinPrediction=${withinPrediction}`);
+
+    if (!withinPrediction) {
       this.touchOnPrediction = false;
+      console.log(`[TouchStart:${mode}] EARLY EXIT - not within prediction`);
       return;
     }
 
     const offsetAtStart = this.getOffsetFromPoint(x, y);
+    console.log(`[TouchStart:${mode}] offsetAtStart=${offsetAtStart}`);
+
     if (offsetAtStart === null) {
       this.touchOnPrediction = false;
+      console.log(`[TouchStart:${mode}] EARLY EXIT - offset is null`);
       return;
     }
 
@@ -433,45 +448,82 @@ class PredictionManager {
     this.touchMoved = false;
     this.touchOnPrediction = true;
 
-    e.preventDefault();
+    console.log(`[TouchStart:${mode}] SUCCESS - touchOnPrediction=true, offset=${offsetAtStart}`);
+
+    // Normal mode: accept immediately on tap (TouchEnd unreliable on mobile)
+    if (!this.selectModeActive) {
+      e.preventDefault();
+      const wordBounds = this.getWordBoundaries(offsetAtStart);
+      console.log(`[TouchStart:NORMAL] wordBounds=`, wordBounds);
+      if (wordBounds) {
+        this.hoverOffset = wordBounds.end;
+      } else {
+        this.hoverOffset = offsetAtStart;
+      }
+      this.navigationOffset = 0;
+      console.log(`[TouchStart:NORMAL] Accepting with hoverOffset=${this.hoverOffset}`);
+      this.acceptPrediction();
+      return;
+    }
 
     if (this.selectModeActive) {
+      e.preventDefault();
       const wordBounds = this.getWordBoundaries(offsetAtStart);
       if (!wordBounds) return;
 
+      // Tap cycle: 1st tap = start, 2nd tap = end, 3rd tap = reset & new start
       if (this.selectStartOffset === null) {
-        this.selectTouchActive = true;
+        // First tap: set start point
+        console.log(`[TouchStart:SELECT] First tap - setting start`);
         this.selectStartOffset = wordBounds.start;
         this.selectPreviewOffset = wordBounds.end;
+        this.selectionFixed = false;
         this.updatePredictionDisplay();
-        this.setSelectionReady(true);
-      } else {
-        this.selectTouchActive = false;
+        this.setSelectionReady(false);
+      } else if (!this.selectionFixed) {
+        // Second tap: set end point, fix selection
+        console.log(`[TouchStart:SELECT] Second tap - setting end`);
         if (wordBounds.end <= this.selectStartOffset) {
           this.selectPreviewOffset = wordBounds.start;
         } else {
           this.selectPreviewOffset = wordBounds.end;
         }
+        this.selectionFixed = true;
         this.updatePredictionDisplay();
+        this.setSelectionReady(true);
+      } else {
+        // Third tap: reset and start fresh
+        console.log(`[TouchStart:SELECT] Third tap - reset, new start`);
+        this.selectStartOffset = wordBounds.start;
+        this.selectPreviewOffset = wordBounds.end;
+        this.selectionFixed = false;
+        this.updatePredictionDisplay();
+        this.setSelectionReady(false);
       }
     }
   }
 
   onEditorTouchMove(e) {
-    if (!this.touchOnPrediction) return;
+    const mode = this.selectModeActive ? 'SELECT' : 'NORMAL';
+    console.log(`[TouchMove:${mode}] FIRED - touchOnPrediction=${this.touchOnPrediction}, selectTouchActive=${this.selectTouchActive}`);
+
+    if (!this.touchOnPrediction) {
+      return;
+    }
     if (!e.touches || !e.touches.length) return;
 
     const touch = e.touches[0];
     const deltaX = Math.abs(touch.clientX - this.touchStartX);
     const deltaY = Math.abs(touch.clientY - this.touchStartY);
 
-    if (deltaX > 5 || deltaY > 5) {
+    if (deltaX > CONFIG.TOUCH_MOVE_THRESHOLD_PX || deltaY > CONFIG.TOUCH_MOVE_THRESHOLD_PX) {
       this.touchMoved = true;
     }
 
     if (this.selectModeActive && this.selectTouchActive) {
       e.preventDefault();
       const offset = this.getOffsetFromPoint(touch.clientX, touch.clientY);
+      console.log(`[TouchMove:SELECT] offset=${offset}, selectTouchActive=${this.selectTouchActive}`);
       if (offset === null) return;
       const wordBounds = this.getWordBoundaries(offset);
       if (!wordBounds) return;
@@ -481,13 +533,20 @@ class PredictionManager {
       } else {
         this.selectPreviewOffset = wordBounds.end;
       }
+      console.log(`[TouchMove:SELECT] start=${this.selectStartOffset}, preview=${this.selectPreviewOffset}`);
       this.updatePredictionDisplay();
       this.setSelectionReady(this.selectStartOffset !== this.selectPreviewOffset);
     }
   }
 
   onEditorTouchEnd(e) {
-    if (!this.touchOnPrediction) return;
+    const mode = this.selectModeActive ? 'SELECT' : 'NORMAL';
+    console.log(`[TouchEnd:${mode}] touchOnPrediction=${this.touchOnPrediction}`);
+
+    if (!this.touchOnPrediction) {
+      console.log(`[TouchEnd:${mode}] EARLY EXIT - touchOnPrediction is false`);
+      return;
+    }
 
     // Save touchStart coords before reset (more accurate for tap detection on mobile)
     const startX = this.touchStartX;
@@ -495,10 +554,15 @@ class PredictionManager {
     const startOffset = this.touchStartOffset;
 
     const touch = e.changedTouches?.[0];
-    if (!touch) return;
+    if (!touch) {
+      console.log(`[TouchEnd:${mode}] EARLY EXIT - no touch in changedTouches`);
+      return;
+    }
 
     const coords = { x: touch.clientX, y: touch.clientY };
     const gestureMoved = this.touchMoved;
+
+    console.log(`[TouchEnd:${mode}] startOffset=${startOffset}, gestureMoved=${gestureMoved}`);
 
     // Reset state
     this.touchStartX = null;
@@ -513,6 +577,7 @@ class PredictionManager {
 
     // Select mode with drag
     if (this.selectModeActive && this.selectTouchActive) {
+      console.log(`[TouchEnd:SELECT] Taking SELECT DRAG path`);
       const offset = this.getOffsetFromPoint(coords.x, coords.y);
       this.selectTouchActive = false;
 
@@ -533,26 +598,36 @@ class PredictionManager {
 
     // Select mode tap
     if (this.selectModeActive) {
+      console.log(`[TouchEnd:SELECT] Taking SELECT TAP path`);
       const offset = this.getOffsetFromPoint(coords.x, coords.y);
       this.handleSelectModeSelection(offset);
       return;
     }
 
     // Normal mode - ignore if finger moved
-    if (gestureMoved) return;
+    if (gestureMoved) {
+      console.log(`[TouchEnd:NORMAL] EARLY EXIT - finger moved`);
+      return;
+    }
 
     // Normal mode - use saved offset from touchStart (most reliable)
     // This fixes the bug where touchend coordinates drift or map to wrong range
     const offset = startOffset;
+    console.log(`[TouchEnd:NORMAL] Using startOffset=${offset}`);
+
     if (offset !== null) {
       const wordBounds = this.getWordBoundaries(offset);
+      console.log(`[TouchEnd:NORMAL] wordBounds=`, wordBounds);
       if (wordBounds) {
         this.hoverOffset = wordBounds.end;
       } else {
         this.hoverOffset = offset;
       }
       this.navigationOffset = 0;
+      console.log(`[TouchEnd:NORMAL] Calling acceptPrediction() with hoverOffset=${this.hoverOffset}`);
       this.acceptPrediction();
+    } else {
+      console.log(`[TouchEnd:NORMAL] SKIP - offset is null`);
     }
   }
 
@@ -1003,13 +1078,19 @@ class PredictionManager {
   }
 
   acceptPrediction() {
-    if (!this.currentPrediction) return;
+    console.log(`[acceptPrediction] currentPrediction="${this.currentPrediction?.substring(0, 30)}...", hoverOffset=${this.hoverOffset}, navigationOffset=${this.navigationOffset}`);
+
+    if (!this.currentPrediction) {
+      console.log(`[acceptPrediction] EARLY EXIT - no currentPrediction`);
+      return;
+    }
 
     const activeOffset = this.hoverOffset || this.navigationOffset;
     const endOffset = activeOffset > 0 && activeOffset <= this.currentPrediction.length
       ? activeOffset
       : this.currentPrediction.length;
 
+    console.log(`[acceptPrediction] activeOffset=${activeOffset}, endOffset=${endOffset}, calling commitAcceptance(0, ${endOffset})`);
     this.commitAcceptance(0, endOffset);
   }
 
