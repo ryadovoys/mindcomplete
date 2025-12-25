@@ -6,10 +6,9 @@ class PredictionManager {
     this.minTextLength = options.minTextLength || 10;
     this.debounceTimer = null;
     this.abortController = null;
-    this.thinkingTimer = null;
     this.currentPrediction = '';
-    this.navigationOffset = 0; // How many chars into prediction we've navigated (clicked)
-    this.hoverOffset = 0; // Hover position (temporary)
+    this.navigationOffset = 0;
+    this.hoverOffset = 0;
 
     // SELECT mode state
     this.selectModeActive = false;
@@ -19,8 +18,8 @@ class PredictionManager {
     this.selectTouchActive = false;
     this.pointerSelecting = false;
     this.selectionReady = false;
-    this.selectionFixed = false; // True after second click (stop hover updates)
-    this.hoverWordEnd = null; // End of hovered word (before first click)
+    this.selectionFixed = false;
+    this.hoverWordEnd = null;
     this.touchStartX = null;
     this.touchStartY = null;
     this.touchMoved = false;
@@ -28,32 +27,24 @@ class PredictionManager {
     this.updateMobileBodyClass();
 
     this.editor = document.querySelector('.editor');
-    this.ghostLayer = document.querySelector('.ghost-layer');
-    this.userTextMirror = document.querySelector('.user-text-mirror');
-    this.thinkingIndicator = document.querySelector('.thinking-indicator');
-    this.predictionEl = document.querySelector('.prediction');
-    this.predictionPreEl = document.querySelector('.prediction-pre');
-    this.predictionAcceptEl = document.querySelector('.prediction-accept');
-    this.predictionRemainEl = document.querySelector('.prediction-remain');
     this.enableRiseMotion = ENABLE_RISE_AND_SET;
     this.motionRemainText = '';
 
+    // Inline prediction element (will be created dynamically)
+    this.inlinePredictionEl = null;
+
     // SELECT mode DOM elements
-    this.selectModeIndicator = null;
-    this.selectStartLine = null;
     this.selectConfirmBtn = null;
 
     this.init();
   }
 
   detectMobile() {
-    // Check for mobile devices via UA or viewport width
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
     const matchesWidth = () => window.matchMedia('(max-width: 768px)').matches;
     const isMobileWidth = matchesWidth();
 
-    // Listen for resize events to keep class in sync with viewport
     window.addEventListener('resize', () => {
       const widthMatch = matchesWidth();
       this.isMobile = isMobileUA || widthMatch;
@@ -64,11 +55,13 @@ class PredictionManager {
   }
 
   getEditorText() {
-    // Get text from contenteditable with proper line break handling
-    // Use innerText to preserve line breaks, but trim trailing newlines
-    // since prediction will appear on its own line as a block element
-    let text = this.editor.innerText || '';
-    // Remove all trailing newlines to prevent accumulating gaps
+    // Get only user text (exclude inline prediction)
+    const clone = this.editor.cloneNode(true);
+    const prediction = clone.querySelector('.inline-prediction');
+    if (prediction) {
+      prediction.remove();
+    }
+    let text = clone.innerText || '';
     text = text.replace(/\n+$/, '');
     return text;
   }
@@ -79,30 +72,13 @@ class PredictionManager {
   }
 
   init() {
-    // Get SELECT mode DOM elements
-    this.selectModeIndicator = document.querySelector('.select-mode-indicator');
-    this.selectStartLine = document.querySelector('.select-start-line');
     this.selectConfirmBtn = document.querySelector('.select-confirm-btn');
 
     // Handle input events
-    this.editor.addEventListener('input', () => this.onInput());
+    this.editor.addEventListener('input', (e) => this.onInput(e));
 
     // Handle keydown for TAB acceptance
     this.editor.addEventListener('keydown', (e) => this.onKeyDown(e));
-
-    // Handle clicks on prediction
-    this.predictionEl.addEventListener('click', (e) => this.onPredictionClick(e));
-
-    // Handle hover on prediction
-    this.predictionEl.addEventListener('pointermove', (e) => this.onPredictionHover(e));
-    this.predictionEl.addEventListener('pointerleave', () => this.onPredictionLeave());
-
-    // Handle selection on prediction (using pointer events)
-    this.predictionEl.addEventListener('pointerup', (e) => this.onPredictionMouseUp(e));
-    this.predictionEl.addEventListener('pointerdown', (e) => this.onPredictionMouseDown(e));
-    this.predictionEl.addEventListener('touchstart', (e) => this.onPredictionTouchStart(e), { passive: false });
-    this.predictionEl.addEventListener('touchmove', (e) => this.onPredictionTouchMove(e), { passive: false });
-    this.predictionEl.addEventListener('touchend', (e) => this.onPredictionTouchEnd(e), { passive: false });
 
     // Focus editor on page load
     this.editor.focus();
@@ -115,17 +91,14 @@ class PredictionManager {
     }
   }
 
-  onInput() {
-    const text = this.editor.textContent;
+  onInput(e) {
+    // Remove inline prediction when user types
+    this.removeInlinePrediction();
+
+    const text = this.getEditorText();
 
     // Cancel any pending prediction
     this.cancelPending();
-
-    // Clear ghost text immediately when typing
-    this.clearPrediction();
-
-    // Update the mirror text (for positioning) - use normalized text to preserve line breaks
-    this.userTextMirror.textContent = this.getEditorText();
 
     // Only request prediction if we have enough text
     if (text.trim().length >= this.minTextLength) {
@@ -146,7 +119,6 @@ class PredictionManager {
       e.preventDefault();
       this.acceptPrediction();
     } else if (e.key === 'ArrowRight' && this.currentPrediction) {
-      // Check if cursor is at the end of user text
       if (this.isCursorAtEnd() && this.navigationOffset < this.currentPrediction.length) {
         e.preventDefault();
         this.navigationOffset++;
@@ -155,21 +127,56 @@ class PredictionManager {
     }
   }
 
+  // Create or get inline prediction element
+  createInlinePrediction() {
+    if (!this.inlinePredictionEl) {
+      this.inlinePredictionEl = document.createElement('span');
+      this.inlinePredictionEl.className = 'inline-prediction';
+      this.inlinePredictionEl.contentEditable = 'false';
+
+      // Add event listeners
+      this.inlinePredictionEl.addEventListener('click', (e) => this.onPredictionClick(e));
+      this.inlinePredictionEl.addEventListener('pointermove', (e) => this.onPredictionHover(e));
+      this.inlinePredictionEl.addEventListener('pointerleave', () => this.onPredictionLeave());
+      this.inlinePredictionEl.addEventListener('pointerup', (e) => this.onPredictionMouseUp(e));
+      this.inlinePredictionEl.addEventListener('pointerdown', (e) => this.onPredictionMouseDown(e));
+      this.inlinePredictionEl.addEventListener('touchstart', (e) => this.onPredictionTouchStart(e), { passive: false });
+      this.inlinePredictionEl.addEventListener('touchmove', (e) => this.onPredictionTouchMove(e), { passive: false });
+      this.inlinePredictionEl.addEventListener('touchend', (e) => this.onPredictionTouchEnd(e), { passive: false });
+    }
+    return this.inlinePredictionEl;
+  }
+
+  // Insert inline prediction at the end of editor
+  insertInlinePrediction() {
+    const prediction = this.createInlinePrediction();
+    if (!this.editor.contains(prediction)) {
+      this.editor.appendChild(prediction);
+    }
+  }
+
+  // Remove inline prediction from editor
+  removeInlinePrediction() {
+    if (this.inlinePredictionEl && this.editor.contains(this.inlinePredictionEl)) {
+      this.inlinePredictionEl.remove();
+    }
+    this.currentPrediction = '';
+    this.navigationOffset = 0;
+    this.hoverOffset = 0;
+  }
+
   onPredictionHover(e) {
     if (e && e.pointerType && e.pointerType !== 'mouse') return;
     if (this.selectModeActive) {
-      // Desktop: show word-based preview
       if (!this.isMobile && !this.selectionFixed) {
         const offset = this.getOffsetFromMouseEvent(e);
         if (offset !== null) {
           const wordBounds = this.getWordBoundaries(offset);
           if (wordBounds) {
             if (this.selectStartOffset === null) {
-              // Before first click - preview the word that will be selected
               this.selectPreviewOffset = wordBounds.start;
               this.hoverWordEnd = wordBounds.end;
             } else {
-              // After first click - extend selection to include the hovered word
               this.hoverWordEnd = null;
               if (wordBounds.end <= this.selectStartOffset) {
                 this.selectPreviewOffset = wordBounds.start;
@@ -185,12 +192,11 @@ class PredictionManager {
       }
       return;
     } else {
-      // Normal mode: word-based hover
       const offset = this.getOffsetFromMouseEvent(e);
       if (offset !== null) {
         const wordBounds = this.getWordBoundaries(offset);
         if (wordBounds) {
-          this.hoverOffset = wordBounds.end; // Highlight up to end of word
+          this.hoverOffset = wordBounds.end;
         } else {
           this.hoverOffset = offset;
         }
@@ -203,7 +209,6 @@ class PredictionManager {
     if (this.selectModeActive) {
       this.hoverOffset = 0;
       this.navigationOffset = 0;
-      // Clear hover preview before first click
       if (this.selectStartOffset === null) {
         this.selectPreviewOffset = null;
         this.hoverWordEnd = null;
@@ -216,11 +221,10 @@ class PredictionManager {
   }
 
   onPredictionClick(e) {
-    // Click handling is now done in mouse/touch events to distinguish from drag selection
+    // Click handling is done in mouse/touch events
   }
 
   onPredictionMouseDown(e) {
-    // Desktop: do nothing on mousedown, handle clicks in mouseup
     if ((e.pointerType && e.pointerType !== 'mouse') || this.isMobile || e.button !== 0) return;
     if (!this.selectModeActive) return;
     e.preventDefault();
@@ -228,7 +232,7 @@ class PredictionManager {
 
   onPredictionMouseUp(e) {
     if (e.pointerType && e.pointerType !== 'mouse') return;
-    // Desktop select mode: two-click selection (word-based)
+
     if (!this.isMobile && this.selectModeActive) {
       const offset = this.getOffsetFromMouseEvent(e);
       if (offset === null) return;
@@ -237,30 +241,26 @@ class PredictionManager {
       if (!wordBounds) return;
 
       if (this.selectStartOffset === null) {
-        // First click - set start to beginning of clicked word
         this.selectStartOffset = wordBounds.start;
-        this.selectPreviewOffset = wordBounds.end; // Select the first word immediately
-        this.hoverWordEnd = null; // Clear hover preview state
-        this.selectionFixed = false; // Allow hover to update preview
+        this.selectPreviewOffset = wordBounds.end;
+        this.hoverWordEnd = null;
+        this.selectionFixed = false;
         this.updatePredictionDisplay();
         this.setSelectionReady(true);
       } else if (!this.selectionFixed) {
-        // Second click - fix the end point
         if (wordBounds.end <= this.selectStartOffset) {
-          // Clicking before start - extend backwards
           this.selectPreviewOffset = this.selectStartOffset;
           this.selectStartOffset = wordBounds.start;
         } else {
           this.selectPreviewOffset = wordBounds.end;
         }
-        this.selectionFixed = true; // Stop hover updates
+        this.selectionFixed = true;
         this.updatePredictionDisplay();
         this.setSelectionReady(this.selectStartOffset !== this.selectPreviewOffset);
       }
       return;
     }
 
-    // If SELECT mode is active (mobile), handle differently
     if (this.selectModeActive) {
       const offset = this.getOffsetFromMouseEvent(e);
       this.handleSelectModeSelection(offset);
@@ -271,17 +271,14 @@ class PredictionManager {
     const selection = window.getSelection();
     const selectedText = selection.toString();
 
-    // Check if user selected text (drag) vs just clicked
     if (selectedText.length > 0) {
-      // User dragged to select text - accept the selected portion
       this.acceptSelectedText(selection);
     } else {
-      // User just clicked - accept up to end of clicked word
       const offset = this.getOffsetFromMouseEvent(e);
       if (offset !== null) {
         const wordBounds = this.getWordBoundaries(offset);
         if (wordBounds) {
-          this.hoverOffset = wordBounds.end; // Accept to end of word
+          this.hoverOffset = wordBounds.end;
         } else {
           this.hoverOffset = offset;
         }
@@ -311,7 +308,6 @@ class PredictionManager {
     this.selectStartOffset = wordBounds.start;
     this.selectPreviewOffset = wordBounds.end;
     this.updatePredictionDisplay();
-    this.showStartLineForOffset(wordBounds.start);
     this.setSelectionReady(true);
   }
 
@@ -336,7 +332,6 @@ class PredictionManager {
     if (!wordBounds) return;
 
     e.preventDefault();
-    // Extend selection to include the touched word
     if (wordBounds.end <= this.selectStartOffset) {
       this.selectPreviewOffset = wordBounds.start;
     } else {
@@ -396,7 +391,7 @@ class PredictionManager {
       e.stopPropagation();
       const wordBounds = this.getWordBoundaries(offset);
       if (wordBounds) {
-        this.hoverOffset = wordBounds.end; // Accept to end of word
+        this.hoverOffset = wordBounds.end;
       } else {
         this.hoverOffset = offset;
       }
@@ -434,40 +429,26 @@ class PredictionManager {
   }
 
   getOffsetFromRange(range) {
-    if (!range) return null;
+    if (!range || !this.inlinePredictionEl) return null;
 
     const container = range.startContainer;
-    const preLength = this.predictionPreEl?.textContent.length || 0;
-    const acceptLength = this.predictionAcceptEl.textContent.length;
-    const offsetWithin = (node, base = 0) => {
-      try {
-        const clone = range.cloneRange();
-        clone.setStart(node, 0);
-        return base + clone.toString().length;
-      } catch (err) {
-        return null;
-      }
-    };
 
-    let offset = null;
-
-    if (this.predictionPreEl && (this.predictionPreEl === container || this.predictionPreEl.contains(container))) {
-      offset = offsetWithin(this.predictionPreEl, 0);
-    } else if (this.predictionAcceptEl && (this.predictionAcceptEl === container || this.predictionAcceptEl.contains(container))) {
-      offset = offsetWithin(this.predictionAcceptEl, preLength);
-    } else if (this.predictionRemainEl && (this.predictionRemainEl === container || this.predictionRemainEl.contains(container))) {
-      offset = offsetWithin(this.predictionRemainEl, preLength + acceptLength);
-    } else if (container === this.predictionEl) {
-      offset = range.startOffset === 0 ? 0 : this.currentPrediction.length;
+    // Check if the click is within our inline prediction
+    if (!this.inlinePredictionEl.contains(container) && container !== this.inlinePredictionEl) {
+      return null;
     }
 
-    if (offset === null) return null;
-
-    const clamped = Math.max(0, Math.min(offset, this.currentPrediction.length));
-    return clamped;
+    // Calculate offset within the prediction text
+    try {
+      const clone = range.cloneRange();
+      clone.setStart(this.inlinePredictionEl, 0);
+      const offset = clone.toString().length;
+      return Math.max(0, Math.min(offset, this.currentPrediction.length));
+    } catch (e) {
+      return null;
+    }
   }
 
-  // Get word boundaries at a given character offset
   getWordBoundaries(offset) {
     if (!this.currentPrediction || offset < 0 || offset > this.currentPrediction.length) {
       return null;
@@ -475,13 +456,11 @@ class PredictionManager {
 
     const text = this.currentPrediction;
 
-    // Find word start (go backwards to find space or start)
     let wordStart = offset;
     while (wordStart > 0 && !/\s/.test(text[wordStart - 1])) {
       wordStart--;
     }
 
-    // Find word end (go forwards to find space or end)
     let wordEnd = offset;
     while (wordEnd < text.length && !/\s/.test(text[wordEnd])) {
       wordEnd++;
@@ -490,58 +469,25 @@ class PredictionManager {
     return { start: wordStart, end: wordEnd };
   }
 
-  resolveNodeForOffset(rawOffset) {
-    if (!this.currentPrediction) return null;
-    const totalLength = this.currentPrediction.length;
-    const offset = Math.max(0, Math.min(rawOffset, totalLength));
-
-    const preLength = this.predictionPreEl?.textContent.length || 0;
-    const acceptLength = this.predictionAcceptEl?.textContent.length || 0;
-
-    let node;
-    let localOffset = offset;
-
-    if (offset <= preLength) {
-      node = this.predictionPreEl.firstChild || this.predictionPreEl;
-    } else if (offset <= preLength + acceptLength) {
-      node = this.predictionAcceptEl.firstChild || this.predictionAcceptEl;
-      localOffset = offset - preLength;
-    } else {
-      node = this.predictionRemainEl.firstChild || this.predictionRemainEl;
-      localOffset = offset - preLength - acceptLength;
-    }
-
-    if (!node) return null;
-    const maxOffset = node.nodeType === Node.TEXT_NODE
-      ? node.textContent.length
-      : node.childNodes.length;
-
-    return {
-      node,
-      offset: Math.max(0, Math.min(localOffset, maxOffset))
-    };
-  }
-
-  getRangeForOffset(offset) {
-    const resolved = this.resolveNodeForOffset(offset);
-    if (!resolved) return null;
-    const range = document.createRange();
-    range.setStart(resolved.node, resolved.offset);
-    range.collapse(true);
-    return range;
-  }
-
   isCursorAtEnd() {
     const selection = window.getSelection();
     if (!selection.rangeCount) return false;
 
     const range = selection.getRangeAt(0);
-    const cursorOffset = range.endOffset;
-    const textLength = this.editor.textContent.length;
 
-    // Check if cursor is at the end of the text
-    return cursorOffset === textLength ||
-           (range.endContainer === this.editor && cursorOffset === this.editor.childNodes.length);
+    // Check if cursor is right before the inline prediction or at the end
+    if (this.inlinePredictionEl && this.editor.contains(this.inlinePredictionEl)) {
+      // Cursor should be just before the prediction element
+      const predictionIndex = Array.from(this.editor.childNodes).indexOf(this.inlinePredictionEl);
+      if (predictionIndex > 0) {
+        const prevNode = this.editor.childNodes[predictionIndex - 1];
+        if (range.endContainer === prevNode || range.endContainer.parentNode === prevNode) {
+          return range.endOffset === (prevNode.textContent || prevNode.innerText || '').length;
+        }
+      }
+    }
+
+    return false;
   }
 
   cancelPending() {
@@ -553,25 +499,15 @@ class PredictionManager {
       this.abortController.abort();
       this.abortController = null;
     }
-    this.hideThinking();
   }
 
   clearPrediction() {
-    this.currentPrediction = '';
-    this.navigationOffset = 0;
-    this.hoverOffset = 0;
+    this.removeInlinePrediction();
     this.selectPreviewOffset = null;
-    this.predictionPreEl.textContent = '';
-    this.predictionAcceptEl.textContent = '';
-    this.useClassicRemain('');
-    this.hideThinking();
   }
 
   async requestPrediction(text) {
     this.abortController = new AbortController();
-
-    // Show thinking indicator after a delay (only if request is still pending)
-    this.showThinkingDelayed();
 
     try {
       const response = await fetch('/api/predict', {
@@ -590,37 +526,13 @@ class PredictionManager {
       if (error.name !== 'AbortError') {
         console.error('Prediction error:', error);
       }
-      this.hideThinking();
     }
-  }
-
-  showThinkingDelayed(delay = 2000) {
-    // Clear any existing thinking timer
-    if (this.thinkingTimer) {
-      clearTimeout(this.thinkingTimer);
-    }
-
-    // Show thinking indicator only after delay
-    this.thinkingTimer = setTimeout(() => {
-      this.thinkingIndicator.classList.add('visible');
-    }, delay);
-  }
-
-  hideThinking() {
-    // Clear the timer if it hasn't fired yet
-    if (this.thinkingTimer) {
-      clearTimeout(this.thinkingTimer);
-      this.thinkingTimer = null;
-    }
-    // Hide the indicator
-    this.thinkingIndicator.classList.remove('visible');
   }
 
   async handleStreamingResponse(response) {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let prediction = '';
-    let firstChunk = true;
 
     try {
       while (true) {
@@ -639,11 +551,6 @@ class PredictionManager {
               const parsed = JSON.parse(data);
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
-                // Hide thinking indicator on first content
-                if (firstChunk) {
-                  this.hideThinking();
-                  firstChunk = false;
-                }
                 prediction += content;
                 this.updatePrediction(prediction);
               }
@@ -662,25 +569,27 @@ class PredictionManager {
 
   updatePrediction(text) {
     this.currentPrediction = text;
-    this.navigationOffset = 0; // Reset navigation when prediction updates
-    this.hoverOffset = 0; // Reset hover when prediction updates
+    this.navigationOffset = 0;
+    this.hoverOffset = 0;
     this.selectPreviewOffset = null;
     if (!this.selectModeActive) {
       this.selectStartOffset = null;
     }
+    this.insertInlinePrediction();
     this.updatePredictionDisplay();
   }
 
   updatePredictionDisplay() {
-    const userText = this.getEditorText();
-    this.userTextMirror.textContent = userText;
+    if (!this.inlinePredictionEl || !this.currentPrediction) return;
 
     if (this.selectModeActive) {
       // Before first click - show hovered word preview
       if (this.selectStartOffset === null && this.selectPreviewOffset !== null && this.hoverWordEnd !== null) {
-        this.predictionPreEl.textContent = this.currentPrediction.slice(0, this.selectPreviewOffset);
-        this.predictionAcceptEl.textContent = this.currentPrediction.slice(this.selectPreviewOffset, this.hoverWordEnd);
-        this.useClassicRemain(this.currentPrediction.slice(this.hoverWordEnd));
+        this.renderPredictionParts(
+          this.currentPrediction.slice(0, this.selectPreviewOffset),
+          this.currentPrediction.slice(this.selectPreviewOffset, this.hoverWordEnd),
+          this.currentPrediction.slice(this.hoverWordEnd)
+        );
         return;
       }
       // After first click - show selection range
@@ -688,77 +597,89 @@ class PredictionManager {
         const start = Math.min(this.selectStartOffset, this.selectPreviewOffset);
         const end = Math.max(this.selectStartOffset, this.selectPreviewOffset);
         if (start === end) {
-          this.predictionPreEl.textContent = '';
-          this.predictionAcceptEl.textContent = '';
-          this.useClassicRemain(this.currentPrediction);
+          this.renderPredictionParts('', '', this.currentPrediction);
           return;
         }
-        this.predictionPreEl.textContent = this.currentPrediction.slice(0, start);
-        this.predictionAcceptEl.textContent = this.currentPrediction.slice(start, end);
-        this.useClassicRemain(this.currentPrediction.slice(end));
+        this.renderPredictionParts(
+          this.currentPrediction.slice(0, start),
+          this.currentPrediction.slice(start, end),
+          this.currentPrediction.slice(end)
+        );
         return;
       }
-      this.predictionPreEl.textContent = '';
-      this.predictionAcceptEl.textContent = '';
-      this.useClassicRemain(this.currentPrediction);
+      this.renderPredictionParts('', '', this.currentPrediction);
       return;
     }
 
-    this.predictionPreEl.textContent = '';
-
-    // Use hoverOffset if hovering, otherwise use navigationOffset (clicked position)
+    // Normal mode
     const activeOffset = this.hoverOffset || this.navigationOffset;
 
     if (activeOffset === 0) {
-      // No navigation/hover - show all in remain color
-      this.predictionAcceptEl.textContent = '';
-      this.renderRemain(this.currentPrediction, true);
+      this.renderPredictionParts('', '', this.currentPrediction);
     } else {
-      // Split into accept (white) and remain (dimmer)
       const acceptPart = this.currentPrediction.slice(0, activeOffset);
       const remainPart = this.currentPrediction.slice(activeOffset);
-
-      this.predictionAcceptEl.textContent = acceptPart;
-      this.renderRemain(remainPart, false);
+      this.renderPredictionParts('', acceptPart, remainPart);
     }
   }
 
-  useClassicRemain(text) {
-    this.predictionRemainEl.classList.remove('motion-rise');
-    this.predictionRemainEl.textContent = text;
-    this.motionRemainText = text;
-  }
+  renderPredictionParts(prePart, acceptPart, remainPart) {
+    if (!this.inlinePredictionEl) return;
 
-  renderRemain(text, allowMotion) {
-    if (!this.enableRiseMotion || !allowMotion) {
-      this.useClassicRemain(text);
-      return;
+    this.inlinePredictionEl.innerHTML = '';
+
+    if (prePart) {
+      const preSpan = document.createElement('span');
+      preSpan.className = 'prediction-remain';
+      preSpan.textContent = prePart;
+      this.inlinePredictionEl.appendChild(preSpan);
     }
 
-    this.predictionRemainEl.classList.add('motion-rise');
-    this.applyRiseMotion(text);
+    if (acceptPart) {
+      const acceptSpan = document.createElement('span');
+      acceptSpan.className = 'prediction-accept';
+      acceptSpan.textContent = acceptPart;
+      this.inlinePredictionEl.appendChild(acceptSpan);
+    }
+
+    if (remainPart) {
+      if (this.enableRiseMotion && !acceptPart && !prePart) {
+        // Apply rise motion for streaming
+        this.applyRiseMotion(remainPart);
+      } else {
+        const remainSpan = document.createElement('span');
+        remainSpan.className = 'prediction-remain';
+        remainSpan.textContent = remainPart;
+        this.inlinePredictionEl.appendChild(remainSpan);
+      }
+    }
   }
 
   applyRiseMotion(targetText) {
     const previous = this.motionRemainText || '';
 
     if (!targetText.startsWith(previous)) {
-      this.useClassicRemain(targetText);
+      const remainSpan = document.createElement('span');
+      remainSpan.className = 'prediction-remain';
+      remainSpan.textContent = targetText;
+      this.inlinePredictionEl.appendChild(remainSpan);
+      this.motionRemainText = targetText;
       return;
     }
 
+    // Keep existing content
     const newSegment = targetText.slice(previous.length);
     if (!newSegment) return;
 
     const tokens = newSegment.match(/\S+|\s+/g) || [];
     tokens.forEach((token) => {
       if (/^\s+$/.test(token)) {
-        this.predictionRemainEl.appendChild(document.createTextNode(token));
+        this.inlinePredictionEl.appendChild(document.createTextNode(token));
       } else {
         const span = document.createElement('span');
         span.textContent = token;
         span.className = 'word-rise';
-        this.predictionRemainEl.appendChild(span);
+        this.inlinePredictionEl.appendChild(span);
       }
     });
 
@@ -779,6 +700,11 @@ class PredictionManager {
     const endOffset = startOffset + selectedTextLength;
 
     const textToAccept = this.currentPrediction.slice(startOffset, endOffset);
+
+    // Remove prediction first
+    this.removeInlinePrediction();
+
+    // Add accepted text
     this.editor.textContent += textToAccept;
     this.moveCursorToEnd();
 
@@ -786,11 +712,10 @@ class PredictionManager {
       this.currentPrediction = this.currentPrediction.slice(endOffset);
       this.navigationOffset = 0;
       this.hoverOffset = 0;
-      this.userTextMirror.textContent = this.editor.textContent;
+      this.insertInlinePrediction();
       this.updatePredictionDisplay();
     } else {
-      this.userTextMirror.textContent = this.editor.textContent;
-      this.clearPrediction();
+      this.currentPrediction = '';
       this.onInput();
     }
 
@@ -800,47 +725,39 @@ class PredictionManager {
   acceptPrediction() {
     if (!this.currentPrediction) return;
 
-    // Use hoverOffset if hovering, otherwise use navigationOffset
     const activeOffset = this.hoverOffset || this.navigationOffset;
 
-    // Determine how much to accept
     let textToAccept = activeOffset > 0
       ? this.currentPrediction.slice(0, activeOffset)
       : this.currentPrediction;
 
-    // Check if accepted text ends with period for auto paragraph break
     const endsWithPeriod = textToAccept.trimEnd().endsWith('.');
 
-    // Ensure the accepted text ends with a space for easier typing (unless it ends with period)
     if (textToAccept && !textToAccept.endsWith(' ') && !endsWithPeriod) {
       textToAccept += ' ';
     }
 
+    // Remove prediction first
+    this.removeInlinePrediction();
+
     // Append accepted prediction to editor
     this.editor.textContent += textToAccept;
 
-    // If text ends with period, add paragraph break
     if (endsWithPeriod) {
       this.editor.textContent += '\n';
     }
 
-    // Move cursor to end
     this.moveCursorToEnd();
 
-    // If we accepted partial prediction, keep the rest
     if (activeOffset > 0 && activeOffset < this.currentPrediction.length) {
       const remainingPrediction = this.currentPrediction.slice(activeOffset);
       this.currentPrediction = remainingPrediction;
       this.navigationOffset = 0;
       this.hoverOffset = 0;
-      this.userTextMirror.textContent = this.getEditorText();
+      this.insertInlinePrediction();
       this.updatePredictionDisplay();
     } else {
-      // Update mirror and clear prediction
-      this.userTextMirror.textContent = this.getEditorText();
-      this.clearPrediction();
-
-      // Trigger a new prediction after acceptance
+      this.currentPrediction = '';
       this.onInput();
     }
   }
@@ -848,10 +765,41 @@ class PredictionManager {
   moveCursorToEnd() {
     const range = document.createRange();
     const selection = window.getSelection();
-    range.selectNodeContents(this.editor);
-    range.collapse(false);
-    selection.removeAllRanges();
-    selection.addRange(range);
+
+    // Find the last text node before prediction (or end of editor)
+    let targetNode = this.editor;
+    let targetOffset = this.editor.childNodes.length;
+
+    if (this.inlinePredictionEl && this.editor.contains(this.inlinePredictionEl)) {
+      const index = Array.from(this.editor.childNodes).indexOf(this.inlinePredictionEl);
+      if (index > 0) {
+        const prevNode = this.editor.childNodes[index - 1];
+        if (prevNode.nodeType === Node.TEXT_NODE) {
+          targetNode = prevNode;
+          targetOffset = prevNode.textContent.length;
+        }
+      }
+    } else {
+      // No prediction, go to end
+      const lastChild = this.editor.lastChild;
+      if (lastChild && lastChild.nodeType === Node.TEXT_NODE) {
+        targetNode = lastChild;
+        targetOffset = lastChild.textContent.length;
+      }
+    }
+
+    try {
+      range.setStart(targetNode, targetOffset);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } catch (e) {
+      // Fallback
+      range.selectNodeContents(this.editor);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
   }
 
   // SELECT MODE METHODS
@@ -866,20 +814,15 @@ class PredictionManager {
     this.selectionFixed = false;
     this.setSelectionReady(false);
 
-    // Visual feedback
     document.body.classList.add('select-mode-active');
-    this.selectModeIndicator.classList.add('active');
 
-    // Clear any hover highlights from normal mode
     this.hoverOffset = 0;
     this.navigationOffset = 0;
     this.updatePredictionDisplay();
 
-    // Update menu button state
     const selectBtn = document.querySelector('.select-menu-btn');
     if (selectBtn) selectBtn.classList.add('active');
 
-    // Change burger button to X
     const burgerIcon = document.querySelector('.burger-btn .material-symbols-outlined');
     if (burgerIcon) burgerIcon.textContent = 'close';
   }
@@ -894,22 +837,15 @@ class PredictionManager {
     this.selectionFixed = false;
     this.setSelectionReady(false);
 
-    // Clear visual feedback
     document.body.classList.remove('select-mode-active');
-    this.selectModeIndicator.classList.remove('active');
-    this.selectStartLine.classList.remove('visible');
-    this.predictionEl.classList.remove('select-mode-hover');
 
-    // Reset display to normal
     this.hoverOffset = 0;
     this.navigationOffset = 0;
     this.updatePredictionDisplay();
 
-    // Update menu button state
     const selectBtn = document.querySelector('.select-menu-btn');
     if (selectBtn) selectBtn.classList.remove('active');
 
-    // Change burger button back to edit icon
     const burgerIcon = document.querySelector('.burger-btn .material-symbols-outlined');
     if (burgerIcon) burgerIcon.textContent = 'edit';
   }
@@ -918,14 +854,11 @@ class PredictionManager {
     if (offset === null) return;
 
     if (this.selectStartOffset === null) {
-      // First tap/click - set start point
       this.selectStartOffset = offset;
       this.selectPreviewOffset = this.isMobile ? offset : null;
       this.updatePredictionDisplay();
       this.setSelectionReady(false);
-
     } else {
-      // Update end point and wait for confirmation (same for mobile and desktop)
       this.selectPreviewOffset = offset;
       this.updatePredictionDisplay();
       this.setSelectionReady(this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset);
@@ -956,55 +889,36 @@ class PredictionManager {
     }
   }
 
-  showStartLineForOffset(offset) {
-    if (!this.selectStartLine) return;
-    const range = this.getRangeForOffset(offset);
-    if (!range) return;
-    const predictionRect = this.predictionEl.getBoundingClientRect();
-    const rect = range.getBoundingClientRect();
-    const leftOffset = rect.left - predictionRect.left;
-    const topOffset = rect.top - predictionRect.top;
-
-    this.selectStartLine.style.left = `${leftOffset}px`;
-    this.selectStartLine.style.top = `${topOffset}px`;
-    this.selectStartLine.classList.add('visible');
-  }
-
   acceptSelectModeRange(startOffset, endOffset) {
     if (!this.currentPrediction) return;
 
-    // Extract the selected text
     let textToAccept = this.currentPrediction.slice(startOffset, endOffset);
 
-    // Check if accepted text ends with period for auto paragraph break
     const endsWithPeriod = textToAccept.trimEnd().endsWith('.');
 
-    // Ensure the accepted text ends with a space for easier typing (unless it ends with period)
     if (textToAccept && !textToAccept.endsWith(' ') && !endsWithPeriod) {
       textToAccept += ' ';
     }
 
-    // Append to editor
+    // Remove prediction first
+    this.removeInlinePrediction();
+
     this.editor.textContent += textToAccept;
 
-    // If text ends with period, add paragraph break
     if (endsWithPeriod) {
       this.editor.textContent += '\n';
     }
 
     this.moveCursorToEnd();
 
-    // Keep only the part after selection
     if (endOffset < this.currentPrediction.length) {
       this.currentPrediction = this.currentPrediction.slice(endOffset);
       this.navigationOffset = 0;
       this.hoverOffset = 0;
-      this.userTextMirror.textContent = this.getEditorText();
+      this.insertInlinePrediction();
       this.updatePredictionDisplay();
     } else {
-      // Selected to the end - clear everything
-      this.userTextMirror.textContent = this.getEditorText();
-      this.clearPrediction();
+      this.currentPrediction = '';
       this.onInput();
     }
   }
@@ -1019,12 +933,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const logo = document.querySelector('.logo');
   const modalClose = document.querySelector('.modal-close');
 
-  // Trigger logo animation on page load
   setTimeout(() => {
     logo.classList.add('animate');
   }, 100);
 
-  // Open modal from logo
   const openModal = () => modal.classList.add('visible');
   logo.addEventListener('click', openModal);
 
@@ -1032,14 +944,12 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.classList.remove('visible');
   });
 
-  // Close modal when clicking outside
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
       modal.classList.remove('visible');
     }
   });
 
-  // Close modal with Escape key
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && modal.classList.contains('visible')) {
       modal.classList.remove('visible');
@@ -1081,7 +991,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Open menu or exit SELECT mode
   burgerBtn.addEventListener('click', () => {
     if (predictionManager.selectModeActive) {
       predictionManager.disableSelectMode();
@@ -1096,16 +1005,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Close menu when clicking overlay background
   menuOverlay.addEventListener('click', (e) => {
     if (e.target === menuOverlay) {
       closeMenu();
     }
   });
 
-  // COPY functionality
   copyMenuBtn.addEventListener('click', async () => {
-    const text = editor.textContent;
+    const text = predictionManager.getEditorText();
     if (!text) {
       closeMenu();
       return;
@@ -1113,7 +1020,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       await navigator.clipboard.writeText(text);
-      // Visual feedback
       const copyLabel = copyMenuBtn.querySelector('.menu-label');
       const originalText = copyLabel ? copyLabel.textContent : 'Copy';
       if (copyLabel) copyLabel.textContent = 'Copied';
@@ -1128,16 +1034,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // CLEAR functionality
   clearMenuBtn.addEventListener('click', () => {
+    predictionManager.removeInlinePrediction();
     editor.textContent = '';
     editor.focus();
-    // Trigger input event to clear any predictions
     editor.dispatchEvent(new Event('input'));
     closeMenu();
   });
 
-  // SELECT mode toggle
   selectMenuBtn.addEventListener('click', () => {
     if (predictionManager.selectModeActive) {
       predictionManager.disableSelectMode();
@@ -1147,7 +1051,6 @@ document.addEventListener('DOMContentLoaded', () => {
     closeMenu();
   });
 
-  // Close menu with Escape key
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && menuOverlay.classList.contains('visible')) {
       closeMenu();
