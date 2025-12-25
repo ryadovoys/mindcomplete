@@ -752,6 +752,8 @@ body.selection-ready .select-confirm-btn {
     font-size: 18pt;
     text-align: left;
     width: 100%;
+    overflow-wrap: normal;
+    word-break: normal;
   }
 
   .ghost-layer {
