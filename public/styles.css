@@ -453,7 +453,11 @@ body.select-mode-active .inline-prediction {
   /* Prevent editing the prediction text */
   user-select: none;
   -webkit-user-select: none;
+  -webkit-user-modify: read-only;
   pointer-events: auto;
+  /* Prevent contenteditable=false from creating block context */
+  white-space: pre-wrap;
+  word-break: normal;
 }
 
 /* Highlighted part (on hover) */

@@ -132,6 +132,7 @@ class PredictionManager {
     if (!this.inlinePredictionEl) {
       this.inlinePredictionEl = document.createElement('span');
       this.inlinePredictionEl.className = 'inline-prediction';
+      this.inlinePredictionEl.contentEditable = 'false';
 
       // Add event listeners
       this.inlinePredictionEl.addEventListener('click', (e) => this.onPredictionClick(e));
