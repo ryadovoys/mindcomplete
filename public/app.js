@@ -542,7 +542,11 @@ class PredictionManager {
 
   getOffsetFromPoint(x, y) {
     const range = this.createRangeFromPoint(x, y);
-    return this.getOffsetFromRange(range);
+    const precise = this.getOffsetFromRange(range);
+    if (precise !== null) {
+      return precise;
+    }
+    return this.approximateOffsetFromPoint(x, y);
   }
 
   createRangeFromPoint(x, y) {
@@ -562,6 +566,60 @@ class PredictionManager {
     }
 
     return null;
+  }
+
+  approximateOffsetFromPoint(x, y) {
+    if (!this.inlinePredictionEl || !this.currentPrediction) return null;
+
+    const textNodes = this.getTextNodesIn(this.inlinePredictionEl);
+    if (!textNodes.length) return null;
+
+    let totalOffset = 0;
+    let closestOffset = 0;
+    let closestDistance = Infinity;
+
+    const point = { x, y };
+
+    textNodes.forEach((textNode) => {
+      const text = textNode.textContent;
+      const length = text.length;
+      const probeRange = document.createRange();
+
+      for (let i = 0; i <= length; i++) {
+        probeRange.setStart(textNode, i);
+        probeRange.setEnd(textNode, i);
+        const rect = probeRange.getBoundingClientRect();
+        if (!rect || (rect.width === 0 && rect.height === 0)) {
+          continue;
+        }
+
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const dx = point.x - centerX;
+        const dy = point.y - centerY;
+        const distance = Math.sqrt((dx * dx) + (dy * dy));
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestOffset = totalOffset + i;
+        }
+      }
+
+      totalOffset += length;
+      probeRange.detach?.();
+    });
+
+    return Math.max(0, Math.min(closestOffset, this.currentPrediction.length));
+  }
+
+  getTextNodesIn(node) {
+    const nodes = [];
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null, false);
+    let current;
+    while ((current = walker.nextNode())) {
+      nodes.push(current);
+    }
+    return nodes;
   }
 
   getOffsetFromRange(range) {
