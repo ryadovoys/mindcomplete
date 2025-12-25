@@ -421,7 +421,6 @@ class PredictionManager {
     const x = touch.clientX;
     const y = touch.clientY;
 
-    // Check if touch is on prediction
     if (!this.isTouchOnPrediction(x, y)) return;
 
     this.touchStartX = x;
@@ -437,11 +436,21 @@ class PredictionManager {
       const wordBounds = this.getWordBoundaries(offset);
       if (!wordBounds) return;
 
-      this.selectTouchActive = true;
-      this.selectStartOffset = wordBounds.start;
-      this.selectPreviewOffset = wordBounds.end;
-      this.updatePredictionDisplay();
-      this.setSelectionReady(true);
+      if (this.selectStartOffset === null) {
+        this.selectTouchActive = true;
+        this.selectStartOffset = wordBounds.start;
+        this.selectPreviewOffset = wordBounds.end;
+        this.updatePredictionDisplay();
+        this.setSelectionReady(true);
+      } else {
+        this.selectTouchActive = false;
+        if (wordBounds.end <= this.selectStartOffset) {
+          this.selectPreviewOffset = wordBounds.start;
+        } else {
+          this.selectPreviewOffset = wordBounds.end;
+        }
+        this.updatePredictionDisplay();
+      }
     }
   }
 
