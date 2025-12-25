@@ -405,8 +405,47 @@ class PredictionManager {
   }
 
   getOffsetFromPoint(x, y) {
-    const range = this.createRangeFromPoint(x, y);
-    return this.getOffsetFromRange(range);
+    if (!this.inlinePredictionEl || !this.currentPrediction) return null;
+
+    // Walk through all text nodes and find closest character to click
+    const textNodes = this.getTextNodesIn(this.inlinePredictionEl);
+    let totalOffset = 0;
+    let closestOffset = 0;
+    let closestDistance = Infinity;
+
+    for (const textNode of textNodes) {
+      const text = textNode.textContent;
+      const range = document.createRange();
+
+      for (let i = 0; i <= text.length; i++) {
+        range.setStart(textNode, i);
+        range.setEnd(textNode, i);
+        const charRect = range.getBoundingClientRect();
+
+        // Calculate distance from click to this character position
+        const dx = x - (charRect.left + charRect.width / 2);
+        const dy = y - (charRect.top + charRect.height / 2);
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestOffset = totalOffset + i;
+        }
+      }
+      totalOffset += text.length;
+    }
+
+    return closestOffset;
+  }
+
+  getTextNodesIn(node) {
+    const textNodes = [];
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null, false);
+    let n;
+    while (n = walker.nextNode()) {
+      textNodes.push(n);
+    }
+    return textNodes;
   }
 
   createRangeFromPoint(x, y) {
