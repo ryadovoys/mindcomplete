@@ -1327,3 +1327,59 @@ if ('serviceWorker' in navigator) {
       .catch((err) => console.error('Service worker registration failed:', err));
   });
 }
+
+// Pull-to-refresh functionality
+(function initPullToRefresh() {
+  const PULL_THRESHOLD = 150; // pixels to pull before refresh triggers
+  let pullStartY = null;
+  let isPulling = false;
+
+  // Create pull indicator element
+  const pullIndicator = document.createElement('div');
+  pullIndicator.className = 'pull-indicator';
+  pullIndicator.innerHTML = '<span class="pull-arrow">↓</span><span class="pull-text">Pull to clear</span>';
+  document.body.appendChild(pullIndicator);
+
+  document.addEventListener('touchstart', (e) => {
+    // Only start pull if at top of page
+    if (window.scrollY === 0) {
+      pullStartY = e.touches[0].clientY;
+      isPulling = true;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!isPulling || pullStartY === null) return;
+
+    const currentY = e.touches[0].clientY;
+    const pullDistance = currentY - pullStartY;
+
+    // Only show indicator when pulling down
+    if (pullDistance > 0 && window.scrollY === 0) {
+      const progress = Math.min(pullDistance / PULL_THRESHOLD, 1);
+      pullIndicator.style.opacity = progress;
+      pullIndicator.classList.toggle('ready', pullDistance >= PULL_THRESHOLD);
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
+    if (!isPulling || pullStartY === null) {
+      return;
+    }
+
+    const indicator = pullIndicator;
+    const wasReady = indicator.classList.contains('ready');
+
+    // Reset indicator
+    indicator.style.opacity = '0';
+    indicator.classList.remove('ready');
+
+    if (wasReady) {
+      // Trigger refresh
+      window.location.reload();
+    }
+
+    pullStartY = null;
+    isPulling = false;
+  }, { passive: true });
+})();

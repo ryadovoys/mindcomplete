@@ -561,7 +561,7 @@ body.selection-ready .select-confirm-btn {
   }
 
   .logo {
-    height: 21px;
+    height: 28px;
   }
 
   .burger-btn {
@@ -646,4 +646,34 @@ body.selection-ready .select-confirm-btn {
     word-break: normal;
     hyphens: none;
   }
+}
+
+/* Pull-to-refresh indicator */
+.pull-indicator {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.pull-indicator.ready {
+  color: #F183FF;
+}
+
+.pull-indicator.ready .pull-arrow {
+  transform: rotate(180deg);
+}
+
+.pull-arrow {
+  font-size: 18px;
+  transition: transform 0.2s ease;
 }
