@@ -51,10 +51,98 @@ body {
 }
 
 .logo {
-  height: 32px;
+  height: 34px;
   width: auto;
   display: block;
   cursor: pointer;
+}
+
+/* Logo animation - initially hide all letters */
+.logo .letter {
+  opacity: 0;
+}
+
+/* Line is visible from the start */
+.logo .letter-line {
+  opacity: 1;
+}
+
+/* Fade-in animation for letters */
+@keyframes letter-appear {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Rise-up animation for "complete" - matches prediction text motion */
+@keyframes letter-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Line cursor movement animation */
+@keyframes line-cursor-move {
+  0% {
+    opacity: 1;
+    transform: translateX(-765px);
+  }
+  20% {
+    transform: translateX(-655px);
+  }
+  40% {
+    transform: translateX(-376px);
+  }
+  60% {
+    transform: translateX(-71px);
+  }
+  80%, 100% {
+    transform: translateX(0);
+  }
+}
+
+/* Apply animations to each letter with staggered delays */
+.logo.animate .letter-m1 {
+  animation: letter-appear 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0s forwards;
+}
+
+.logo.animate .letter-i {
+  animation: letter-appear 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards;
+}
+
+.logo.animate .letter-n {
+  animation: letter-appear 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s forwards;
+}
+
+.logo.animate .letter-d {
+  animation: letter-appear 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.6s forwards;
+}
+
+/* Line moves like a cursor as letters appear */
+.logo.animate .letter-line {
+  animation: line-cursor-move 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0s forwards;
+}
+
+/* "complete" letters rise up together as one word */
+.logo.animate .letter-c,
+.logo.animate .letter-o,
+.logo.animate .letter-m2,
+.logo.animate .letter-p,
+.logo.animate .letter-l,
+.logo.animate .letter-e1,
+.logo.animate .letter-t,
+.logo.animate .letter-e2 {
+  animation: letter-rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 1.2s forwards;
 }
 
 .header-actions {
@@ -108,7 +196,7 @@ body {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: none;
-  border-radius: 8px;
+  border-radius: 999px;
   height: 48px;
   width: 48px;
   color: var(--text-color);
@@ -125,7 +213,7 @@ body {
 }
 
 .burger-btn .material-symbols-outlined {
-  font-size: 40px;
+  font-size: 32px;
   opacity: 0.6;
   transition: opacity 0.2s, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -156,7 +244,7 @@ body {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-radius: 16px;
+  border-radius: 30px;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -511,7 +599,7 @@ body.selection-ready .select-confirm-btn {
   }
 
   .logo {
-    height: 32px;
+    height: 34px;
   }
 
   .burger-btn {
@@ -523,6 +611,7 @@ body.selection-ready .select-confirm-btn {
     width: 60px;
     border-radius: 999px;
     transform: none;
+    padding: 30px;
   }
 
   .select-confirm-btn {
@@ -539,7 +628,7 @@ body.selection-ready .select-confirm-btn {
   }
 
   .select-confirm-btn .material-symbols-outlined {
-    font-size: 40px;
+    font-size: 32px;
   }
 
   /* Menu overlay adjustments for mobile */
@@ -552,7 +641,7 @@ body.selection-ready .select-confirm-btn {
     right: 40px;
     left: auto;
     top: auto;
-    bottom: calc(40px + 60px + 4px);
+    bottom: calc(40px + 60px + 10px);
     transform-origin: top right;
     transform: translateY(-6px);
   }

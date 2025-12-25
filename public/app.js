@@ -982,6 +982,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const logo = document.querySelector('.logo');
   const modalClose = document.querySelector('.modal-close');
 
+  // Trigger logo animation on page load
+  setTimeout(() => {
+    logo.classList.add('animate');
+  }, 100);
+
   // Open modal from logo
   const openModal = () => modal.classList.add('visible');
   logo.addEventListener('click', openModal);
