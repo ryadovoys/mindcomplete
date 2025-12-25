@@ -105,16 +105,7 @@
 
   <div class="container">
     <div class="editor-wrapper">
-      <!-- Ghost layer (behind): shows user text + prediction -->
-      <div class="ghost-layer" aria-hidden="true">
-        <span class="user-text-mirror"></span><span class="thinking-indicator">Thinking<span
-            class="dots"></span></span><span class="prediction"><span class="prediction-pre"></span><span
-            class="prediction-accept"></span><span class="prediction-remain"></span></span>
-        <div class="select-mode-indicator">
-          <span class="select-start-line"></span>
-        </div>
-      </div>
-      <!-- Editable layer (front): user types here -->
+      <!-- Editable layer with inline predictions -->
       <div class="editor" contenteditable="true" data-placeholder="What's on your mind" spellcheck="false"></div>
     </div>
   </div>
