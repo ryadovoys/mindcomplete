@@ -594,7 +594,7 @@ class PredictionManager {
     }
   }
 
-  showThinkingDelayed(delay = 200) {
+  showThinkingDelayed(delay = 2000) {
     // Clear any existing thinking timer
     if (this.thinkingTimer) {
       clearTimeout(this.thinkingTimer);
