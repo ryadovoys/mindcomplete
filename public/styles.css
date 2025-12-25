@@ -447,11 +447,13 @@ body.select-mode-active .inline-prediction {
 
 /* Inline prediction - appears directly in editor */
 .inline-prediction {
+  display: inline;
   color: #F183FF;
   cursor: pointer;
   /* Prevent editing the prediction text */
   user-select: none;
   -webkit-user-select: none;
+  pointer-events: auto;
 }
 
 /* Highlighted part (on hover) */
@@ -462,27 +464,6 @@ body.select-mode-active .inline-prediction {
 /* Non-highlighted part */
 .inline-prediction .prediction-remain {
   color: #F183FF;
-}
-
-/* Word animation for streaming */
-.inline-prediction .word-rise {
-  display: inline-block;
-  opacity: 0;
-  transform: translateY(16px);
-  animation: rise-set 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-  white-space: nowrap;
-  will-change: transform, opacity;
-}
-
-@keyframes rise-set {
-  0% {
-    opacity: 0;
-    transform: translateY(18px) scale(0.98);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 body.select-mode-active .inline-prediction .prediction-accept {

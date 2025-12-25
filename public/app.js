@@ -1,4 +1,4 @@
-const ENABLE_RISE_AND_SET = true; // Flip to false to return to classic streaming
+const ENABLE_RISE_AND_SET = false; // Disabled for inline prediction mode
 
 class PredictionManager {
   constructor(options = {}) {
@@ -132,7 +132,6 @@ class PredictionManager {
     if (!this.inlinePredictionEl) {
       this.inlinePredictionEl = document.createElement('span');
       this.inlinePredictionEl.className = 'inline-prediction';
-      this.inlinePredictionEl.contentEditable = 'false';
 
       // Add event listeners
       this.inlinePredictionEl.addEventListener('click', (e) => this.onPredictionClick(e));
