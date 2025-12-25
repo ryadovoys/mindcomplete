@@ -76,14 +76,18 @@
       </svg>
     </div>
     <div class="header-actions">
+      <a href="#" class="about-link">About</a>
       <button class="select-confirm-btn" aria-label="Confirm selection">
         <span class="material-symbols-outlined">check</span>
       </button>
       <button class="burger-btn" aria-label="Menu">
-        <span class="material-symbols-outlined">menu</span>
+        <span class="material-symbols-outlined">edit</span>
       </button>
     </div>
   </header>
+
+  <!-- Gradient overlay to fade text under header -->
+  <div class="header-gradient-overlay"></div>
 
   <!-- Burger Menu Overlay -->
   <div class="menu-overlay">
@@ -96,9 +100,6 @@
       </button>
       <button class="menu-item select-menu-btn">
         <span class="menu-label">Select</span>
-      </button>
-      <button class="menu-item about-menu-btn">
-        <span class="menu-label">About</span>
       </button>
     </div>
   </div>
@@ -124,23 +125,16 @@
     <div class="modal-content">
       <button class="modal-close">&times;</button>
       <h2>About Mindcomplete</h2>
-      <p>This tool helps you expand your ideas by completing your thoughts. Just start typing and when you pause, it
-        will continue for you. Hover over the suggestion to see what will be accepted—the text turns white up to your
-        cursor. Click anywhere in the suggestion or press TAB to accept up to that point, and it becomes part of your
-        writing.</p>
+      <p>Mindcomplete helps you expand your ideas by completing your thoughts with AI. Start typing, pause, and watch your ideas flow.</p>
 
-      <h3>How It Works</h3>
-      <ol>
-        <li>Start typing your thoughts</li>
-        <li>Pause for 1 second - AI starts thinking</li>
-        <li>"typing..." appears while waiting</li>
-        <li>AI suggestion appears in dimmed text</li>
-        <li>Hover over the suggestion - text turns white up to your cursor</li>
-        <li><strong>Click</strong> anywhere to accept up to that point</li>
-        <li><strong>Drag to select</strong> a portion in the middle - only that part gets accepted, everything before is skipped, everything after remains</li>
-        <li>Press <strong>TAB</strong> to accept the full suggestion</li>
-        <li>Keep writing naturally!</li>
-      </ol>
+      <p>Click in the middle to accept part. Tab to accept full suggestion</p>
+
+      <div class="modal-donate">
+        <p>Enjoying Mindcomplete?</p>
+        <a href="https://buymeacoffee.com/yourusername" target="_blank" rel="noopener noreferrer" class="donate-btn">
+          <span>☕</span> Buy me a coffee
+        </a>
+      </div>
     </div>
   </div>
 

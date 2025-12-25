@@ -44,6 +44,18 @@ body {
   z-index: 100;
 }
 
+/* Gradient overlay to fade text under header */
+.header-gradient-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: var(--bg-color);
+  z-index: 50;
+  pointer-events: none;
+}
+
 .header-left {
   display: flex;
   align-items: center;
@@ -151,6 +163,19 @@ body {
   gap: 16px;
 }
 
+.about-link {
+  color: var(--text-color);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.about-link:hover {
+  opacity: 1;
+}
+
 .copy-btn,
 .clear-btn {
   background: rgba(255, 255, 255, 0.1);
@@ -192,6 +217,9 @@ body {
 
 /* Burger Menu Button */
 .burger-btn {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -206,6 +234,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 0;
+  z-index: 400;
 }
 
 .burger-btn:hover {
@@ -251,13 +280,13 @@ body {
   gap: 4px;
   min-width: 160px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
-  transform-origin: top right;
+  transform-origin: bottom right;
   transform: translateY(-6px);
   opacity: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
   position: absolute;
-  top: calc(20px + 48px + 4px);
-  right: 20px;
+  bottom: calc(40px + 48px + 10px);
+  right: 40px;
 }
 .menu-overlay.menu-ready .menu-content {
   transform: translateY(0);
@@ -350,7 +379,7 @@ body.select-mode-active .prediction {
 }
 
 .modal-content {
-  background: #111;
+  background: var(--bg-color);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 48px;
@@ -359,7 +388,9 @@ body.select-mode-active .prediction {
 }
 
 .modal-content h2 {
-  display: none;
+  margin: 0 0 20px 0;
+  font-size: 24px;
+  font-weight: 600;
 }
 
 .modal-content h3 {
@@ -367,14 +398,50 @@ body.select-mode-active .prediction {
 }
 
 .modal-content p {
-  margin: 0;
-  line-height: 1.4;
+  margin: 0 0 16px 0;
+  line-height: 1.6;
   opacity: 0.9;
-  font-size: 18pt;
+  font-size: 16px;
 }
 
 .modal-content ol {
   display: none;
+}
+
+.modal-donate {
+  margin-top: 32px;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.modal-donate p {
+  margin-bottom: 16px;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.donate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #FFDD00;
+  color: #000;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.donate-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 221, 0, 0.3);
+}
+
+.donate-btn span {
+  font-size: 20px;
 }
 
 .modal-close {
@@ -405,18 +472,18 @@ body.select-mode-active .prediction {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   min-height: 100vh;
-  padding: 48px 24px;
+  padding: 48px 20px;
 }
 
 .editor-wrapper {
-  grid-column: 4 / 10;
+  grid-column: 1 / 10;
   position: relative;
   display: flex;
   align-items: flex-start;
   padding-top: 20vh;
   width: 100%;
   max-width: 700px;
-  margin: 0 auto;
+  margin: 0;
 }
 
 /* Ghost layer - positioned behind the editor */
@@ -479,6 +546,8 @@ body.select-mode-active .prediction {
   display: block;
   pointer-events: auto;
   cursor: pointer;
+  margin: 0;
+  padding: 0;
 }
 
 body.mobile-touch:not(.select-mode-active) .prediction {
@@ -549,13 +618,16 @@ body.select-mode-active .prediction-accept {
 
 /* Select confirm button - applies to all screen sizes */
 .select-confirm-btn {
+  position: fixed;
+  bottom: calc(40px + 48px + 10px);
+  right: 40px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: none;
-  border-radius: 8px;
-  height: 36px;
-  width: 36px;
+  border-radius: 999px;
+  height: 48px;
+  width: 48px;
   color: var(--text-color);
   cursor: pointer;
   display: none;
@@ -564,10 +636,11 @@ body.select-mode-active .prediction-accept {
   padding: 0;
   opacity: 0.6;
   transition: opacity 0.2s, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 401;
 }
 
 .select-confirm-btn .material-symbols-outlined {
-  font-size: 20px;
+  font-size: 32px;
 }
 
 .select-confirm-btn:hover {
@@ -603,32 +676,15 @@ body.selection-ready .select-confirm-btn {
   }
 
   .burger-btn {
-    position: fixed;
-    bottom: 40px;
-    right: 40px;
-    z-index: 400;
     height: 60px;
     width: 60px;
-    border-radius: 999px;
-    transform: none;
     padding: 30px;
   }
 
   .select-confirm-btn {
-    position: fixed;
     bottom: calc(40px + 60px + 10px);
-    right: 40px;
     height: 60px;
     width: 60px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 401;
-  }
-
-  .select-confirm-btn .material-symbols-outlined {
-    font-size: 32px;
   }
 
   /* Menu overlay adjustments for mobile */
@@ -638,12 +694,7 @@ body.selection-ready .select-confirm-btn {
 
   .menu-content {
     min-width: 150px;
-    right: 40px;
-    left: auto;
-    top: auto;
     bottom: calc(40px + 60px + 10px);
-    transform-origin: top right;
-    transform: translateY(-6px);
   }
 
   .menu-overlay.menu-ready .menu-content {

@@ -63,6 +63,16 @@ class PredictionManager {
     return isMobileUA || isMobileWidth;
   }
 
+  getEditorText() {
+    // Get text from contenteditable with proper line break handling
+    // Use innerText to preserve line breaks, but trim trailing newlines
+    // since prediction will appear on its own line as a block element
+    let text = this.editor.innerText || '';
+    // Remove all trailing newlines to prevent accumulating gaps
+    text = text.replace(/\n+$/, '');
+    return text;
+  }
+
   updateMobileBodyClass() {
     if (!document.body) return;
     document.body.classList.toggle('mobile-touch', Boolean(this.isMobile));
@@ -114,8 +124,8 @@ class PredictionManager {
     // Clear ghost text immediately when typing
     this.clearPrediction();
 
-    // Update the mirror text (for positioning)
-    this.userTextMirror.textContent = text;
+    // Update the mirror text (for positioning) - use normalized text to preserve line breaks
+    this.userTextMirror.textContent = this.getEditorText();
 
     // Only request prediction if we have enough text
     if (text.trim().length >= this.minTextLength) {
@@ -662,7 +672,7 @@ class PredictionManager {
   }
 
   updatePredictionDisplay() {
-    const userText = this.editor.textContent;
+    const userText = this.getEditorText();
     this.userTextMirror.textContent = userText;
 
     if (this.selectModeActive) {
@@ -794,9 +804,14 @@ class PredictionManager {
     const activeOffset = this.hoverOffset || this.navigationOffset;
 
     // Determine how much to accept
-    const textToAccept = activeOffset > 0
+    let textToAccept = activeOffset > 0
       ? this.currentPrediction.slice(0, activeOffset)
       : this.currentPrediction;
+
+    // Ensure the accepted text ends with a space for easier typing
+    if (textToAccept && !textToAccept.endsWith(' ')) {
+      textToAccept += ' ';
+    }
 
     // Append accepted prediction to editor
     this.editor.textContent += textToAccept;
@@ -810,11 +825,11 @@ class PredictionManager {
       this.currentPrediction = remainingPrediction;
       this.navigationOffset = 0;
       this.hoverOffset = 0;
-      this.userTextMirror.textContent = this.editor.textContent;
+      this.userTextMirror.textContent = this.getEditorText();
       this.updatePredictionDisplay();
     } else {
       // Update mirror and clear prediction
-      this.userTextMirror.textContent = this.editor.textContent;
+      this.userTextMirror.textContent = this.getEditorText();
       this.clearPrediction();
 
       // Trigger a new prediction after acceptance
@@ -886,9 +901,9 @@ class PredictionManager {
     const selectBtn = document.querySelector('.select-menu-btn');
     if (selectBtn) selectBtn.classList.remove('active');
 
-    // Change burger button back to menu icon
+    // Change burger button back to edit icon
     const burgerIcon = document.querySelector('.burger-btn .material-symbols-outlined');
-    if (burgerIcon) burgerIcon.textContent = 'menu';
+    if (burgerIcon) burgerIcon.textContent = 'edit';
   }
 
   handleSelectModeSelection(offset) {
@@ -951,7 +966,12 @@ class PredictionManager {
     if (!this.currentPrediction) return;
 
     // Extract the selected text
-    const textToAccept = this.currentPrediction.slice(startOffset, endOffset);
+    let textToAccept = this.currentPrediction.slice(startOffset, endOffset);
+
+    // Ensure the accepted text ends with a space for easier typing
+    if (textToAccept && !textToAccept.endsWith(' ')) {
+      textToAccept += ' ';
+    }
 
     // Append to editor
     this.editor.textContent += textToAccept;
@@ -962,11 +982,11 @@ class PredictionManager {
       this.currentPrediction = this.currentPrediction.slice(endOffset);
       this.navigationOffset = 0;
       this.hoverOffset = 0;
-      this.userTextMirror.textContent = this.editor.textContent;
+      this.userTextMirror.textContent = this.getEditorText();
       this.updatePredictionDisplay();
     } else {
       // Selected to the end - clear everything
-      this.userTextMirror.textContent = this.editor.textContent;
+      this.userTextMirror.textContent = this.getEditorText();
       this.clearPrediction();
       this.onInput();
     }
@@ -987,9 +1007,17 @@ document.addEventListener('DOMContentLoaded', () => {
     logo.classList.add('animate');
   }, 100);
 
-  // Open modal from logo
+  // Open modal from logo or about link
   const openModal = () => modal.classList.add('visible');
   logo.addEventListener('click', openModal);
+
+  const aboutLink = document.querySelector('.about-link');
+  if (aboutLink) {
+    aboutLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      openModal();
+    });
+  }
 
   modalClose.addEventListener('click', () => {
     modal.classList.remove('visible');
@@ -1016,7 +1044,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const copyMenuBtn = document.querySelector('.copy-menu-btn');
   const clearMenuBtn = document.querySelector('.clear-menu-btn');
   const selectMenuBtn = document.querySelector('.select-menu-btn');
-  const aboutMenuBtn = document.querySelector('.about-menu-btn');
   const editor = document.querySelector('.editor');
   let menuReadyTimeout = null;
 
@@ -1041,7 +1068,7 @@ document.addEventListener('DOMContentLoaded', () => {
     menuOverlay.classList.remove('menu-ready');
     menuOverlay.classList.remove('visible');
     if (!predictionManager.selectModeActive && burgerIcon) {
-      burgerIcon.textContent = 'menu';
+      burgerIcon.textContent = 'edit';
     }
   };
 
@@ -1049,7 +1076,7 @@ document.addEventListener('DOMContentLoaded', () => {
   burgerBtn.addEventListener('click', () => {
     if (predictionManager.selectModeActive) {
       predictionManager.disableSelectMode();
-      if (burgerIcon) burgerIcon.textContent = 'menu';
+      if (burgerIcon) burgerIcon.textContent = 'edit';
       return;
     }
 
@@ -1110,14 +1137,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     closeMenu();
   });
-
-  // ABOUT
-  if (aboutMenuBtn) {
-    aboutMenuBtn.addEventListener('click', () => {
-      closeMenu();
-      modal.classList.add('visible');
-    });
-  }
 
   // Close menu with Escape key
   document.addEventListener('keydown', (e) => {
