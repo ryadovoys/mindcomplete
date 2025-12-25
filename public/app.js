@@ -1024,17 +1024,9 @@ document.addEventListener('DOMContentLoaded', () => {
     logo.classList.add('animate');
   }, 100);
 
-  // Open modal from logo or about link
+  // Open modal from logo
   const openModal = () => modal.classList.add('visible');
   logo.addEventListener('click', openModal);
-
-  const aboutLink = document.querySelector('.about-link');
-  if (aboutLink) {
-    aboutLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      openModal();
-    });
-  }
 
   modalClose.addEventListener('click', () => {
     modal.classList.remove('visible');
