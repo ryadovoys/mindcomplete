@@ -23,7 +23,7 @@ class PredictionManager {
     this.touchStartX = null;
     this.touchStartY = null;
     this.touchMoved = false;
-    this.normalTouchActive = false;
+    this.touchOnPrediction = false;
     this.isMobile = this.detectMobile();
     this.updateMobileBodyClass();
 
@@ -81,6 +81,11 @@ class PredictionManager {
     // Handle keydown for TAB acceptance
     this.editor.addEventListener('keydown', (e) => this.onKeyDown(e));
 
+    // Handle touch events on editor (more reliable than on prediction element)
+    this.editor.addEventListener('touchstart', (e) => this.onEditorTouchStart(e), { passive: false });
+    this.editor.addEventListener('touchmove', (e) => this.onEditorTouchMove(e), { passive: false });
+    this.editor.addEventListener('touchend', (e) => this.onEditorTouchEnd(e), { passive: false });
+
     // Focus editor on page load
     this.editor.focus();
 
@@ -135,15 +140,13 @@ class PredictionManager {
       this.inlinePredictionEl.className = 'inline-prediction';
       this.inlinePredictionEl.contentEditable = 'false';
 
-      // Add event listeners
+      // Add pointer event listeners (for desktop hover/click)
       this.inlinePredictionEl.addEventListener('click', (e) => this.onPredictionClick(e));
       this.inlinePredictionEl.addEventListener('pointermove', (e) => this.onPredictionHover(e));
       this.inlinePredictionEl.addEventListener('pointerleave', () => this.onPredictionLeave());
       this.inlinePredictionEl.addEventListener('pointerup', (e) => this.onPredictionMouseUp(e));
       this.inlinePredictionEl.addEventListener('pointerdown', (e) => this.onPredictionMouseDown(e));
-      this.inlinePredictionEl.addEventListener('touchstart', (e) => this.onPredictionTouchStart(e), { passive: false });
-      this.inlinePredictionEl.addEventListener('touchmove', (e) => this.onPredictionTouchMove(e), { passive: false });
-      this.inlinePredictionEl.addEventListener('touchend', (e) => this.onPredictionTouchEnd(e), { passive: false });
+      // Touch events are now handled at editor level (onEditorTouchStart/Move/End)
     }
     return this.inlinePredictionEl;
   }
@@ -289,78 +292,89 @@ class PredictionManager {
     }
   }
 
-  onPredictionTouchStart(e) {
+  // Check if touch point is inside prediction element
+  isTouchOnPrediction(x, y) {
+    if (!this.inlinePredictionEl) return false;
+    const rect = this.inlinePredictionEl.getBoundingClientRect();
+    return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+  }
+
+  // Editor-level touch handlers (more reliable)
+  onEditorTouchStart(e) {
     if (!this.isMobile || !e.touches || !e.touches.length) return;
+    if (!this.currentPrediction) return;
+
     const touch = e.touches[0];
-    this.touchStartX = touch.clientX;
-    this.touchStartY = touch.clientY;
+    const x = touch.clientX;
+    const y = touch.clientY;
+
+    // Check if touch is on prediction
+    if (!this.isTouchOnPrediction(x, y)) return;
+
+    this.touchStartX = x;
+    this.touchStartY = y;
     this.touchMoved = false;
-
-    // Always prevent default to stop browser from converting to click
-    e.preventDefault();
-
-    if (!this.selectModeActive) {
-      // Normal mode - mark that we started a touch on prediction
-      this.normalTouchActive = true;
-      return;
-    }
-
-    const offset = this.getOffsetFromPoint(touch.clientX, touch.clientY);
-    if (offset === null) return;
-
-    const wordBounds = this.getWordBoundaries(offset);
-    if (!wordBounds) return;
-
-    this.selectTouchActive = true;
-    this.selectStartOffset = wordBounds.start;
-    this.selectPreviewOffset = wordBounds.end;
-    this.updatePredictionDisplay();
-    this.setSelectionReady(true);
-  }
-
-  onPredictionTouchMove(e) {
-    if (!this.isMobile || !e.touches || !e.touches.length) return;
-    const touch = e.touches[0];
-
-    if (this.touchStartX !== null && this.touchStartY !== null) {
-      const deltaX = Math.abs(touch.clientX - this.touchStartX);
-      const deltaY = Math.abs(touch.clientY - this.touchStartY);
-      if (deltaX > 5 || deltaY > 5) {
-        this.touchMoved = true;
-      }
-    }
-
-    if (!this.selectModeActive || !this.selectTouchActive) return;
-
-    const offset = this.getOffsetFromPoint(touch.clientX, touch.clientY);
-    if (offset === null) return;
-
-    const wordBounds = this.getWordBoundaries(offset);
-    if (!wordBounds) return;
+    this.touchOnPrediction = true;
 
     e.preventDefault();
-    if (wordBounds.end <= this.selectStartOffset) {
-      this.selectPreviewOffset = wordBounds.start;
-    } else {
+
+    if (this.selectModeActive) {
+      const offset = this.getOffsetFromPoint(x, y);
+      if (offset === null) return;
+      const wordBounds = this.getWordBoundaries(offset);
+      if (!wordBounds) return;
+
+      this.selectTouchActive = true;
+      this.selectStartOffset = wordBounds.start;
       this.selectPreviewOffset = wordBounds.end;
+      this.updatePredictionDisplay();
+      this.setSelectionReady(true);
     }
-    this.updatePredictionDisplay();
-    this.setSelectionReady(this.selectStartOffset !== this.selectPreviewOffset);
   }
 
-  onPredictionTouchEnd(e) {
-    if (!this.isMobile || !e.changedTouches || !e.changedTouches.length) return;
+  onEditorTouchMove(e) {
+    if (!this.touchOnPrediction) return;
+    if (!e.touches || !e.touches.length) return;
 
-    const touch = e.changedTouches[0];
+    const touch = e.touches[0];
+    const deltaX = Math.abs(touch.clientX - this.touchStartX);
+    const deltaY = Math.abs(touch.clientY - this.touchStartY);
+
+    if (deltaX > 5 || deltaY > 5) {
+      this.touchMoved = true;
+    }
+
+    if (this.selectModeActive && this.selectTouchActive) {
+      e.preventDefault();
+      const offset = this.getOffsetFromPoint(touch.clientX, touch.clientY);
+      if (offset === null) return;
+      const wordBounds = this.getWordBoundaries(offset);
+      if (!wordBounds) return;
+
+      if (wordBounds.end <= this.selectStartOffset) {
+        this.selectPreviewOffset = wordBounds.start;
+      } else {
+        this.selectPreviewOffset = wordBounds.end;
+      }
+      this.updatePredictionDisplay();
+      this.setSelectionReady(this.selectStartOffset !== this.selectPreviewOffset);
+    }
+  }
+
+  onEditorTouchEnd(e) {
+    if (!this.touchOnPrediction) return;
+
+    const touch = e.changedTouches?.[0];
+    if (!touch) return;
+
     const coords = { x: touch.clientX, y: touch.clientY };
     const gestureMoved = this.touchMoved;
-    const wasNormalTouch = this.normalTouchActive;
 
     // Reset state
     this.touchStartX = null;
     this.touchStartY = null;
     this.touchMoved = false;
-    this.normalTouchActive = false;
+    this.touchOnPrediction = false;
 
     e.preventDefault();
     e.stopPropagation();
@@ -392,10 +406,8 @@ class PredictionManager {
       return;
     }
 
-    // Normal mode - ignore if finger moved (was scrolling)
-    if (gestureMoved || !wasNormalTouch) {
-      return;
-    }
+    // Normal mode - ignore if finger moved
+    if (gestureMoved) return;
 
     // Normal mode - accept prediction up to tapped word
     const offset = this.getOffsetFromPoint(coords.x, coords.y);
