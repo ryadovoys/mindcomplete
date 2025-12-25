@@ -405,13 +405,6 @@ class PredictionManager {
     }
   }
 
-  // Check if touch point is inside prediction element (using individual line rects)
-  isTouchOnPrediction(x, y) {
-    if (!this.inlinePredictionEl) return false;
-    const hit = document.elementFromPoint(x, y);
-    return Boolean(hit && (hit === this.inlinePredictionEl || this.inlinePredictionEl.contains(hit)));
-  }
-
   // Editor-level touch handlers (more reliable)
   onEditorTouchStart(e) {
     if (!this.isMobile || !e.touches || !e.touches.length) return;
@@ -421,7 +414,11 @@ class PredictionManager {
     const x = touch.clientX;
     const y = touch.clientY;
 
-    if (!this.isTouchOnPrediction(x, y)) return;
+    const offsetAtStart = this.getOffsetFromPoint(x, y);
+    if (offsetAtStart === null) {
+      this.touchOnPrediction = false;
+      return;
+    }
 
     this.touchStartX = x;
     this.touchStartY = y;
@@ -431,9 +428,7 @@ class PredictionManager {
     e.preventDefault();
 
     if (this.selectModeActive) {
-      const offset = this.getOffsetFromPoint(x, y);
-      if (offset === null) return;
-      const wordBounds = this.getWordBoundaries(offset);
+      const wordBounds = this.getWordBoundaries(offsetAtStart);
       if (!wordBounds) return;
 
       if (this.selectStartOffset === null) {
