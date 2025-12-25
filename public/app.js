@@ -231,7 +231,11 @@ class PredictionManager {
   }
 
   onPredictionMouseUp(e) {
-    if (e.pointerType && e.pointerType !== 'mouse') return;
+    console.log('onPredictionMouseUp called', { pointerType: e.pointerType, isMobile: this.isMobile, selectMode: this.selectModeActive });
+    if (e.pointerType && e.pointerType !== 'mouse') {
+      console.log('Skipping - not mouse event');
+      return;
+    }
 
     if (!this.isMobile && this.selectModeActive) {
       const offset = this.getOffsetFromMouseEvent(e);
@@ -342,7 +346,11 @@ class PredictionManager {
   }
 
   onPredictionTouchEnd(e) {
-    if (!this.isMobile || !e.changedTouches || !e.changedTouches.length) return;
+    console.log('onPredictionTouchEnd called', { isMobile: this.isMobile, touches: e.changedTouches });
+    if (!this.isMobile || !e.changedTouches || !e.changedTouches.length) {
+      console.log('onPredictionTouchEnd early return');
+      return;
+    }
     const touch = e.changedTouches[0];
     const coords = { x: touch.clientX, y: touch.clientY };
     const gestureMoved = this.touchMoved;
@@ -385,17 +393,21 @@ class PredictionManager {
     }
 
     // Normal mode - word-based touch
+    console.log('Normal mode touch, coords:', coords);
     const offset = this.getOffsetFromPoint(coords.x, coords.y);
+    console.log('Offset from point:', offset);
     if (offset !== null) {
       e.preventDefault();
       e.stopPropagation();
       const wordBounds = this.getWordBoundaries(offset);
+      console.log('Word bounds:', wordBounds);
       if (wordBounds) {
         this.hoverOffset = wordBounds.end;
       } else {
         this.hoverOffset = offset;
       }
       this.navigationOffset = 0;
+      console.log('Accepting prediction with hoverOffset:', this.hoverOffset);
       this.acceptPrediction();
     }
   }
@@ -405,10 +417,12 @@ class PredictionManager {
   }
 
   getOffsetFromPoint(x, y) {
+    console.log('getOffsetFromPoint called', { x, y, hasEl: !!this.inlinePredictionEl, prediction: this.currentPrediction?.substring(0, 20) });
     if (!this.inlinePredictionEl || !this.currentPrediction) return null;
 
     // Walk through all text nodes and find closest character to click
     const textNodes = this.getTextNodesIn(this.inlinePredictionEl);
+    console.log('Text nodes found:', textNodes.length);
     let totalOffset = 0;
     let closestOffset = 0;
     let closestDistance = Infinity;
