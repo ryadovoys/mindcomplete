@@ -23,6 +23,7 @@ class PredictionManager {
     this.touchStartX = null;
     this.touchStartY = null;
     this.touchMoved = false;
+    this.normalTouchActive = false;
     this.isMobile = this.detectMobile();
     this.updateMobileBodyClass();
 
@@ -231,11 +232,7 @@ class PredictionManager {
   }
 
   onPredictionMouseUp(e) {
-    console.log('onPredictionMouseUp called', { pointerType: e.pointerType, isMobile: this.isMobile, selectMode: this.selectModeActive });
-    if (e.pointerType && e.pointerType !== 'mouse') {
-      console.log('Skipping - not mouse event');
-      return;
-    }
+    if (e.pointerType && e.pointerType !== 'mouse') return;
 
     if (!this.isMobile && this.selectModeActive) {
       const offset = this.getOffsetFromMouseEvent(e);
@@ -299,7 +296,14 @@ class PredictionManager {
     this.touchStartY = touch.clientY;
     this.touchMoved = false;
 
-    if (!this.selectModeActive) return;
+    // Always prevent default to stop browser from converting to click
+    e.preventDefault();
+
+    if (!this.selectModeActive) {
+      // Normal mode - mark that we started a touch on prediction
+      this.normalTouchActive = true;
+      return;
+    }
 
     const offset = this.getOffsetFromPoint(touch.clientX, touch.clientY);
     if (offset === null) return;
@@ -307,7 +311,6 @@ class PredictionManager {
     const wordBounds = this.getWordBoundaries(offset);
     if (!wordBounds) return;
 
-    e.preventDefault();
     this.selectTouchActive = true;
     this.selectStartOffset = wordBounds.start;
     this.selectPreviewOffset = wordBounds.end;
@@ -346,22 +349,24 @@ class PredictionManager {
   }
 
   onPredictionTouchEnd(e) {
-    console.log('onPredictionTouchEnd called', { isMobile: this.isMobile, touches: e.changedTouches });
-    if (!this.isMobile || !e.changedTouches || !e.changedTouches.length) {
-      console.log('onPredictionTouchEnd early return');
-      return;
-    }
+    if (!this.isMobile || !e.changedTouches || !e.changedTouches.length) return;
+
     const touch = e.changedTouches[0];
     const coords = { x: touch.clientX, y: touch.clientY };
     const gestureMoved = this.touchMoved;
+    const wasNormalTouch = this.normalTouchActive;
+
+    // Reset state
     this.touchStartX = null;
     this.touchStartY = null;
     this.touchMoved = false;
+    this.normalTouchActive = false;
 
-    if (this.selectModeActive && this.isMobile && this.selectTouchActive) {
-      e.preventDefault();
-      e.stopPropagation();
+    e.preventDefault();
+    e.stopPropagation();
 
+    // Select mode with drag
+    if (this.selectModeActive && this.selectTouchActive) {
       const offset = this.getOffsetFromPoint(coords.x, coords.y);
       this.selectTouchActive = false;
 
@@ -380,34 +385,28 @@ class PredictionManager {
       return;
     }
 
+    // Select mode tap
     if (this.selectModeActive) {
-      e.preventDefault();
-      e.stopPropagation();
       const offset = this.getOffsetFromPoint(coords.x, coords.y);
       this.handleSelectModeSelection(offset);
       return;
     }
 
-    if (gestureMoved) {
+    // Normal mode - ignore if finger moved (was scrolling)
+    if (gestureMoved || !wasNormalTouch) {
       return;
     }
 
-    // Normal mode - word-based touch
-    console.log('Normal mode touch, coords:', coords);
+    // Normal mode - accept prediction up to tapped word
     const offset = this.getOffsetFromPoint(coords.x, coords.y);
-    console.log('Offset from point:', offset);
     if (offset !== null) {
-      e.preventDefault();
-      e.stopPropagation();
       const wordBounds = this.getWordBoundaries(offset);
-      console.log('Word bounds:', wordBounds);
       if (wordBounds) {
         this.hoverOffset = wordBounds.end;
       } else {
         this.hoverOffset = offset;
       }
       this.navigationOffset = 0;
-      console.log('Accepting prediction with hoverOffset:', this.hoverOffset);
       this.acceptPrediction();
     }
   }
@@ -417,12 +416,10 @@ class PredictionManager {
   }
 
   getOffsetFromPoint(x, y) {
-    console.log('getOffsetFromPoint called', { x, y, hasEl: !!this.inlinePredictionEl, prediction: this.currentPrediction?.substring(0, 20) });
     if (!this.inlinePredictionEl || !this.currentPrediction) return null;
 
     // Walk through all text nodes and find closest character to click
     const textNodes = this.getTextNodesIn(this.inlinePredictionEl);
-    console.log('Text nodes found:', textNodes.length);
     let totalOffset = 0;
     let closestOffset = 0;
     let closestDistance = Infinity;
