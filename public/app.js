@@ -808,13 +808,21 @@ class PredictionManager {
       ? this.currentPrediction.slice(0, activeOffset)
       : this.currentPrediction;
 
-    // Ensure the accepted text ends with a space for easier typing
-    if (textToAccept && !textToAccept.endsWith(' ')) {
+    // Check if accepted text ends with period for auto paragraph break
+    const endsWithPeriod = textToAccept.trimEnd().endsWith('.');
+
+    // Ensure the accepted text ends with a space for easier typing (unless it ends with period)
+    if (textToAccept && !textToAccept.endsWith(' ') && !endsWithPeriod) {
       textToAccept += ' ';
     }
 
     // Append accepted prediction to editor
     this.editor.textContent += textToAccept;
+
+    // If text ends with period, add paragraph break
+    if (endsWithPeriod) {
+      this.editor.textContent += '\n';
+    }
 
     // Move cursor to end
     this.moveCursorToEnd();
@@ -968,13 +976,22 @@ class PredictionManager {
     // Extract the selected text
     let textToAccept = this.currentPrediction.slice(startOffset, endOffset);
 
-    // Ensure the accepted text ends with a space for easier typing
-    if (textToAccept && !textToAccept.endsWith(' ')) {
+    // Check if accepted text ends with period for auto paragraph break
+    const endsWithPeriod = textToAccept.trimEnd().endsWith('.');
+
+    // Ensure the accepted text ends with a space for easier typing (unless it ends with period)
+    if (textToAccept && !textToAccept.endsWith(' ') && !endsWithPeriod) {
       textToAccept += ' ';
     }
 
     // Append to editor
     this.editor.textContent += textToAccept;
+
+    // If text ends with period, add paragraph break
+    if (endsWithPeriod) {
+      this.editor.textContent += '\n';
+    }
+
     this.moveCursorToEnd();
 
     // Keep only the part after selection

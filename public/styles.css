@@ -17,9 +17,9 @@ body {
   height: 100%;
   background: var(--bg-color);
   color: var(--text-color);
-  font-family: "Google Sans", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-family: "Google Sans Flex", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
   font-optical-sizing: auto;
-  font-weight: 400;
+  font-weight: 300;
   font-style: normal;
 }
 
@@ -608,6 +608,7 @@ body.select-mode-active .prediction-accept {
   white-space: pre-wrap;
   word-wrap: break-word;
   caret-color: #F183FF;
+  font-weight: 300;
 }
 
 .editor:empty::before {
