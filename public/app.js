@@ -292,11 +292,22 @@ class PredictionManager {
     }
   }
 
-  // Check if touch point is inside prediction element
+  // Check if touch point is inside prediction element (using individual line rects)
   isTouchOnPrediction(x, y) {
     if (!this.inlinePredictionEl) return false;
-    const rect = this.inlinePredictionEl.getBoundingClientRect();
-    return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+
+    // Get rects for each line of text in prediction
+    const range = document.createRange();
+    range.selectNodeContents(this.inlinePredictionEl);
+    const rects = range.getClientRects();
+
+    // Check if point is inside any of the line rects
+    for (const rect of rects) {
+      if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // Editor-level touch handlers (more reliable)
