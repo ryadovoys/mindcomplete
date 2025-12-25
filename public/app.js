@@ -486,6 +486,10 @@ class PredictionManager {
   onEditorTouchEnd(e) {
     if (!this.touchOnPrediction) return;
 
+    // Save touchStart coords before reset (more accurate for tap detection on mobile)
+    const startX = this.touchStartX;
+    const startY = this.touchStartY;
+
     const touch = e.changedTouches?.[0];
     if (!touch) return;
 
@@ -531,8 +535,8 @@ class PredictionManager {
     // Normal mode - ignore if finger moved
     if (gestureMoved) return;
 
-    // Normal mode - accept prediction up to tapped word
-    const offset = this.getOffsetFromPoint(coords.x, coords.y);
+    // Normal mode - use touchStart coords for accurate tap detection on mobile
+    const offset = this.getOffsetFromPoint(startX ?? coords.x, startY ?? coords.y);
     if (offset !== null) {
       const wordBounds = this.getWordBoundaries(offset);
       if (wordBounds) {
