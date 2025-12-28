@@ -194,6 +194,7 @@ class PredictionManager {
     this.editor.addEventListener('touchstart', (e) => this.onEditorTouchStart(e), { passive: false });
     this.editor.addEventListener('touchmove', (e) => this.onEditorTouchMove(e), { passive: false });
     this.editor.addEventListener('touchend', (e) => this.onEditorTouchEnd(e), { passive: false });
+    this.editor.addEventListener('click', (e) => this.onEditorClick(e));
 
     // Focus editor on page load
     this.editor.focus();
@@ -412,9 +413,31 @@ class PredictionManager {
     }
   }
 
+  onEditorClick(e) {
+    if (!this.isMobile || this.selectModeActive) return;
+
+    if (this.isPointWithinPrediction(e.clientX, e.clientY)) {
+      const offset = this.getOffsetFromMouseEvent(e);
+      if (offset !== null) {
+        const wordBounds = this.getWordBoundaries(offset);
+        if (wordBounds) {
+          this.hoverOffset = wordBounds.end;
+        } else {
+          this.hoverOffset = offset;
+        }
+        this.navigationOffset = 0;
+        this.acceptPrediction();
+      }
+    }
+  }
+
   // Editor-level touch handlers (more reliable)
   onEditorTouchStart(e) {
     if (!this.isMobile || !e.touches || !e.touches.length) return;
+
+    // Normal mode relies on native click events to distinguish tap vs swipe
+    if (!this.selectModeActive) return;
+
     if (!this.currentPrediction) return;
 
     const touch = e.touches[0];
@@ -450,19 +473,8 @@ class PredictionManager {
 
     console.log(`[TouchStart:${mode}] SUCCESS - touchOnPrediction=true, offset=${offsetAtStart}`);
 
-    // Normal mode: accept immediately on tap (TouchEnd unreliable on mobile)
+    // Normal mode: let TouchEnd handle logic to distinguish tap vs swipe
     if (!this.selectModeActive) {
-      e.preventDefault();
-      const wordBounds = this.getWordBoundaries(offsetAtStart);
-      console.log(`[TouchStart:NORMAL] wordBounds=`, wordBounds);
-      if (wordBounds) {
-        this.hoverOffset = wordBounds.end;
-      } else {
-        this.hoverOffset = offsetAtStart;
-      }
-      this.navigationOffset = 0;
-      console.log(`[TouchStart:NORMAL] Accepting with hoverOffset=${this.hoverOffset}`);
-      this.acceptPrediction();
       return;
     }
 
