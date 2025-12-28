@@ -1368,11 +1368,11 @@ class ContextManager {
     if (this.filesContainer) {
       this.filesContainer.innerHTML = this.files
         .map(
-          (filename) => `
+          (file) => `
         <div class="context-file">
           <span class="context-file-name">
             <span class="material-symbols-outlined">description</span>
-            ${filename}
+            ${file.name || file}
           </span>
         </div>
       `
