@@ -1,7 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
-import pdfParse from 'pdf-parse';
-import Busboy from 'busboy';
 
 const CONTEXT_TTL_MS = 30 * 60 * 1000; // 30 minutes
 const MAX_TOTAL_CHARS = 50000;
@@ -12,6 +10,22 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 const supabase = supabaseUrl && supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey)
   : null;
+
+// Dynamic imports for modules that may have issues in serverless
+let Busboy = null;
+let pdfParse = null;
+
+// Load dependencies dynamically to avoid module loading issues in serverless
+async function loadDependencies() {
+  if (!Busboy) {
+    const busboyModule = await import('busboy');
+    Busboy = busboyModule.default;
+  }
+  if (!pdfParse) {
+    const pdfModule = await import('pdf-parse');
+    pdfParse = pdfModule.default;
+  }
+}
 
 // Parse file based on type
 async function parseFile(buffer, mimeType, filename) {
@@ -111,6 +125,15 @@ export default async function handler(req, res) {
   console.log('[context] Handler called:', req.method, req.url);
   console.log('[context] Content-Type:', req.headers['content-type']);
   console.log('[context] Supabase configured:', !!supabase);
+
+  // Load dependencies dynamically
+  try {
+    await loadDependencies();
+    console.log('[context] Dependencies loaded successfully');
+  } catch (err) {
+    console.error('[context] Failed to load dependencies:', err.message);
+    return res.status(500).json({ error: 'Failed to load dependencies: ' + err.message });
+  }
 
   // Handle CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
