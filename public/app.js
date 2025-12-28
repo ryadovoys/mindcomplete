@@ -1001,9 +1001,8 @@ class PredictionManager {
 
   normalizeAcceptedText(text) {
     let output = text;
-    const endsWithSentence = output.trimEnd().endsWith('.');
 
-    if (output && !output.endsWith(' ') && !endsWithSentence) {
+    if (output && !output.endsWith(' ')) {
       output += ' ';
     }
 
@@ -1049,7 +1048,14 @@ class PredictionManager {
     if (!this.currentPrediction || startOffset === endOffset || !this.inlinePredictionEl) return;
 
     const safeStart = Math.max(0, Math.min(startOffset, endOffset));
-    const safeEnd = Math.max(safeStart, Math.min(endOffset, this.currentPrediction.length));
+    let safeEnd = Math.max(safeStart, Math.min(endOffset, this.currentPrediction.length));
+
+    // Greedily consume a following space from the prediction if available
+    // and we aren't already at the end
+    if (safeEnd < this.currentPrediction.length && this.currentPrediction[safeEnd] === ' ') {
+      safeEnd++;
+    }
+
     if (safeStart === safeEnd) return;
 
     const textToAccept = this.currentPrediction.slice(safeStart, safeEnd);

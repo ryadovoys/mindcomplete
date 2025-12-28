@@ -46,8 +46,18 @@ const upload = multer({
   }
 });
 
+// Helper to handle multer errors and return JSON
+const handleUpload = (req, res, next) => {
+  upload.array('files', 5)(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    next();
+  });
+};
+
 // Upload context files
-app.post('/api/context', upload.array('files', 5), async (req, res) => {
+app.post('/api/context', handleUpload, async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' });
