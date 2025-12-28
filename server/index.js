@@ -3,6 +3,10 @@ import cors from 'cors';
 import 'dotenv/config';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import multer from 'multer';
+import { v4 as uuidv4 } from 'uuid';
+import { parseFile, combineContexts } from './fileParser.js';
+import { setContext, getContext, deleteContext } from './contextStore.js';
 
 const CONFIG = {
   MAX_TOKENS: 400,
@@ -20,8 +24,64 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(join(__dirname, '../public')));
 
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB max per file
+    files: 5 // Max 5 files
+  },
+  fileFilter: (req, file, cb) => {
+    const allowed = ['application/pdf', 'text/plain', 'text/markdown'];
+    if (
+      allowed.includes(file.mimetype) ||
+      file.originalname.endsWith('.md') ||
+      file.originalname.endsWith('.txt')
+    ) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF, TXT, and MD files are allowed'));
+    }
+  }
+});
+
+// Upload context files
+app.post('/api/context', upload.array('files', 5), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
+    }
+
+    const parsedFiles = await Promise.all(
+      req.files.map((file) =>
+        parseFile(file.buffer, file.mimetype, file.originalname)
+      )
+    );
+
+    const combined = combineContexts(parsedFiles);
+    const sessionId = uuidv4();
+
+    setContext(sessionId, combined);
+
+    res.json({
+      sessionId,
+      files: combined.files,
+      estimatedTokens: combined.estimatedTokens
+    });
+  } catch (error) {
+    console.error('Context upload error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Clear context
+app.delete('/api/context/:sessionId', (req, res) => {
+  deleteContext(req.params.sessionId);
+  res.json({ success: true });
+});
+
 app.post('/api/predict', async (req, res) => {
-  const { text } = req.body;
+  const { text, sessionId } = req.body;
 
   if (!text) {
     return res.status(400).json({ error: 'Text is required' });
@@ -29,6 +89,22 @@ app.post('/api/predict', async (req, res) => {
 
   if (!process.env.OPENROUTER_API_KEY) {
     return res.status(500).json({ error: 'OPENROUTER_API_KEY not configured' });
+  }
+
+  // Build system prompt with context if available
+  let systemPrompt = `Continue the user's thought from where they stopped. Write 1 paragraph that naturally extends their idea, matching their tone and style. Do not repeat their text or add meta commentary. Just provide the seamless continuation.`;
+
+  if (sessionId) {
+    const context = getContext(sessionId);
+    if (context) {
+      systemPrompt = `You are helping the user write content related to the following reference material:
+
+<reference_context>
+${context.text}
+</reference_context>
+
+Based on this context, continue the user's thought from where they stopped. Write 1 paragraph that naturally extends their idea, incorporating relevant information from the reference material when appropriate. Match their tone and style. Do not repeat their text or add meta commentary. Just provide the seamless continuation.`;
+    }
   }
 
   try {
@@ -46,7 +122,7 @@ app.post('/api/predict', async (req, res) => {
         messages: [
           {
             role: 'system',
-            content: `Continue the user's thought from where they stopped. Write 1 paragraph that naturally extends their idea, matching their tone and style. Do not repeat their text or add meta commentary. Just provide the seamless continuation.`
+            content: systemPrompt
           },
           {
             role: 'user',

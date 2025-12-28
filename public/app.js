@@ -803,7 +803,10 @@ class PredictionManager {
       const response = await fetch('/api/predict', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({
+          text,
+          sessionId: window.contextManager?.getSessionId()
+        }),
         signal: this.abortController.signal
       });
 
@@ -1187,9 +1190,183 @@ class PredictionManager {
   }
 }
 
+class ContextManager {
+  constructor() {
+    this.sessionId = null;
+    this.files = [];
+    this.estimatedTokens = 0;
+
+    this.modal = document.getElementById('context-modal');
+    this.uploadZone = document.getElementById('upload-zone');
+    this.fileInput = document.getElementById('file-input');
+    this.filesContainer = document.getElementById('context-files');
+    this.clearBtn = document.getElementById('context-clear-btn');
+    this.statusEl = document.getElementById('context-status');
+    this.contextMenuBtn = document.querySelector('.context-menu-btn');
+
+    this.init();
+  }
+
+  init() {
+    if (!this.uploadZone || !this.fileInput) return;
+
+    // Click to upload
+    this.uploadZone.addEventListener('click', () => this.fileInput.click());
+
+    // File input change
+    this.fileInput.addEventListener('change', (e) => this.handleFiles(e.target.files));
+
+    // Drag and drop
+    this.uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      this.uploadZone.classList.add('dragover');
+    });
+
+    this.uploadZone.addEventListener('dragleave', () => {
+      this.uploadZone.classList.remove('dragover');
+    });
+
+    this.uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      this.uploadZone.classList.remove('dragover');
+      this.handleFiles(e.dataTransfer.files);
+    });
+
+    // Clear button
+    if (this.clearBtn) {
+      this.clearBtn.addEventListener('click', () => this.clearContext());
+    }
+
+    // Modal close
+    if (this.modal) {
+      const closeBtn = this.modal.querySelector('.modal-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => this.closeModal());
+      }
+      this.modal.addEventListener('click', (e) => {
+        if (e.target === this.modal) this.closeModal();
+      });
+    }
+  }
+
+  async handleFiles(fileList) {
+    if (!fileList || fileList.length === 0) return;
+
+    const formData = new FormData();
+    for (const file of fileList) {
+      formData.append('files', file);
+    }
+
+    if (this.statusEl) {
+      this.statusEl.textContent = 'Uploading...';
+    }
+
+    try {
+      const response = await fetch('/api/context', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+
+      const data = await response.json();
+      this.sessionId = data.sessionId;
+      this.files = data.files;
+      this.estimatedTokens = data.estimatedTokens;
+
+      this.updateUI();
+    } catch (error) {
+      console.error('Upload error:', error);
+      if (this.statusEl) {
+        this.statusEl.textContent = `Error: ${error.message}`;
+      }
+    }
+
+    // Reset file input so same file can be re-selected
+    if (this.fileInput) {
+      this.fileInput.value = '';
+    }
+  }
+
+  async clearContext() {
+    if (this.sessionId) {
+      try {
+        await fetch(`/api/context/${this.sessionId}`, { method: 'DELETE' });
+      } catch (e) {
+        console.error('Error clearing context:', e);
+      }
+    }
+
+    this.sessionId = null;
+    this.files = [];
+    this.estimatedTokens = 0;
+    this.updateUI();
+  }
+
+  updateUI() {
+    // Update files list
+    if (this.filesContainer) {
+      this.filesContainer.innerHTML = this.files
+        .map(
+          (filename) => `
+        <div class="context-file">
+          <span class="context-file-name">
+            <span class="material-symbols-outlined">description</span>
+            ${filename}
+          </span>
+        </div>
+      `
+        )
+        .join('');
+    }
+
+    // Update status
+    if (this.files.length > 0) {
+      if (this.statusEl) {
+        this.statusEl.textContent = `~${this.estimatedTokens.toLocaleString()} tokens`;
+      }
+      if (this.clearBtn) {
+        this.clearBtn.disabled = false;
+      }
+    } else {
+      if (this.statusEl) {
+        this.statusEl.textContent = '';
+      }
+      if (this.clearBtn) {
+        this.clearBtn.disabled = true;
+      }
+    }
+
+    // Update menu button indicator
+    if (this.contextMenuBtn) {
+      this.contextMenuBtn.classList.toggle('has-context', this.files.length > 0);
+    }
+  }
+
+  openModal() {
+    if (this.modal) {
+      this.modal.classList.add('visible');
+    }
+  }
+
+  closeModal() {
+    if (this.modal) {
+      this.modal.classList.remove('visible');
+    }
+  }
+
+  getSessionId() {
+    return this.sessionId;
+  }
+}
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   const predictionManager = new PredictionManager();
+  window.contextManager = new ContextManager();
 
   // Modal handling
   const modal = document.getElementById('about-modal');
@@ -1314,9 +1491,26 @@ document.addEventListener('DOMContentLoaded', () => {
     closeMenu();
   });
 
+  // Context menu button
+  const contextMenuBtn = document.querySelector('.context-menu-btn');
+  if (contextMenuBtn) {
+    contextMenuBtn.addEventListener('click', () => {
+      window.contextManager.openModal();
+      closeMenu();
+    });
+  }
+
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && menuOverlay.classList.contains('visible')) {
       closeMenu();
+    }
+  });
+
+  // Also close context modal on Escape
+  document.addEventListener('keydown', (e) => {
+    const contextModal = document.getElementById('context-modal');
+    if (e.key === 'Escape' && contextModal?.classList.contains('visible')) {
+      window.contextManager.closeModal();
     }
   });
 });

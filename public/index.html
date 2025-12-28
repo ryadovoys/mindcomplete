@@ -100,6 +100,9 @@
       <button class="menu-item select-menu-btn">
         <span class="menu-label">Select</span>
       </button>
+      <button class="menu-item context-menu-btn">
+        <span class="menu-label">Context</span>
+      </button>
     </div>
   </div>
 
@@ -124,6 +127,31 @@
         <a href="https://buymeacoffee.com/yourusername" target="_blank" rel="noopener noreferrer" class="donate-btn">
           <span>☕</span> Buy me a coffee
         </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Context Upload Modal -->
+  <div class="modal" id="context-modal">
+    <div class="modal-content">
+      <button class="modal-close">&times;</button>
+      <h2>Add Context</h2>
+      <p>Upload files to help the AI understand what you're writing about.</p>
+
+      <div class="upload-zone" id="upload-zone">
+        <span class="material-symbols-outlined upload-icon">upload_file</span>
+        <p>Drop files here or click to browse</p>
+        <p class="upload-hint">PDF, TXT, or MD files (max 10MB each, up to 5 files)</p>
+        <input type="file" id="file-input" multiple accept=".pdf,.txt,.md,text/plain,text/markdown,application/pdf" hidden>
+      </div>
+
+      <div class="context-files" id="context-files"></div>
+
+      <div class="context-actions">
+        <button class="context-clear-btn" id="context-clear-btn" disabled>
+          Clear Context
+        </button>
+        <div class="context-status" id="context-status"></div>
       </div>
     </div>
   </div>
