@@ -97,115 +97,94 @@ body {
   gap: 12px;
 }
 
+/* Logo - Text-based with typewriter animation */
 .logo {
+  display: flex;
+  align-items: center;
   height: 28px;
-  width: auto;
-  display: block;
+  font-size: 28px;
+  font-weight: 400;
   cursor: pointer;
+  position: relative;
 }
 
-/* Logo colors */
-.logo-text {
-  fill: var(--text-color);
+.logo-write {
+  color: var(--text-color);
+  display: inline-block;
+  overflow: hidden;
+  width: 0;
+  white-space: nowrap;
 }
 
-.logo-accent {
-  fill: var(--color-accent);
-}
-
-/* Logo animation - initially hide all letters */
-.logo .letter {
-  opacity: 0;
-}
-
-/* Line is visible from the start */
-.logo .letter-line {
+.logo-separator {
+  width: 1px;
+  height: 36px;
+  background: var(--color-accent);
+  flex-shrink: 0;
   opacity: 1;
+  margin-left: 3px; /* 3px space after "write", flush with gradient */
+  margin-bottom: -4px; /* extend 4px down */
 }
 
-/* Fade-in animation for letters */
-@keyframes letter-appear {
+.logo-gradient {
+  width: 26px;
+  height: 36px;
+  background: linear-gradient(to right,
+    rgba(var(--color-accent-rgb), 0.4) 0%,
+    rgba(var(--color-accent-rgb), 0) 100%);
+  opacity: 0;
+  pointer-events: none;
+  flex-shrink: 0;
+  margin-right: -26px; /* Overlap complete, not the line */
+  margin-bottom: -4px; /* extend 4px down */
+}
+
+.logo-complete {
+  color: var(--color-accent);
+  display: inline-block;
+  opacity: 0;
+  transform: translateX(-10px);
+  white-space: nowrap;
+  margin-left: 4px; /* 4px space from line */
+}
+
+/* Logo animation keyframes */
+@keyframes typewriter-write {
+  0% { width: 0; }
+  20% { width: 0.6em; }   /* w */
+  40% { width: 1.1em; }   /* wr */
+  60% { width: 1.4em; }   /* wri */
+  80% { width: 1.9em; }   /* writ */
+  100% { width: 2.4em; }  /* write */
+}
+
+@keyframes gradient-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes complete-slide-in {
   0% {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateX(-10px);
   }
-
   100% {
     opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Rise-up animation for "complete" - matches prediction text motion */
-@keyframes letter-rise {
-  0% {
-    opacity: 0;
-    transform: translateY(18px) scale(0.98);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Line cursor movement animation */
-@keyframes line-cursor-move {
-  0% {
-    opacity: 1;
-    transform: translateX(-765px);
-  }
-
-  20% {
-    transform: translateX(-655px);
-  }
-
-  40% {
-    transform: translateX(-376px);
-  }
-
-  60% {
-    transform: translateX(-71px);
-  }
-
-  80%,
-  100% {
     transform: translateX(0);
   }
 }
 
-/* Apply animations to each letter with staggered delays */
-.logo.animate .letter-m1 {
-  animation: letter-appear 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0s forwards;
+/* Logo animation sequence */
+.logo.animate .logo-write {
+  animation: typewriter-write 1.0s steps(5, end) forwards;
 }
 
-.logo.animate .letter-i {
-  animation: letter-appear 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards;
+.logo.animate .logo-gradient {
+  animation: gradient-fade-in 0.3s ease-out 1.0s forwards;
 }
 
-.logo.animate .letter-n {
-  animation: letter-appear 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s forwards;
-}
-
-.logo.animate .letter-d {
-  animation: letter-appear 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.6s forwards;
-}
-
-/* Line moves like a cursor as letters appear */
-.logo.animate .letter-line {
-  animation: line-cursor-move 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0s forwards;
-}
-
-/* "complete" letters rise up together as one word */
-.logo.animate .letter-c,
-.logo.animate .letter-o,
-.logo.animate .letter-m2,
-.logo.animate .letter-p,
-.logo.animate .letter-l,
-.logo.animate .letter-e1,
-.logo.animate .letter-t,
-.logo.animate .letter-e2 {
-  animation: letter-rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 1.2s forwards;
+.logo.animate .logo-complete {
+  animation: complete-slide-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 1.3s forwards;
 }
 
 .header-actions {
@@ -253,19 +232,17 @@ body {
   opacity: 1;
 }
 
-/* Burger Menu Button */
+/* Burger Menu Button - Always blue */
 .burger-btn {
   position: fixed;
   bottom: 40px;
   right: 40px;
-  background: var(--surface-color);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: var(--color-accent);
   border: none;
   border-radius: 999px;
-  height: 48px;
-  width: 48px;
-  color: var(--text-color);
+  height: 72px;
+  width: 72px;
+  color: #FFFFFF;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
@@ -276,16 +253,31 @@ body {
 }
 
 .burger-btn:hover {
-  background: var(--surface-hover);
+  opacity: 0.9;
 }
 
 .burger-btn .material-symbols-outlined {
-  font-size: 32px;
-  opacity: 0.6;
-  transition: opacity 0.2s, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 40px;
+  opacity: 1;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.burger-btn:hover .material-symbols-outlined {
+/* Theme toggle button - hidden for now */
+.theme-toggle-btn {
+  display: none;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--surface-hover);
+}
+
+.theme-toggle-btn .material-symbols-outlined {
+  font-size: 24px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.theme-toggle-btn:hover .material-symbols-outlined {
   opacity: 1;
 }
 
@@ -295,7 +287,7 @@ body {
 .menu-overlay {
   position: fixed;
   inset: 0;
-  background: var(--overlay-color);
+  background: transparent;
   z-index: 200;
   pointer-events: none;
   opacity: 0;
@@ -317,13 +309,12 @@ body {
   flex-direction: column;
   gap: 4px;
   min-width: 160px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
   transform-origin: bottom right;
   transform: translateY(-6px);
   opacity: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
   position: absolute;
-  bottom: calc(40px + 48px + 10px);
+  bottom: calc(40px + 72px + 10px);
   right: 40px;
 }
 
@@ -560,7 +551,7 @@ body.mobile-touch:not(.select-mode-active) .inline-prediction {
 /* Select confirm button - applies to all screen sizes */
 .select-confirm-btn {
   position: fixed;
-  bottom: calc(40px + 48px + 10px);
+  bottom: calc(40px + 72px + 10px);
   right: 40px;
   background: var(--surface-color);
   backdrop-filter: blur(8px);
@@ -600,6 +591,21 @@ body.selection-ready .select-confirm-btn {
     width: 100%;
     min-width: 0;
   }
+
+  .burger-btn {
+    right: 20px;
+    bottom: 20px;
+  }
+
+  .select-confirm-btn {
+    bottom: calc(20px + 72px + 10px);
+    right: 20px;
+  }
+
+  .menu-content {
+    bottom: calc(20px + 72px + 10px);
+    right: 20px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -617,13 +623,15 @@ body.selection-ready .select-confirm-btn {
   }
 
   .burger-btn {
-    height: 60px;
-    width: 60px;
-    padding: 30px;
+    height: 72px;
+    width: 72px;
+    right: 20px;
+    bottom: 20px;
   }
 
   .select-confirm-btn {
-    bottom: calc(40px + 60px + 10px);
+    bottom: calc(20px + 72px + 10px);
+    right: 20px;
     height: 60px;
     width: 60px;
   }
@@ -635,7 +643,8 @@ body.selection-ready .select-confirm-btn {
 
   .menu-content {
     min-width: 150px;
-    bottom: calc(40px + 60px + 10px);
+    bottom: calc(20px + 72px + 10px);
+    right: 20px;
   }
 
   .menu-overlay.menu-ready .menu-content {

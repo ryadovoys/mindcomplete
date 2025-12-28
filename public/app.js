@@ -1491,7 +1491,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const burgerBtn = document.querySelector('.burger-btn');
   const burgerIcon = burgerBtn.querySelector('.material-symbols-outlined');
   const menuOverlay = document.querySelector('.menu-overlay');
-  const copyMenuBtn = document.querySelector('.copy-menu-btn');
+  const shareMenuBtn = document.querySelector('.share-menu-btn');
   const clearMenuBtn = document.querySelector('.clear-menu-btn');
   const selectMenuBtn = document.querySelector('.select-menu-btn');
   const editor = document.querySelector('.editor');
@@ -1542,26 +1542,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  copyMenuBtn.addEventListener('click', async () => {
+  shareMenuBtn.addEventListener('click', async () => {
     const text = predictionManager.getEditorText();
     if (!text) {
       closeMenu();
       return;
     }
 
-    try {
-      await navigator.clipboard.writeText(text);
-      const copyLabel = copyMenuBtn.querySelector('.menu-label');
-      const originalText = copyLabel ? copyLabel.textContent : 'Copy';
-      if (copyLabel) copyLabel.textContent = 'Copied';
+    const shareLabel = shareMenuBtn.querySelector('.menu-label');
+    const originalText = shareLabel ? shareLabel.textContent : 'Share';
 
-      setTimeout(() => {
-        if (copyLabel) copyLabel.textContent = originalText;
+    try {
+      // Try Web Share API first (works on mobile and some desktop browsers)
+      if (navigator.share) {
+        await navigator.share({ text });
         closeMenu();
-      }, 800);
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(text);
+        if (shareLabel) shareLabel.textContent = 'Copied!';
+        setTimeout(() => {
+          if (shareLabel) shareLabel.textContent = originalText;
+          closeMenu();
+        }, 800);
+      }
     } catch (err) {
-      console.error('Failed to copy:', err);
-      closeMenu();
+      // User cancelled share or error occurred - fallback to copy
+      if (err.name !== 'AbortError') {
+        try {
+          await navigator.clipboard.writeText(text);
+          if (shareLabel) shareLabel.textContent = 'Copied!';
+          setTimeout(() => {
+            if (shareLabel) shareLabel.textContent = originalText;
+            closeMenu();
+          }, 800);
+        } catch (copyErr) {
+          console.error('Failed to share or copy:', copyErr);
+          closeMenu();
+        }
+      } else {
+        closeMenu();
+      }
     }
   });
 
@@ -1591,27 +1612,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Theme toggle button
-  const themeMenuBtn = document.querySelector('.theme-menu-btn');
-  if (themeMenuBtn) {
-    const themeLabel = themeMenuBtn.querySelector('.menu-label');
+  // Theme toggle button (in header)
+  const themeToggleBtn = document.querySelector('.theme-toggle-btn');
+  if (themeToggleBtn) {
+    const themeIcon = themeToggleBtn.querySelector('.material-symbols-outlined');
 
     const updateThemeButton = () => {
       const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-      if (themeLabel) {
-        themeLabel.textContent = isLight ? 'Dark mode' : 'Light mode';
+      if (themeIcon) {
+        // Show moon (dark_mode) when in light theme, sun (light_mode) when in dark theme
+        themeIcon.textContent = isLight ? 'dark_mode' : 'light_mode';
       }
     };
 
-    themeMenuBtn.addEventListener('click', () => {
+    themeToggleBtn.addEventListener('click', () => {
       const html = document.documentElement;
       const isCurrentlyLight = html.getAttribute('data-theme') === 'light';
       html.setAttribute('data-theme', isCurrentlyLight ? 'dark' : 'light');
       updateThemeButton();
-      closeMenu();
     });
 
-    // Initialize button text based on current theme
+    // Initialize button icon based on current theme
     updateThemeButton();
   }
 
