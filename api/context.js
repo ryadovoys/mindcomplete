@@ -13,7 +13,6 @@ const supabase = supabaseUrl && supabaseServiceKey
 
 // Dynamic imports for modules that may have issues in serverless
 let Busboy = null;
-let pdfParse = null;
 
 // Load dependencies dynamically to avoid module loading issues in serverless
 async function loadDependencies() {
@@ -21,10 +20,8 @@ async function loadDependencies() {
     const busboyModule = await import('busboy');
     Busboy = busboyModule.default;
   }
-  if (!pdfParse) {
-    const pdfModule = await import('pdf-parse');
-    pdfParse = pdfModule.default;
-  }
+  // pdf-parse doesn't work in Vercel serverless (requires DOMMatrix browser API)
+  // PDF support is only available in local Express server
 }
 
 // Parse file based on type
@@ -35,12 +32,8 @@ async function parseFile(buffer, mimeType, filename) {
   let text = '';
 
   if (ext === '.pdf' || mimeType === 'application/pdf') {
-    try {
-      const data = await pdfParse(buffer);
-      text = data.text;
-    } catch (err) {
-      throw new Error(`Failed to parse PDF: ${err.message}`);
-    }
+    // PDF parsing not available in serverless (requires browser APIs)
+    throw new Error('PDF files are not supported in production. Please use .txt or .md files.');
   } else if (ext === '.txt' || ext === '.md' ||
              mimeType === 'text/plain' ||
              mimeType === 'text/markdown' ||
@@ -184,13 +177,16 @@ export default async function handler(req, res) {
       console.log(`[context] File ${i}: ${f.filename}, ${f.mimeType}, ${f.buffer.length} bytes`);
     });
 
-    // Validate file types
-    const allowedExtensions = ['.md', '.txt', '.pdf'];
+    // Validate file types (PDF not supported in serverless)
+    const allowedExtensions = ['.md', '.txt'];
     for (const file of files) {
       const ext = file.filename.toLowerCase().slice(file.filename.lastIndexOf('.'));
       if (!allowedExtensions.includes(ext)) {
         console.log('[context] ERROR: Unsupported file type:', ext);
-        return res.status(400).json({ error: `File type not supported: ${file.filename}` });
+        const errorMsg = ext === '.pdf'
+          ? 'PDF files are not supported. Please convert to .txt or .md'
+          : `File type not supported: ${file.filename}`;
+        return res.status(400).json({ error: errorMsg });
       }
     }
 
