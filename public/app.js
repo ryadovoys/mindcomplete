@@ -1222,6 +1222,8 @@ class ContextManager {
     this.clearBtn = document.getElementById('context-clear-btn');
     this.statusEl = document.getElementById('context-status');
     this.contextMenuBtn = document.querySelector('.context-menu-btn');
+    this.textarea = document.getElementById('context-textarea');
+    this.addTextBtn = document.getElementById('add-text-btn');
 
     this.init();
   }
@@ -1282,6 +1284,11 @@ class ContextManager {
         if (e.target === this.modal) this.closeModal();
       });
     }
+
+    // Add text button
+    if (this.addTextBtn) {
+      this.addTextBtn.addEventListener('click', () => this.handleTextAdd());
+    }
   }
 
   async handleFiles(fileList) {
@@ -1339,6 +1346,33 @@ class ContextManager {
     // Reset file input so same file can be re-selected
     if (this.fileInput) {
       this.fileInput.value = '';
+    }
+  }
+
+  async handleTextAdd() {
+    if (!this.textarea) return;
+
+    const text = this.textarea.value.trim();
+    if (!text) {
+      if (this.statusEl) {
+        this.statusEl.textContent = 'Please enter some text';
+      }
+      return;
+    }
+
+    // Generate timestamp-based filename
+    const now = new Date();
+    const filename = `text-${now.toISOString().slice(0, 16).replace('T', '-').replace(':', '-')}.txt`;
+
+    // Create a virtual text file
+    const file = new File([text], filename, { type: 'text/plain' });
+
+    // Use existing handleFiles method
+    await this.handleFiles([file]);
+
+    // Clear textarea on success (if no error shown)
+    if (this.statusEl && !this.statusEl.textContent.startsWith('Error')) {
+      this.textarea.value = '';
     }
   }
 
