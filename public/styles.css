@@ -7,8 +7,8 @@
 /* Color Tokens */
 :root {
   /* Brand colors */
-  --color-accent: #0040FF;
-  --color-accent-rgb: 0, 64, 255;
+  --color-accent: #0091FF;
+  --color-accent-rgb: 0, 145, 255;
 
   /* Dark theme (default) */
   --color-bg-dark: #171719;
