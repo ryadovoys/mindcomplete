@@ -36,7 +36,8 @@ const upload = multer({
     if (
       allowed.includes(file.mimetype) ||
       file.originalname.endsWith('.md') ||
-      file.originalname.endsWith('.txt')
+      file.originalname.endsWith('.txt') ||
+      file.originalname.endsWith('.pdf')
     ) {
       cb(null, true);
     } else {

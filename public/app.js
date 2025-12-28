@@ -1280,8 +1280,19 @@ class ContextManager {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Upload failed');
+        let errorMessage = 'Upload failed';
+        try {
+          const error = await response.json();
+          errorMessage = error.error || errorMessage;
+        } catch (e) {
+          // Response wasn't JSON (iOS Safari compatibility)
+          try {
+            errorMessage = await response.text() || errorMessage;
+          } catch (e2) {
+            // Use default error message
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
