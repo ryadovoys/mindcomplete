@@ -1500,6 +1500,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Theme toggle button
+  const themeMenuBtn = document.querySelector('.theme-menu-btn');
+  if (themeMenuBtn) {
+    const themeLabel = themeMenuBtn.querySelector('.menu-label');
+
+    const updateThemeButton = () => {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      if (themeLabel) {
+        themeLabel.textContent = isLight ? 'Dark mode' : 'Light mode';
+      }
+    };
+
+    themeMenuBtn.addEventListener('click', () => {
+      const html = document.documentElement;
+      const isCurrentlyLight = html.getAttribute('data-theme') === 'light';
+      html.setAttribute('data-theme', isCurrentlyLight ? 'dark' : 'light');
+      updateThemeButton();
+      closeMenu();
+    });
+
+    // Initialize button text based on current theme
+    updateThemeButton();
+  }
+
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && menuOverlay.classList.contains('visible')) {
       closeMenu();
