@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
 import pdfParse from 'pdf-parse';
+import Busboy from 'busboy';
 
 const CONTEXT_TTL_MS = 30 * 60 * 1000; // 30 minutes
 const MAX_TOTAL_CHARS = 50000;
@@ -68,50 +69,36 @@ function combineContexts(parsedFiles) {
   };
 }
 
-// Parse multipart form data manually for Vercel
+// Parse multipart form data using busboy (reliable for Vercel serverless)
 async function parseMultipartForm(req) {
-  const contentType = req.headers['content-type'] || '';
-  if (!contentType.includes('multipart/form-data')) {
-    throw new Error('Expected multipart/form-data');
-  }
-
-  const boundaryMatch = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/);
-  if (!boundaryMatch) throw new Error('No boundary found');
-  const boundary = boundaryMatch[1] || boundaryMatch[2];
-
-  // Read body as buffer
-  const chunks = [];
-  for await (const chunk of req) {
-    chunks.push(chunk);
-  }
-  const buffer = Buffer.concat(chunks);
-  const body = buffer.toString('latin1');
-
-  const parts = body.split(`--${boundary}`).slice(1, -1);
-  const files = [];
-
-  for (const part of parts) {
-    const headerEnd = part.indexOf('\r\n\r\n');
-    if (headerEnd === -1) continue;
-
-    const headers = part.slice(0, headerEnd);
-    const content = part.slice(headerEnd + 4, part.lastIndexOf('\r\n'));
-
-    const filenameMatch = headers.match(/filename="([^"]+)"/);
-    const contentTypeMatch = headers.match(/Content-Type:\s*(.+)/i);
-
-    if (filenameMatch) {
-      const filename = filenameMatch[1];
-      const mimeType = contentTypeMatch ? contentTypeMatch[1].trim() : 'application/octet-stream';
-
-      // Convert back to buffer using latin1 encoding to preserve binary data
-      const fileBuffer = Buffer.from(content, 'latin1');
-
-      files.push({ buffer: fileBuffer, mimeType, filename });
+  return new Promise((resolve, reject) => {
+    const contentType = req.headers['content-type'] || '';
+    if (!contentType.includes('multipart/form-data')) {
+      return reject(new Error('Expected multipart/form-data'));
     }
-  }
 
-  return files;
+    const busboy = Busboy({ headers: req.headers });
+    const files = [];
+
+    busboy.on('file', (fieldname, file, info) => {
+      const { filename, mimeType } = info;
+      const chunks = [];
+
+      file.on('data', (chunk) => chunks.push(chunk));
+      file.on('end', () => {
+        files.push({
+          buffer: Buffer.concat(chunks),
+          mimeType: mimeType || 'application/octet-stream',
+          filename
+        });
+      });
+    });
+
+    busboy.on('finish', () => resolve(files));
+    busboy.on('error', (err) => reject(err));
+
+    req.pipe(busboy);
+  });
 }
 
 export const config = {
@@ -182,7 +169,8 @@ export default async function handler(req, res) {
         char_count: combined.charCount,
         estimated_tokens: combined.estimatedTokens,
         files: combined.files,
-        expires_at: expiresAt
+        expires_at: expiresAt,
+        user_id: null  // Explicit null for RLS policy
       }, {
         onConflict: 'session_id'
       });
