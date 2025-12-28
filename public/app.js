@@ -1229,6 +1229,17 @@ class ContextManager {
   init() {
     if (!this.uploadZone || !this.fileInput) return;
 
+    // Restore session from localStorage if available
+    const savedSessionId = localStorage.getItem('mindcomplete_session_id');
+    const savedFiles = localStorage.getItem('mindcomplete_files');
+    const savedTokens = localStorage.getItem('mindcomplete_tokens');
+    if (savedSessionId && savedFiles) {
+      this.sessionId = savedSessionId;
+      this.files = JSON.parse(savedFiles);
+      this.estimatedTokens = parseInt(savedTokens) || 0;
+      this.updateUI();
+    }
+
     // Click to upload (desktop zone)
     this.uploadZone.addEventListener('click', () => this.fileInput.click());
 
@@ -1312,6 +1323,11 @@ class ContextManager {
       this.files = data.files;
       this.estimatedTokens = data.estimatedTokens;
 
+      // Save to localStorage for session recovery
+      localStorage.setItem('mindcomplete_session_id', this.sessionId);
+      localStorage.setItem('mindcomplete_files', JSON.stringify(this.files));
+      localStorage.setItem('mindcomplete_tokens', this.estimatedTokens.toString());
+
       this.updateUI();
     } catch (error) {
       console.error('Upload error:', error);
@@ -1338,6 +1354,12 @@ class ContextManager {
     this.sessionId = null;
     this.files = [];
     this.estimatedTokens = 0;
+
+    // Clear localStorage
+    localStorage.removeItem('mindcomplete_session_id');
+    localStorage.removeItem('mindcomplete_files');
+    localStorage.removeItem('mindcomplete_tokens');
+
     this.updateUI();
   }
 

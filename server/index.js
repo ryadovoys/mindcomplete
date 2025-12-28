@@ -32,16 +32,20 @@ const upload = multer({
     files: 5 // Max 5 files
   },
   fileFilter: (req, file, cb) => {
-    const allowed = ['application/pdf', 'text/plain', 'text/markdown'];
-    if (
-      allowed.includes(file.mimetype) ||
-      file.originalname.endsWith('.md') ||
-      file.originalname.endsWith('.txt') ||
-      file.originalname.endsWith('.pdf')
-    ) {
+    const allowedMimes = [
+      'application/pdf',
+      'text/plain',
+      'text/markdown',
+      'text/x-markdown',
+      'application/octet-stream' // iOS Chrome sends this for text files
+    ];
+    const allowedExtensions = ['.md', '.txt', '.pdf'];
+    const ext = file.originalname.toLowerCase().slice(file.originalname.lastIndexOf('.'));
+
+    if (allowedMimes.includes(file.mimetype) || allowedExtensions.includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error('Only PDF, TXT, and MD files are allowed'));
+      cb(new Error(`File type not supported: ${file.originalname}`));
     }
   }
 });
@@ -72,7 +76,7 @@ app.post('/api/context', handleUpload, async (req, res) => {
     const combined = combineContexts(parsedFiles);
     const sessionId = uuidv4();
 
-    setContext(sessionId, combined);
+    await setContext(sessionId, combined);
 
     res.json({
       sessionId,
@@ -86,8 +90,8 @@ app.post('/api/context', handleUpload, async (req, res) => {
 });
 
 // Clear context
-app.delete('/api/context/:sessionId', (req, res) => {
-  deleteContext(req.params.sessionId);
+app.delete('/api/context/:sessionId', async (req, res) => {
+  await deleteContext(req.params.sessionId);
   res.json({ success: true });
 });
 
@@ -106,7 +110,7 @@ app.post('/api/predict', async (req, res) => {
   let systemPrompt = `Continue the user's thought from where they stopped. Write 1 paragraph that naturally extends their idea, matching their tone and style. Do not repeat their text or add meta commentary. Just provide the seamless continuation.`;
 
   if (sessionId) {
-    const context = getContext(sessionId);
+    const context = await getContext(sessionId);
     if (context) {
       systemPrompt = `You are helping the user write content related to the following reference material:
 

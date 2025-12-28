@@ -6,19 +6,23 @@ const MAX_CONTEXT_CHARS = 50000; // ~12,500 tokens (4 chars per token estimate)
 
 export async function parseFile(buffer, mimetype, filename) {
   let text = '';
+  const ext = filename.toLowerCase().slice(filename.lastIndexOf('.'));
 
-  if (mimetype === 'application/pdf') {
+  // Detect file type by extension first (more reliable on mobile)
+  if (ext === '.pdf' || mimetype === 'application/pdf') {
     const data = await pdfParse(buffer);
     text = data.text;
   } else if (
+    ext === '.txt' ||
+    ext === '.md' ||
     mimetype === 'text/plain' ||
     mimetype === 'text/markdown' ||
-    filename.endsWith('.md') ||
-    filename.endsWith('.txt')
+    mimetype === 'text/x-markdown' ||
+    mimetype === 'application/octet-stream' // iOS sends this for text files
   ) {
     text = buffer.toString('utf-8');
   } else {
-    throw new Error(`Unsupported file type: ${mimetype}`);
+    throw new Error(`Unsupported file type: ${mimetype} (${filename})`);
   }
 
   // Clean whitespace
