@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
-import pdfParse from 'pdf-parse/lib/pdf-parse.js';
+import pdfParse from 'pdf-parse';
 
 const CONTEXT_TTL_MS = 30 * 60 * 1000; // 30 minutes
 const MAX_TOTAL_CHARS = 50000;
