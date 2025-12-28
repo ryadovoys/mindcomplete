@@ -692,36 +692,6 @@ body.selection-ready .select-confirm-btn {
   }
 }
 
-/* Pull-to-refresh indicator */
-.pull-indicator {
-  position: fixed;
-  top: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--ghost-color);
-  font-size: 14px;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  z-index: 1000;
-  pointer-events: none;
-}
-
-.pull-indicator.ready {
-  color: var(--color-accent);
-}
-
-.pull-indicator.ready .pull-arrow {
-  transform: rotate(180deg);
-}
-
-.pull-arrow {
-  font-size: 18px;
-  transition: transform 0.2s ease;
-}
-
 /* Context Upload Modal */
 .upload-zone {
   border: 2px dashed var(--ghost-color);
