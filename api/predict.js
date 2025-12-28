@@ -1,8 +1,38 @@
+import { createClient } from '@supabase/supabase-js';
+
 const CONFIG = {
   MAX_TOKENS: 400,
   TEMPERATURE: 0.7,
   MODEL: 'xiaomi/mimo-v2-flash:free',
 };
+
+// Initialize Supabase
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+const supabase = supabaseUrl && supabaseServiceKey
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null;
+
+// Get context from Supabase
+async function getContext(sessionId) {
+  if (!supabase || !sessionId) return null;
+
+  const { data, error } = await supabase
+    .from('contexts')
+    .select('text, char_count, estimated_tokens, files, expires_at')
+    .eq('session_id', sessionId)
+    .gt('expires_at', new Date().toISOString())
+    .single();
+
+  if (error || !data) return null;
+
+  return {
+    text: data.text,
+    charCount: data.char_count,
+    estimatedTokens: data.estimated_tokens,
+    files: data.files
+  };
+}
 
 export default async function handler(req, res) {
   // Only allow POST requests
@@ -10,7 +40,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { text } = req.body;
+  const { text, sessionId } = req.body;
 
   if (!text) {
     return res.status(400).json({ error: 'Text is required' });
@@ -18,6 +48,22 @@ export default async function handler(req, res) {
 
   if (!process.env.OPENROUTER_API_KEY) {
     return res.status(500).json({ error: 'OPENROUTER_API_KEY not configured' });
+  }
+
+  // Build system prompt with context if available
+  let systemPrompt = `Continue the user's thought from where they stopped. Write 1 paragraph that naturally extends their idea, matching their tone and style. Do not repeat their text or add meta commentary. Just provide the seamless continuation.`;
+
+  if (sessionId) {
+    const context = await getContext(sessionId);
+    if (context) {
+      systemPrompt = `You are helping the user write content related to the following reference material:
+
+<reference_context>
+${context.text}
+</reference_context>
+
+Based on this context, continue the user's thought from where they stopped. Write 1 paragraph that naturally extends their idea, incorporating relevant information from the reference material when appropriate. Match their tone and style. Do not repeat their text or add meta commentary. Just provide the seamless continuation.`;
+    }
   }
 
   try {
@@ -35,7 +81,7 @@ export default async function handler(req, res) {
         messages: [
           {
             role: 'system',
-            content: `Continue the user's thought from where they stopped. Write 1 paragraph that naturally extends their idea, matching their tone and style. Do not repeat their text or add meta commentary. Just provide the seamless continuation.`
+            content: systemPrompt
           },
           {
             role: 'user',
