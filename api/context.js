@@ -108,6 +108,10 @@ export const config = {
 };
 
 export default async function handler(req, res) {
+  console.log('[context] Handler called:', req.method, req.url);
+  console.log('[context] Content-Type:', req.headers['content-type']);
+  console.log('[context] Supabase configured:', !!supabase);
+
   // Handle CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, DELETE, OPTIONS');
@@ -120,6 +124,7 @@ export default async function handler(req, res) {
   // DELETE - clear context
   if (req.method === 'DELETE') {
     const sessionId = req.url.split('/').pop();
+    console.log('[context] DELETE sessionId:', sessionId);
 
     if (supabase && sessionId) {
       await supabase.from('contexts').delete().eq('session_id', sessionId);
@@ -130,37 +135,55 @@ export default async function handler(req, res) {
 
   // POST - upload context
   if (req.method !== 'POST') {
+    console.log('[context] Method not allowed:', req.method);
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   if (!supabase) {
+    console.log('[context] ERROR: Supabase not configured');
+    console.log('[context] SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
+    console.log('[context] SUPABASE_SERVICE_KEY exists:', !!process.env.SUPABASE_SERVICE_KEY);
     return res.status(500).json({ error: 'Supabase not configured' });
   }
 
   try {
+    console.log('[context] Parsing multipart form...');
     const files = await parseMultipartForm(req);
+    console.log('[context] Files parsed:', files.length);
 
     if (files.length === 0) {
+      console.log('[context] ERROR: No files in request');
       return res.status(400).json({ error: 'No files uploaded' });
     }
+
+    // Log file details
+    files.forEach((f, i) => {
+      console.log(`[context] File ${i}: ${f.filename}, ${f.mimeType}, ${f.buffer.length} bytes`);
+    });
 
     // Validate file types
     const allowedExtensions = ['.md', '.txt', '.pdf'];
     for (const file of files) {
       const ext = file.filename.toLowerCase().slice(file.filename.lastIndexOf('.'));
       if (!allowedExtensions.includes(ext)) {
+        console.log('[context] ERROR: Unsupported file type:', ext);
         return res.status(400).json({ error: `File type not supported: ${file.filename}` });
       }
     }
 
+    console.log('[context] Parsing file contents...');
     const parsedFiles = await Promise.all(
       files.map(file => parseFile(file.buffer, file.mimeType, file.filename))
     );
+    console.log('[context] Files parsed successfully');
 
     const combined = combineContexts(parsedFiles);
+    console.log('[context] Combined:', combined.charCount, 'chars,', combined.estimatedTokens, 'tokens');
+
     const sessionId = uuidv4();
     const expiresAt = new Date(Date.now() + CONTEXT_TTL_MS).toISOString();
 
+    console.log('[context] Saving to Supabase, sessionId:', sessionId);
     const { error } = await supabase
       .from('contexts')
       .upsert({
@@ -176,17 +199,19 @@ export default async function handler(req, res) {
       });
 
     if (error) {
-      console.error('Supabase error:', error);
+      console.error('[context] Supabase error:', JSON.stringify(error));
       return res.status(500).json({ error: 'Failed to save context' });
     }
 
+    console.log('[context] SUCCESS - returning sessionId:', sessionId);
     res.status(200).json({
       sessionId,
       files: combined.files,
       estimatedTokens: combined.estimatedTokens
     });
   } catch (error) {
-    console.error('Context upload error:', error);
+    console.error('[context] CATCH error:', error.message);
+    console.error('[context] Stack:', error.stack);
     res.status(500).json({ error: error.message });
   }
 }
