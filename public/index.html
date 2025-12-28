@@ -145,8 +145,17 @@
         <span class="material-symbols-outlined upload-icon">upload_file</span>
         <p>Drop files here or click to browse</p>
         <p class="upload-hint">PDF, TXT, or MD files (max 10MB each, up to 5 files)</p>
-        <input type="file" id="file-input" multiple accept=".pdf,.txt,.md,text/plain,text/markdown,application/pdf" hidden>
       </div>
+
+      <div class="upload-mobile" id="upload-mobile">
+        <button class="upload-btn" id="upload-btn">
+          <span class="material-symbols-outlined">upload_file</span>
+          Upload Files
+        </button>
+        <p class="upload-mobile-hint">PDF, TXT, or MD files<br>Max 10MB each, up to 5 files</p>
+      </div>
+
+      <input type="file" id="file-input" multiple accept=".pdf,.txt,.md,text/plain,text/markdown,application/pdf" class="visually-hidden">
 
       <div class="context-files" id="context-files"></div>
 

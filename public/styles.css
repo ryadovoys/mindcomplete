@@ -700,6 +700,19 @@ body.selection-ready .select-confirm-btn {
   }
 }
 
+/* Visually hidden but still functional for iOS file inputs */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Context Upload Modal */
 .upload-zone {
   border: 2px dashed var(--ghost-color);
@@ -728,6 +741,54 @@ body.selection-ready .select-confirm-btn {
   font-size: 12px;
   opacity: 0.5;
   margin-top: 8px;
+}
+
+/* Mobile upload button - hidden on desktop */
+.upload-mobile {
+  display: none;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-color);
+  background: var(--color-accent);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.upload-btn:hover {
+  opacity: 0.9;
+}
+
+.upload-btn .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.upload-mobile-hint {
+  font-size: 12px;
+  opacity: 0.5;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+/* Mobile: show button, hide drag-drop zone */
+@media (max-width: 768px) {
+  .upload-zone {
+    display: none;
+  }
+
+  .upload-mobile {
+    display: block;
+  }
 }
 
 .context-files {

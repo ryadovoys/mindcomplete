@@ -1210,6 +1210,7 @@ class ContextManager {
 
     this.modal = document.getElementById('context-modal');
     this.uploadZone = document.getElementById('upload-zone');
+    this.uploadBtn = document.getElementById('upload-btn');
     this.fileInput = document.getElementById('file-input');
     this.filesContainer = document.getElementById('context-files');
     this.clearBtn = document.getElementById('context-clear-btn');
@@ -1222,8 +1223,13 @@ class ContextManager {
   init() {
     if (!this.uploadZone || !this.fileInput) return;
 
-    // Click to upload
+    // Click to upload (desktop zone)
     this.uploadZone.addEventListener('click', () => this.fileInput.click());
+
+    // Click to upload (mobile button)
+    if (this.uploadBtn) {
+      this.uploadBtn.addEventListener('click', () => this.fileInput.click());
+    }
 
     // File input change
     this.fileInput.addEventListener('change', (e) => this.handleFiles(e.target.files));
