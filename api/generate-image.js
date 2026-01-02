@@ -1,16 +1,21 @@
 const CONFIG = {
   PROMPT_MODEL: 'xiaomi/mimo-v2-flash:free',
-  IMAGE_MODEL: 'bytedance-seed/seedream-4.5',
-  STYLE_SUFFIX: ', in the style of Hayao Miyazaki Studio Ghibli anime, soft watercolor palette, detailed hand-painted backgrounds, whimsical atmosphere, warm lighting',
+  IMAGE_MODEL: 'sourceful/riverflow-v2-fast-preview',
+  STYLE_SUFFIX: ', in the style of Hayao Miyazaki Studio Ghibli anime',
 };
 
 // Generate image prompt from text using LLM
-async function generateImagePrompt(text, apiKey, host) {
-  const systemPrompt = `You are an image prompt generator. Analyze the given text and create a short, vivid image prompt (max 80 words) that illustrates the last few sentences.
+async function generateImagePrompt(text, apiKey, host, guidance = '') {
+  let systemPrompt = `You are an image prompt generator. Analyze the given text and create a short, vivid image prompt (max 80 words) that illustrates the last few sentences.
 
 Describe visual elements: characters, setting, lighting, colors, atmosphere. Be specific on what's going on in the scene.
 
 Output ONLY the image prompt, nothing else. No quotes, no explanations.`;
+
+  // Add user guidance if provided
+  if (guidance && guidance.trim()) {
+    systemPrompt += `\n\nIMPORTANT - Follow this guidance from the user:\n${guidance}`;
+  }
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -113,7 +118,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { text } = req.body;
+  const { text, guidance } = req.body;
 
   if (!text || text.trim().length === 0) {
     return res.status(400).json({ error: 'Text is required' });
@@ -127,9 +132,10 @@ export default async function handler(req, res) {
   const host = req.headers.host || 'localhost';
 
   try {
-    // Step 1: Generate image prompt from text
+    // Step 1: Generate image prompt from text (with optional guidance)
     console.log('Generating image prompt from text...');
-    const basePrompt = await generateImagePrompt(text, apiKey, host);
+    if (guidance) console.log('With guidance:', guidance);
+    const basePrompt = await generateImagePrompt(text, apiKey, host, guidance);
 
     if (!basePrompt) {
       return res.status(500).json({ error: 'Failed to generate image prompt' });

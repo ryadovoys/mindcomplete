@@ -1653,10 +1653,100 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Create image button
+  // Create image button and guidance modal
   const createImageBtn = document.querySelector('.create-image-btn');
-  if (createImageBtn) {
-    createImageBtn.addEventListener('click', async () => {
+  const imageGuidanceModal = document.getElementById('image-guidance-modal');
+  const imageGuidanceTextarea = document.getElementById('image-guidance-textarea');
+  const applyGuidanceBtn = document.getElementById('apply-guidance-btn');
+  const skipGuidanceBtn = document.getElementById('skip-guidance-btn');
+
+  // Function to generate image with optional guidance
+  async function generateImageWithGuidance(text, guidance = '') {
+    // Remove any existing predictions and cancel pending requests
+    predictionManager.cancelPending();
+    predictionManager.removeInlinePrediction();
+
+    // Add loading state
+    createImageBtn.classList.add('loading');
+    const imageIcon = createImageBtn.querySelector('.material-symbols-outlined');
+    if (imageIcon) imageIcon.textContent = 'progress_activity';
+
+    // Insert loading placeholder into editor
+    const placeholder = document.createElement('div');
+    placeholder.className = 'image-loading-placeholder';
+    placeholder.innerHTML = '<span class="material-symbols-outlined">progress_activity</span> Creating image...';
+    editor.appendChild(placeholder);
+
+    try {
+      const response = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, guidance })
+      });
+
+      if (!response.ok) {
+        throw new Error('Image generation failed');
+      }
+
+      const data = await response.json();
+
+      // Remove placeholder
+      placeholder.remove();
+
+      // Get the image URL from the response
+      const imageUrl = data.image?.url || data.image?.b64_json;
+
+      if (imageUrl) {
+        // Create container for image with remove button
+        const container = document.createElement('div');
+        container.className = 'editor-image-container';
+        container.contentEditable = 'false';
+
+        // Create image element
+        const img = document.createElement('img');
+        img.className = 'editor-image';
+
+        if (data.image?.b64_json) {
+          img.src = `data:image/png;base64,${data.image.b64_json}`;
+        } else {
+          img.src = imageUrl;
+        }
+
+        img.alt = 'Generated illustration';
+
+        // Create remove button
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'editor-image-remove';
+        removeBtn.innerHTML = '<span class="material-symbols-outlined">close</span>';
+        removeBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          container.remove();
+        });
+
+        container.appendChild(img);
+        container.appendChild(removeBtn);
+        editor.appendChild(container);
+
+        // Add line break after image for continued writing
+        editor.appendChild(document.createElement('br'));
+      }
+    } catch (error) {
+      console.error('Image generation error:', error);
+      placeholder.innerHTML = 'Failed to generate image';
+      setTimeout(() => placeholder.remove(), 2000);
+    } finally {
+      // Remove loading state
+      createImageBtn.classList.remove('loading');
+      if (imageIcon) imageIcon.textContent = 'image';
+    }
+  }
+
+  // Store text for image generation
+  let pendingImageText = '';
+
+  if (createImageBtn && imageGuidanceModal) {
+    createImageBtn.addEventListener('click', () => {
       // Get text BEFORE removing prediction (getEditorText already excludes predictions)
       const text = predictionManager.getEditorText();
       if (!text || text.trim().length < 10) {
@@ -1664,85 +1754,42 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // Remove any existing predictions and cancel pending requests
-      predictionManager.cancelPending();
-      predictionManager.removeInlinePrediction();
-
-      // Add loading state
-      createImageBtn.classList.add('loading');
-      const imageIcon = createImageBtn.querySelector('.material-symbols-outlined');
-      if (imageIcon) imageIcon.textContent = 'progress_activity';
-
+      // Store text and show guidance modal
+      pendingImageText = text;
       closeMenu();
+      imageGuidanceModal.classList.add('visible');
+      imageGuidanceTextarea.value = '';
+      imageGuidanceTextarea.focus();
+    });
 
-      // Insert loading placeholder into editor
-      const placeholder = document.createElement('div');
-      placeholder.className = 'image-loading-placeholder';
-      placeholder.innerHTML = '<span class="material-symbols-outlined">progress_activity</span> Creating image...';
-      editor.appendChild(placeholder);
+    // Apply guidance button
+    if (applyGuidanceBtn) {
+      applyGuidanceBtn.addEventListener('click', () => {
+        const guidance = imageGuidanceTextarea.value.trim();
+        imageGuidanceModal.classList.remove('visible');
+        generateImageWithGuidance(pendingImageText, guidance);
+      });
+    }
 
-      try {
-        const response = await fetch('/api/generate-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text })
-        });
+    // Skip guidance button
+    if (skipGuidanceBtn) {
+      skipGuidanceBtn.addEventListener('click', () => {
+        imageGuidanceModal.classList.remove('visible');
+        generateImageWithGuidance(pendingImageText, '');
+      });
+    }
 
-        if (!response.ok) {
-          throw new Error('Image generation failed');
-        }
+    // Close modal on backdrop click
+    imageGuidanceModal.addEventListener('click', (e) => {
+      if (e.target === imageGuidanceModal) {
+        imageGuidanceModal.classList.remove('visible');
+      }
+    });
 
-        const data = await response.json();
-
-        // Remove placeholder
-        placeholder.remove();
-
-        // Get the image URL from the response
-        const imageUrl = data.image?.url || data.image?.b64_json;
-
-        if (imageUrl) {
-          // Create container for image with remove button
-          const container = document.createElement('div');
-          container.className = 'editor-image-container';
-          container.contentEditable = 'false';
-
-          // Create image element
-          const img = document.createElement('img');
-          img.className = 'editor-image';
-
-          if (data.image?.b64_json) {
-            img.src = `data:image/png;base64,${data.image.b64_json}`;
-          } else {
-            img.src = imageUrl;
-          }
-
-          img.alt = 'Generated illustration';
-
-          // Create remove button
-          const removeBtn = document.createElement('button');
-          removeBtn.className = 'editor-image-remove';
-          removeBtn.innerHTML = '<span class="material-symbols-outlined">close</span>';
-          removeBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            container.remove();
-          });
-
-          container.appendChild(img);
-          container.appendChild(removeBtn);
-          editor.appendChild(container);
-
-          // Add line break after image for continued writing
-          editor.appendChild(document.createElement('br'));
-        }
-      } catch (error) {
-        console.error('Image generation error:', error);
-        placeholder.innerHTML = 'Failed to generate image';
-        setTimeout(() => placeholder.remove(), 2000);
-      } finally {
-        // Remove loading state
-        createImageBtn.classList.remove('loading');
-        if (imageIcon) imageIcon.textContent = 'image';
+    // Close modal on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && imageGuidanceModal.classList.contains('visible')) {
+        imageGuidanceModal.classList.remove('visible');
       }
     });
   }
