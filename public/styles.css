@@ -565,7 +565,7 @@ body.selection-ready .select-confirm-btn {
 @media (max-width: 768px) {
   .header {
     height: 80px;
-    padding: 0 2px;
+    padding: 0 10px;
     background: var(--bg-color);
   }
 
