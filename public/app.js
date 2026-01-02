@@ -1,4 +1,4 @@
-const ENABLE_DREAMY_MOTION = true; // Enabled for dreamy inline prediction appearance
+const ENABLE_WORD_FADE = true; // Enabled for Word Fade appearance as seen in motion lab
 
 const CONFIG = {
   DEBOUNCE_MS: 1000,
@@ -36,8 +36,8 @@ class PredictionManager {
     this.updateMobileBodyClass();
 
     this.editor = document.querySelector('.editor');
-    this.enableDreamyMotion = ENABLE_DREAMY_MOTION;
-    this.motionRemainText = '';
+    this.enableWordFade = ENABLE_WORD_FADE;
+    this.lastStreamedText = ''; // Track already animated text to prevent flickers
 
     // Track caret locations so predictions can be anchored inline
     this.lastSelectionRange = null;
@@ -880,126 +880,117 @@ class PredictionManager {
     if (!this.selectModeActive) {
       this.selectStartOffset = null;
     }
-    this.motionRemainText = '';
+
     this.insertInlinePrediction();
-    this.updatePredictionDisplay();
+    // Pass true to indicate this is a streaming update (allow animations)
+    this.updatePredictionDisplay(true);
   }
 
-  updatePredictionDisplay() {
+  updatePredictionDisplay(isStreamingUpdate = false) {
     if (!this.inlinePredictionEl || !this.currentPrediction) return;
 
+    if (!isStreamingUpdate) {
+      // For hover/interaction, we always redraw everything static to ensure correct segment classes
+      this.fullRedraw();
+      return;
+    }
+
+    // Determine segments for streaming (usually just remainPart)
+    // We only support incremental animation for the standard 'remain' state
+    const activeOffset = this.hoverOffset || this.navigationOffset;
+    if (activeOffset > 0 || this.selectModeActive) {
+      this.fullRedraw();
+      return;
+    }
+
+    this.incrementalStreamDisplay(this.currentPrediction);
+  }
+
+  fullRedraw() {
+    if (!this.inlinePredictionEl) return;
+    this.inlinePredictionEl.innerHTML = '';
+    this.lastStreamedText = '';
+
+    let prePart = '';
+    let acceptPart = '';
+    let remainPart = '';
+
     if (this.selectModeActive) {
-      // Before first click - show hovered word preview
       if (this.selectStartOffset === null && this.selectPreviewOffset !== null && this.hoverWordEnd !== null) {
-        this.renderPredictionParts(
-          this.currentPrediction.slice(0, this.selectPreviewOffset),
-          this.currentPrediction.slice(this.selectPreviewOffset, this.hoverWordEnd),
-          this.currentPrediction.slice(this.hoverWordEnd)
-        );
-        return;
-      }
-      // After first click - show selection range
-      if (this.selectStartOffset !== null && this.selectPreviewOffset !== null) {
+        prePart = this.currentPrediction.slice(0, this.selectPreviewOffset);
+        acceptPart = this.currentPrediction.slice(this.selectPreviewOffset, this.hoverWordEnd);
+        remainPart = this.currentPrediction.slice(this.hoverWordEnd);
+      } else if (this.selectStartOffset !== null && this.selectPreviewOffset !== null) {
         const start = Math.min(this.selectStartOffset, this.selectPreviewOffset);
         const end = Math.max(this.selectStartOffset, this.selectPreviewOffset);
-        if (start === end) {
-          this.renderPredictionParts('', '', this.currentPrediction);
-          return;
+        if (start !== end) {
+          prePart = this.currentPrediction.slice(0, start);
+          acceptPart = this.currentPrediction.slice(start, end);
+          remainPart = this.currentPrediction.slice(end);
+        } else {
+          remainPart = this.currentPrediction;
         }
-        this.renderPredictionParts(
-          this.currentPrediction.slice(0, start),
-          this.currentPrediction.slice(start, end),
-          this.currentPrediction.slice(end)
-        );
-        return;
+      } else {
+        remainPart = this.currentPrediction;
       }
-      this.renderPredictionParts('', '', this.currentPrediction);
-      return;
-    }
-
-    // Normal mode
-    const activeOffset = this.hoverOffset || this.navigationOffset;
-
-    if (activeOffset === 0) {
-      this.renderPredictionParts('', '', this.currentPrediction);
     } else {
-      const acceptPart = this.currentPrediction.slice(0, activeOffset);
-      const remainPart = this.currentPrediction.slice(activeOffset);
-      this.renderPredictionParts('', acceptPart, remainPart);
+      const activeOffset = this.hoverOffset || this.navigationOffset;
+      if (activeOffset === 0) {
+        remainPart = this.currentPrediction;
+      } else {
+        acceptPart = this.currentPrediction.slice(0, activeOffset);
+        remainPart = this.currentPrediction.slice(activeOffset);
+      }
     }
+
+    const append = (text, className) => {
+      if (!text) return;
+      const span = document.createElement('span');
+      span.className = className;
+      span.textContent = text;
+      this.inlinePredictionEl.appendChild(span);
+    };
+
+    append(prePart, 'prediction-remain');
+    append(acceptPart, 'prediction-accept');
+    append(remainPart, 'prediction-remain');
+
+    this.lastStreamedText = this.currentPrediction;
   }
 
-  renderPredictionParts(prePart, acceptPart, remainPart) {
+  incrementalStreamDisplay(targetText) {
     if (!this.inlinePredictionEl) return;
 
-    this.inlinePredictionEl.innerHTML = '';
-    const shouldAnimate = this.enableDreamyMotion && !acceptPart && !prePart;
-
-    if (!shouldAnimate) {
-      this.motionRemainText = '';
+    // If text doesn't extend what we have, or container was cleared, do a full reset
+    if (!targetText.startsWith(this.lastStreamedText) || this.inlinePredictionEl.innerHTML === '') {
+      this.inlinePredictionEl.innerHTML = '';
+      this.lastStreamedText = '';
     }
 
-    if (prePart) {
-      const preSpan = document.createElement('span');
-      preSpan.className = 'prediction-remain';
-      preSpan.textContent = prePart;
-      this.inlinePredictionEl.appendChild(preSpan);
-    }
-
-    if (acceptPart) {
-      const acceptSpan = document.createElement('span');
-      acceptSpan.className = 'prediction-accept';
-      acceptSpan.textContent = acceptPart;
-      this.inlinePredictionEl.appendChild(acceptSpan);
-    }
-
-    if (remainPart) {
-      if (shouldAnimate) {
-        this.applyDreamyMotion(remainPart);
-      } else {
-        const remainSpan = document.createElement('span');
-        remainSpan.className = 'prediction-remain';
-        remainSpan.textContent = remainPart;
-        this.inlinePredictionEl.appendChild(remainSpan);
-        this.motionRemainText = remainPart;
-      }
-    } else {
-      this.motionRemainText = '';
-    }
-  }
-
-  applyDreamyMotion(targetText) {
-    const previous = this.motionRemainText || '';
-
-    if (!targetText.startsWith(previous)) {
-      const remainSpan = document.createElement('span');
-      remainSpan.className = 'prediction-remain';
-      remainSpan.textContent = targetText;
-      this.inlinePredictionEl.appendChild(remainSpan);
-      this.motionRemainText = targetText;
-      return;
-    }
-
-    // Keep existing content
-    const newSegment = targetText.slice(previous.length);
+    const newSegment = targetText.slice(this.lastStreamedText.length);
     if (!newSegment) return;
 
-    const tokens = newSegment.match(/\S+|\s+/g) || [];
-    tokens.forEach((token, index) => {
-      if (/^\s+$/.test(token)) {
-        this.inlinePredictionEl.appendChild(document.createTextNode(token));
+    // Split by character for letter-by-letter appearance
+    const letters = newSegment.split('');
+    letters.forEach((char, index) => {
+      if (char === ' ') {
+        this.inlinePredictionEl.appendChild(document.createTextNode(' '));
       } else {
         const span = document.createElement('span');
-        span.textContent = token;
-        span.className = 'word-dreamy';
-        // Subtle stagger: 50ms between words in a single chunk
-        span.style.animationDelay = `${index * 0.05}s`;
+        span.textContent = char;
+        span.className = 'word-fade prediction-remain';
+        if (this.enableWordFade) {
+          // Faster stagger for letters: 20ms
+          span.style.animationDelay = `${index * 0.02}s`;
+        }
         this.inlinePredictionEl.appendChild(span);
       }
     });
 
-    this.motionRemainText = targetText;
+    this.lastStreamedText = targetText;
   }
+
+
 
   normalizeAcceptedText(text) {
     let output = text;

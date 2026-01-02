@@ -429,27 +429,22 @@ body.select-mode-active .inline-prediction {
   color: var(--ghost-text-color);
 }
 
-.word-dreamy {
-  display: inline-block;
+.word-fade {
+  display: inline;
   opacity: 0;
-  filter: blur(8px);
-  transform: translateY(2px);
-  animation: dreamy-fade 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: word-fade-in 0.8s forwards;
 }
 
-@keyframes dreamy-fade {
-  0% {
+@keyframes word-fade-in {
+  from {
     opacity: 0;
-    filter: blur(8px);
-    transform: translateY(2px);
   }
 
-  100% {
+  to {
     opacity: 1;
-    filter: blur(0);
-    transform: translateY(0);
   }
 }
+
 
 body.select-mode-active .inline-prediction .prediction-accept {
   color: var(--text-color);
