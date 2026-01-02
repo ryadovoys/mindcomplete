@@ -1509,14 +1509,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // Modal handling
   const modal = document.getElementById('about-modal');
   const logo = document.querySelector('.logo');
-  const modalClose = document.querySelector('.modal-close');
+  const modalClose = document.getElementById('about-modal-close');
 
   const openModal = () => modal.classList.add('visible');
-  logo.addEventListener('click', openModal);
+  /* Logo click listener removed as requested */
 
-  modalClose.addEventListener('click', () => {
-    modal.classList.remove('visible');
-  });
+  if (modalClose) {
+    modalClose.addEventListener('click', () => {
+      modal.classList.remove('visible');
+    });
+  }
 
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
