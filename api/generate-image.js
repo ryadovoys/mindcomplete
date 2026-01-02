@@ -6,9 +6,9 @@ const CONFIG = {
 
 // Generate image prompt from text using LLM
 async function generateImagePrompt(text, apiKey, host) {
-  const systemPrompt = `You are an image prompt generator. Analyze the given text and create a short, vivid image prompt (max 80 words) that illustrates the scene, mood, or concept from the text. Focus especially on the last few sentences as they represent the current moment.
+  const systemPrompt = `You are an image prompt generator. Analyze the given text and create a short, vivid image prompt (max 80 words) that illustrates the last few sentences.
 
-Describe visual elements: characters, setting, lighting, colors, atmosphere. Be specific and painterly.
+Describe visual elements: characters, setting, lighting, colors, atmosphere. Be specific on what's going on in the scene.
 
 Output ONLY the image prompt, nothing else. No quotes, no explanations.`;
 
