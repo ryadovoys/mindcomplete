@@ -1531,36 +1531,56 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // MENU FUNCTIONALITY
+  // MENU FUNCTIONALITY
   const settingsBtn = document.getElementById('settings-btn');
   const settingsIcon = settingsBtn.querySelector('.material-symbols-outlined');
-  const menuOverlay = document.querySelector('.menu-overlay');
+
+  const menuBtn = document.getElementById('menu-btn');
+  const menuIcon = menuBtn ? menuBtn.querySelector('.material-symbols-outlined') : null;
+
+  const rightMenuOverlay = document.querySelector('.right-menu-overlay');
+  const leftMenuOverlay = document.querySelector('.left-menu-overlay');
+
   const shareMenuBtn = document.querySelector('.share-menu-btn');
   const clearMenuBtn = document.querySelector('.clear-menu-btn');
   const selectMenuBtn = document.querySelector('.select-menu-btn');
   const editor = document.querySelector('.editor');
   let menuReadyTimeout = null;
 
-  const openMenu = () => {
-    menuOverlay.classList.add('visible');
-    if (settingsIcon) settingsIcon.textContent = 'close';
+  const openMenu = (overlay, icon, openIconName = 'close') => {
+    overlay.classList.add('visible');
+    if (icon) icon.textContent = openIconName;
     if (menuReadyTimeout) {
       clearTimeout(menuReadyTimeout);
     }
     menuReadyTimeout = setTimeout(() => {
-      menuOverlay.classList.add('menu-ready');
+      overlay.classList.add('menu-ready');
       menuReadyTimeout = null;
     }, 120);
   };
 
   const closeMenu = () => {
-    if (!menuOverlay.classList.contains('visible')) return;
-    if (menuReadyTimeout) {
-      clearTimeout(menuReadyTimeout);
-      menuReadyTimeout = null;
+    // Close Right Menu
+    if (rightMenuOverlay && rightMenuOverlay.classList.contains('visible')) {
+      if (menuReadyTimeout) {
+        clearTimeout(menuReadyTimeout);
+        menuReadyTimeout = null;
+      }
+      rightMenuOverlay.classList.remove('menu-ready');
+      rightMenuOverlay.classList.remove('visible');
+      if (settingsIcon) settingsIcon.textContent = 'edit';
     }
-    menuOverlay.classList.remove('menu-ready');
-    menuOverlay.classList.remove('visible');
-    if (settingsIcon) settingsIcon.textContent = 'edit';
+
+    // Close Left Menu
+    if (leftMenuOverlay && leftMenuOverlay.classList.contains('visible')) {
+      if (menuReadyTimeout) {
+        clearTimeout(menuReadyTimeout);
+        menuReadyTimeout = null;
+      }
+      leftMenuOverlay.classList.remove('menu-ready');
+      leftMenuOverlay.classList.remove('visible');
+      if (menuIcon) menuIcon.textContent = 'dehaze';
+    }
   };
 
   settingsBtn.addEventListener('click', () => {
@@ -1570,18 +1590,49 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (menuOverlay.classList.contains('visible')) {
+    if (rightMenuOverlay.classList.contains('visible')) {
       closeMenu();
     } else {
-      openMenu();
+      closeMenu(); // Close others
+      openMenu(rightMenuOverlay, settingsIcon, 'close');
     }
   });
 
-  menuOverlay.addEventListener('click', (e) => {
-    if (e.target === menuOverlay) {
+  if (menuBtn && leftMenuOverlay) {
+    menuBtn.addEventListener('click', () => {
+      if (leftMenuOverlay.classList.contains('visible')) {
+        closeMenu();
+      } else {
+        closeMenu();
+        openMenu(leftMenuOverlay, menuIcon, 'close');
+      }
+    });
+  }
+
+  if (rightMenuOverlay) {
+    rightMenuOverlay.addEventListener('click', (e) => {
+      if (e.target === rightMenuOverlay) {
+        closeMenu();
+      }
+    });
+  }
+
+  if (leftMenuOverlay) {
+    leftMenuOverlay.addEventListener('click', (e) => {
+      if (e.target === leftMenuOverlay) {
+        closeMenu();
+      }
+    });
+  }
+
+  // Left menu specific items
+  const aboutMenuBtn = document.querySelector('.about-menu-btn');
+  if (aboutMenuBtn) {
+    aboutMenuBtn.addEventListener('click', () => {
+      openModal();
       closeMenu();
-    }
-  });
+    });
+  }
 
   shareMenuBtn.addEventListener('click', async () => {
     const text = predictionManager.getEditorText();
@@ -1827,7 +1878,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && menuOverlay.classList.contains('visible')) {
+    if (e.key === 'Escape') {
       closeMenu();
     }
   });

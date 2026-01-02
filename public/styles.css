@@ -234,6 +234,12 @@ h2 {
   opacity: 1;
 }
 
+.menu-content.left-aligned {
+  right: auto;
+  left: 20px;
+  transform-origin: top left;
+}
+
 .menu-item {
   background: transparent;
   border: none;
