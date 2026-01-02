@@ -1,4 +1,4 @@
-const ENABLE_RISE_AND_SET = false; // Disabled for inline prediction mode
+const ENABLE_DREAMY_MOTION = true; // Enabled for dreamy inline prediction appearance
 
 const CONFIG = {
   DEBOUNCE_MS: 1000,
@@ -36,7 +36,7 @@ class PredictionManager {
     this.updateMobileBodyClass();
 
     this.editor = document.querySelector('.editor');
-    this.enableRiseMotion = ENABLE_RISE_AND_SET;
+    this.enableDreamyMotion = ENABLE_DREAMY_MOTION;
     this.motionRemainText = '';
 
     // Track caret locations so predictions can be anchored inline
@@ -933,7 +933,7 @@ class PredictionManager {
     if (!this.inlinePredictionEl) return;
 
     this.inlinePredictionEl.innerHTML = '';
-    const shouldAnimate = this.enableRiseMotion && !acceptPart && !prePart;
+    const shouldAnimate = this.enableDreamyMotion && !acceptPart && !prePart;
 
     if (!shouldAnimate) {
       this.motionRemainText = '';
@@ -955,7 +955,7 @@ class PredictionManager {
 
     if (remainPart) {
       if (shouldAnimate) {
-        this.applyRiseMotion(remainPart);
+        this.applyDreamyMotion(remainPart);
       } else {
         const remainSpan = document.createElement('span');
         remainSpan.className = 'prediction-remain';
@@ -968,7 +968,7 @@ class PredictionManager {
     }
   }
 
-  applyRiseMotion(targetText) {
+  applyDreamyMotion(targetText) {
     const previous = this.motionRemainText || '';
 
     if (!targetText.startsWith(previous)) {
@@ -985,13 +985,15 @@ class PredictionManager {
     if (!newSegment) return;
 
     const tokens = newSegment.match(/\S+|\s+/g) || [];
-    tokens.forEach((token) => {
+    tokens.forEach((token, index) => {
       if (/^\s+$/.test(token)) {
         this.inlinePredictionEl.appendChild(document.createTextNode(token));
       } else {
         const span = document.createElement('span');
         span.textContent = token;
-        span.className = 'word-rise';
+        span.className = 'word-dreamy';
+        // Subtle stagger: 50ms between words in a single chunk
+        span.style.animationDelay = `${index * 0.05}s`;
         this.inlinePredictionEl.appendChild(span);
       }
     });
@@ -1160,7 +1162,7 @@ class PredictionManager {
     if (selectBtn) selectBtn.classList.remove('active');
 
     const settingsIcon = document.querySelector('#settings-btn .material-symbols-outlined');
-    if (settingsIcon) settingsIcon.textContent = 'app_registration';
+    if (settingsIcon) settingsIcon.textContent = 'edit';
   }
 
   handleSelectModeSelection(offset) {
@@ -1565,13 +1567,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     menuOverlay.classList.remove('menu-ready');
     menuOverlay.classList.remove('visible');
-    if (settingsIcon) settingsIcon.textContent = 'app_registration';
+    if (settingsIcon) settingsIcon.textContent = 'edit';
   };
 
   settingsBtn.addEventListener('click', () => {
     if (predictionManager.selectModeActive) {
       predictionManager.disableSelectMode();
-      if (settingsIcon) settingsIcon.textContent = 'app_registration';
+      if (settingsIcon) settingsIcon.textContent = 'edit';
       return;
     }
 

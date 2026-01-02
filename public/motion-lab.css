@@ -47,7 +47,10 @@ body {
 
 .lab-header h1 {
   margin: 0;
+  font-family: 'Source Serif 4', serif;
+  font-optical-sizing: auto;
   font-size: clamp(32px, 5vw, 48px);
+  font-weight: 600;
 }
 
 .lede {
@@ -108,7 +111,10 @@ body {
 
 .demo-heading h2 {
   margin: 0;
+  font-family: 'Source Serif 4', serif;
+  font-optical-sizing: auto;
   font-size: 20px;
+  font-weight: 500;
 }
 
 .demo-heading p {
@@ -154,19 +160,52 @@ body {
 }
 
 @keyframes caret-blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
+
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  51%,
+  100% {
+    opacity: 0;
+  }
 }
 
 /* Word utilities */
-.word-fade { animation: fade-in 0.8s forwards; }
-.word-slide { animation: slide-up 0.8s forwards; }
-.word-pop { animation: pop-in 0.6s forwards; }
-.word-flip { animation: flip-in 0.7s forwards; transform-origin: center; }
-.word-highlight { animation: highlight 1.2s forwards; position: relative; }
-.word-drop { animation: drop-in 0.8s forwards; }
-.word-wave { animation: wave 0.9s ease-out forwards; }
-.word-glide { animation: glide-in 0.8s forwards; }
+.word-fade {
+  animation: fade-in 0.8s forwards;
+}
+
+.word-slide {
+  animation: slide-up 0.8s forwards;
+}
+
+.word-pop {
+  animation: pop-in 0.6s forwards;
+}
+
+.word-flip {
+  animation: flip-in 0.7s forwards;
+  transform-origin: center;
+}
+
+.word-highlight {
+  animation: highlight 1.2s forwards;
+  position: relative;
+}
+
+.word-drop {
+  animation: drop-in 0.8s forwards;
+}
+
+.word-wave {
+  animation: wave 0.9s ease-out forwards;
+}
+
+.word-glide {
+  animation: glide-in 0.8s forwards;
+}
 
 .line {
   display: block;
@@ -179,51 +218,126 @@ body {
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slide-up {
-  0% { opacity: 0; transform: translateY(16px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes pop-in {
-  0% { opacity: 0; transform: scale(0.85); }
-  60% { opacity: 1; transform: scale(1.05); }
-  100% { transform: scale(1); }
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 @keyframes flip-in {
-  0% { opacity: 0; transform: rotateX(90deg); }
-  100% { opacity: 1; transform: rotateX(0deg); }
+  0% {
+    opacity: 0;
+    transform: rotateX(90deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: rotateX(0deg);
+  }
 }
 
 @keyframes highlight {
-  0% { opacity: 0; background: transparent; }
-  30% { opacity: 1; background: rgba(241, 131, 255, 0.15); }
-  100% { opacity: 1; background: transparent; }
+  0% {
+    opacity: 0;
+    background: transparent;
+  }
+
+  30% {
+    opacity: 1;
+    background: rgba(241, 131, 255, 0.15);
+  }
+
+  100% {
+    opacity: 1;
+    background: transparent;
+  }
 }
 
 @keyframes drop-in {
-  0% { opacity: 0; transform: translateY(-20px); filter: blur(4px); }
-  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+    filter: blur(4px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
 }
 
 @keyframes wave {
-  0% { opacity: 0; transform: translateY(12px); }
-  50% { opacity: 1; transform: translateY(-8px); }
-  100% { transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(-8px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
 }
 
 @keyframes glide-in {
-  0% { opacity: 0; transform: translateX(-24px) skewX(10deg); filter: blur(3px); }
-  100% { opacity: 1; transform: translateX(0) skewX(0); filter: blur(0); }
+  0% {
+    opacity: 0;
+    transform: translateX(-24px) skewX(10deg);
+    filter: blur(3px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0) skewX(0);
+    filter: blur(0);
+  }
 }
 
 @keyframes line-fade {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsive tweaks */
