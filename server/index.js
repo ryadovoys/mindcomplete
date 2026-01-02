@@ -96,7 +96,7 @@ app.delete('/api/context/:sessionId', async (req, res) => {
 });
 
 app.post('/api/predict', async (req, res) => {
-  const { text, sessionId } = req.body;
+  const { text, sessionId, rules } = req.body;
 
   if (!text) {
     return res.status(400).json({ error: 'Text is required' });
@@ -109,6 +109,18 @@ app.post('/api/predict', async (req, res) => {
   // Build system prompt with context if available
   let systemPrompt = `Continue the user's thought from where they stopped. Write 1 paragraph that naturally extends their idea, matching their tone and style. Do not repeat their text or add meta commentary. Just provide the seamless continuation.`;
 
+  // Add rules if provided
+  if (rules && rules.trim()) {
+    systemPrompt = `Follow these rules when writing:
+
+<rules>
+${rules}
+</rules>
+
+${systemPrompt}`;
+  }
+
+  // Add file context if available
   if (sessionId) {
     const context = await getContext(sessionId);
     if (context) {
@@ -118,7 +130,13 @@ app.post('/api/predict', async (req, res) => {
 ${context.text}
 </reference_context>
 
-Based on this context, continue the user's thought from where they stopped. Write 1 paragraph that naturally extends their idea, incorporating relevant information from the reference material when appropriate. Match their tone and style. Do not repeat their text or add meta commentary. Just provide the seamless continuation.`;
+${rules && rules.trim() ? `Also follow these rules when writing:
+
+<rules>
+${rules}
+</rules>
+
+` : ''}Based on this context, continue the user's thought from where they stopped. Write 1 paragraph that naturally extends their idea, incorporating relevant information from the reference material when appropriate. Match their tone and style. Do not repeat their text or add meta commentary. Just provide the seamless continuation.`;
     }
   }
 

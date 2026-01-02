@@ -70,7 +70,7 @@ body {
   height: 100%;
   background: var(--bg-color);
   color: var(--text-color);
-  font-family: "Google Sans Flex", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-family: "Work Sans", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
   font-optical-sizing: auto;
   font-size: var(--font-body-size);
   font-weight: var(--font-body-weight);
@@ -237,8 +237,8 @@ h2 {
   border: none;
   padding: 0;
   color: var(--text-color);
-  font-size: 16px;
-  font-weight: 300;
+  font-size: var(--font-caption-size);
+  font-weight: var(--font-caption-weight);
   cursor: pointer;
   font-family: inherit;
   display: flex;
@@ -583,7 +583,7 @@ body.selection-ready .select-confirm-btn {
   }
 
   .menu-item {
-    font-size: 16px;
+    font-size: var(--font-caption-size);
   }
 
   .modal {
@@ -688,8 +688,8 @@ body.selection-ready .select-confirm-btn {
 }
 
 .context-modal-title {
-  font-size: 17px;
-  font-weight: 500;
+  font-size: var(--font-body-small-size);
+  font-weight: 600;
   color: var(--text-color);
   text-align: center;
 }
@@ -749,16 +749,16 @@ body.selection-ready .select-confirm-btn {
 }
 
 .section-title {
-  font-size: 17px;
-  font-weight: 500;
+  font-size: var(--font-body-small-size);
+  font-weight: 600;
   color: var(--text-color);
   margin: 0;
   line-height: 1.2;
 }
 
 .section-description {
-  font-size: 17px;
-  font-weight: 300;
+  font-size: var(--font-body-small-size);
+  font-weight: var(--font-body-small-weight);
   color: rgba(208, 198, 255, 0.6);
   margin: 0;
   line-height: 1.4;
@@ -770,6 +770,17 @@ body.selection-ready .select-confirm-btn {
   gap: 10px;
 }
 
+.rules-status {
+  margin-left: auto;
+  font-size: var(--font-caption-size);
+  font-weight: var(--font-caption-weight);
+  color: var(--light-purple);
+}
+
+.rules-status:empty {
+  display: none;
+}
+
 /* Primary Button (Solid Offwhite) */
 .btn-primary {
   display: inline-flex;
@@ -778,8 +789,8 @@ body.selection-ready .select-confirm-btn {
   gap: 10px;
   padding: 12px 20px;
   height: 48px;
-  font-size: 17px;
-  font-weight: 300;
+  font-size: var(--font-caption-size);
+  font-weight: var(--font-caption-weight);
   font-family: inherit;
   color: var(--dark-purple);
   background: var(--offwhite);
@@ -816,8 +827,8 @@ body.selection-ready .select-confirm-btn {
   gap: 10px;
   padding: 12px 20px;
   height: 48px;
-  font-size: 17px;
-  font-weight: 300;
+  font-size: var(--font-caption-size);
+  font-weight: var(--font-caption-weight);
   font-family: inherit;
   color: var(--dark-purple);
   background: var(--offwhite);
@@ -853,8 +864,8 @@ body.selection-ready .select-confirm-btn {
   justify-content: center;
   padding: 12px 20px;
   height: 48px;
-  font-size: 17px;
-  font-weight: 300;
+  font-size: var(--font-caption-size);
+  font-weight: var(--font-caption-weight);
   font-family: inherit;
   color: var(--text-color);
   background: transparent;
@@ -928,8 +939,8 @@ body.selection-ready .select-confirm-btn {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 17px;
-  font-weight: 300;
+  font-size: var(--font-caption-size);
+  font-weight: var(--font-caption-weight);
   color: var(--text-color);
   overflow: hidden;
   text-overflow: ellipsis;

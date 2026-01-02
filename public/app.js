@@ -817,7 +817,8 @@ class PredictionManager {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text,
-          sessionId: window.contextManager?.getSessionId()
+          sessionId: window.contextManager?.getSessionId(),
+          rules: window.contextManager?.getRulesText()
         }),
         signal: this.abortController.signal
       });
@@ -1214,6 +1215,7 @@ class ContextManager {
     this.filesContainer = document.getElementById('context-files');
     this.removeFilesBtn = document.getElementById('remove-files-btn');
     this.statusEl = document.getElementById('context-status');
+    this.rulesStatusEl = document.getElementById('rules-status');
     this.contextMenuBtn = document.querySelector('.context-menu-btn');
     this.textarea = document.getElementById('context-textarea');
     this.saveRulesBtn = document.getElementById('save-rules-btn');
@@ -1293,11 +1295,11 @@ class ContextManager {
       localStorage.removeItem('mindcomplete_rules');
     }
 
-    if (this.statusEl) {
-      this.statusEl.textContent = text ? 'Rules saved' : 'Rules cleared';
+    if (this.rulesStatusEl) {
+      this.rulesStatusEl.textContent = text ? 'Rules saved' : 'Rules cleared';
       setTimeout(() => {
-        if (this.statusEl && (this.statusEl.textContent === 'Rules saved' || this.statusEl.textContent === 'Rules cleared')) {
-          this.statusEl.textContent = this.files.length > 0 ? `~${this.estimatedTokens.toLocaleString()} tokens` : '';
+        if (this.rulesStatusEl && (this.rulesStatusEl.textContent === 'Rules saved' || this.rulesStatusEl.textContent === 'Rules cleared')) {
+          this.rulesStatusEl.textContent = '';
         }
       }, 2000);
     }
@@ -1312,11 +1314,11 @@ class ContextManager {
     }
     localStorage.removeItem('mindcomplete_rules');
 
-    if (this.statusEl) {
-      this.statusEl.textContent = 'Rules cleared';
+    if (this.rulesStatusEl) {
+      this.rulesStatusEl.textContent = 'Rules cleared';
       setTimeout(() => {
-        if (this.statusEl && this.statusEl.textContent === 'Rules cleared') {
-          this.statusEl.textContent = this.files.length > 0 ? `~${this.estimatedTokens.toLocaleString()} tokens` : '';
+        if (this.rulesStatusEl && this.rulesStatusEl.textContent === 'Rules cleared') {
+          this.rulesStatusEl.textContent = '';
         }
       }, 2000);
     }
@@ -1464,10 +1466,10 @@ class ContextManager {
 
     // Update status
     if (this.files.length > 0 && this.statusEl) {
-      if (!this.statusEl.textContent.startsWith('Rules') && !this.statusEl.textContent.startsWith('Error') && !this.statusEl.textContent.startsWith('Uploading')) {
+      if (!this.statusEl.textContent.startsWith('Error') && !this.statusEl.textContent.startsWith('Uploading')) {
         this.statusEl.textContent = `~${this.estimatedTokens.toLocaleString()} tokens`;
       }
-    } else if (this.statusEl && !this.statusEl.textContent.startsWith('Rules') && !this.statusEl.textContent.startsWith('Error')) {
+    } else if (this.statusEl && !this.statusEl.textContent.startsWith('Error')) {
       this.statusEl.textContent = '';
     }
 
