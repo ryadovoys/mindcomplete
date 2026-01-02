@@ -6,48 +6,43 @@
 
 /* Color Tokens */
 :root {
-  /* Brand colors */
-  --color-accent: #0091FF;
-  --color-accent-rgb: 0, 145, 255;
+  /* Purple Valley Brand Colors */
+  --dark-purple: #0e0a27;
+  --offwhite: #d0c6ff;
+  --light-purple: #7952ed;
+  --offwhite-glass: rgba(212, 202, 255, 0.06);
+  --offwhite-rgb: 208, 198, 255;
 
-  /* Dark theme (default) */
-  --color-bg-dark: #171719;
-  --color-text-dark: #FFFFFF;
-
-  /* Light theme */
-  --color-bg-light: #F2F1ED;
-  --color-text-light: #171719;
-
-  /* Semantic tokens - Dark theme default */
-  --bg-color: var(--color-bg-dark);
-  --text-color: var(--color-text-dark);
-  --text-color-rgb: 255, 255, 255;
-  --ghost-color: rgba(var(--text-color-rgb), 0.4);
-  --placeholder-color: rgba(var(--text-color-rgb), 0.3);
-  --hint-color: rgba(var(--text-color-rgb), 0.2);
-  --surface-color: rgba(var(--text-color-rgb), 0.1);
-  --surface-hover: rgba(var(--text-color-rgb), 0.15);
-  --border-color: rgba(var(--text-color-rgb), 0.1);
-  --overlay-color: rgba(0, 0, 0, 0.3);
-  --modal-overlay: rgba(0, 0, 0, 0.8);
+  /* Semantic tokens */
+  --bg-color: var(--dark-purple);
+  --text-color: var(--offwhite);
+  --text-color-rgb: var(--offwhite-rgb);
+  --ghost-color: rgba(var(--offwhite-rgb), 0.4);
+  --placeholder-color: rgba(var(--offwhite-rgb), 0.3);
+  --hint-color: rgba(var(--offwhite-rgb), 0.2);
+  --surface-color: var(--offwhite-glass);
+  --surface-hover: rgba(212, 202, 255, 0.1);
+  --border-color: rgba(var(--offwhite-rgb), 0.1);
+  --overlay-color: rgba(14, 10, 39, 0.3);
+  --modal-overlay: rgba(14, 10, 39, 0.8);
 
   /* Figma design specific */
-  --figma-surface: rgba(255, 255, 255, 0.06);
-  --ghost-text-color: #8a8a8a;
+  --figma-surface: var(--offwhite-glass);
+  --ghost-text-color: var(--light-purple);
 
-  /* Typography */
+  /* Typography - Light weight (300) per Figma */
   --font-h1-size: 28pt;
-  --font-h1-weight: 400;
+  --font-h1-weight: 300;
   --font-h2-size: 22pt;
-  --font-h2-weight: 500;
+  --font-h2-weight: 300;
   --font-h3-size: 17pt;
-  --font-h3-weight: 500;
+  --font-h3-weight: 300;
   --font-body-size: 17pt;
-  --font-body-weight: 200;
+  --font-body-weight: 300;
   --font-body-small-size: 14pt;
-  --font-body-small-weight: 200;
+  --font-body-small-weight: 300;
   --font-caption-size: 12pt;
-  --font-caption-weight: 200;
+  --font-caption-weight: 300;
 
   /* Icons */
   --icon-weight: 200;
@@ -55,11 +50,11 @@
   --icon-size-lg: 40px;
 }
 
-/* Light theme */
+/* Light theme - keeping for future use */
 [data-theme="light"] {
-  --bg-color: var(--color-bg-light);
-  --text-color: var(--color-text-light);
-  --text-color-rgb: 23, 23, 25;
+  --bg-color: #F2F1ED;
+  --text-color: var(--dark-purple);
+  --text-color-rgb: 14, 10, 39;
   --ghost-color: rgba(var(--text-color-rgb), 0.4);
   --placeholder-color: rgba(var(--text-color-rgb), 0.3);
   --hint-color: rgba(var(--text-color-rgb), 0.2);
@@ -145,20 +140,19 @@ body {
 
 /* Logo */
 .logo {
-  font-size: var(--font-h1-size);
-  font-weight: var(--font-h1-weight);
-  color: var(--text-color);
+  height: 34px;
+  width: auto;
   cursor: pointer;
 }
 
-/* Icon Button */
+/* Icon Button (Ghost style) */
 .icon-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 48px;
   height: 48px;
-  background: var(--figma-surface);
+  background: transparent;
   border: none;
   border-radius: 16px;
   cursor: pointer;
@@ -166,7 +160,7 @@ body {
 }
 
 .icon-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(212, 202, 255, 0.1);
 }
 
 .icon-btn .material-symbols-outlined {
@@ -195,7 +189,7 @@ body {
 
 .menu-content {
   position: absolute;
-  top: 100px;
+  top: 84px;
   right: 40px;
   background: var(--figma-surface);
   backdrop-filter: blur(40px);
@@ -222,7 +216,7 @@ body {
   padding: 0;
   color: var(--text-color);
   font-size: 16px;
-  font-weight: 400;
+  font-weight: 300;
   cursor: pointer;
   font-family: inherit;
   display: flex;
@@ -275,9 +269,11 @@ body.select-mode-active .inline-prediction {
 }
 
 .modal-content {
-  background: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
+  background: var(--offwhite-glass);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: none;
+  border-radius: 32px;
   padding: 48px;
   max-width: 500px;
   position: relative;
@@ -286,7 +282,7 @@ body.select-mode-active .inline-prediction {
 .modal-content h2 {
   margin: 0 0 20px 0;
   font-size: 24px;
-  font-weight: 600;
+  font-weight: 300;
 }
 
 .modal-content h3:not(.section-title) {
@@ -326,7 +322,7 @@ body.select-mode-active .inline-prediction {
   color: #000;
   text-decoration: none;
   border-radius: 8px;
-  font-weight: 600;
+  font-weight: 300;
   font-size: 16px;
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -432,8 +428,8 @@ body.mobile-touch:not(.select-mode-active) .inline-prediction {
   white-space: pre-wrap;
   word-break: normal;
   hyphens: none;
-  caret-color: var(--color-accent);
-  font-weight: 400;
+  caret-color: var(--light-purple);
+  font-weight: 300;
 }
 
 .editor:empty::before {
@@ -447,12 +443,12 @@ body.mobile-touch:not(.select-mode-active) .inline-prediction {
   position: fixed;
   bottom: 40px;
   right: 40px;
-  background: var(--color-accent);
+  background: var(--offwhite);
   border: none;
   border-radius: 999px;
   height: 72px;
   width: 72px;
-  color: #FFFFFF;
+  color: var(--dark-purple);
   cursor: pointer;
   display: none;
   align-items: center;
@@ -490,7 +486,7 @@ body.selection-ready .select-confirm-btn {
   }
 
   .menu-content {
-    top: 80px;
+    top: 74px;
     right: 20px;
   }
 }
@@ -506,9 +502,6 @@ body.selection-ready .select-confirm-btn {
     gap: 12px;
   }
 
-  .logo {
-    font-size: 22px;
-  }
 
   .select-confirm-btn {
     bottom: 20px;
@@ -519,7 +512,7 @@ body.selection-ready .select-confirm-btn {
 
   /* Menu overlay adjustments for mobile */
   .menu-content {
-    top: 80px;
+    top: 74px;
     right: 20px;
   }
 
@@ -536,9 +529,10 @@ body.selection-ready .select-confirm-btn {
     height: 100vh;
     max-width: 100vw;
     border-radius: 0;
-    background: var(--bg-color);
+    background: var(--dark-purple);
     border: none;
     padding: 60px 20px 20px 20px;
+    backdrop-filter: none;
   }
 
   .modal-content h2 {
@@ -556,6 +550,7 @@ body.selection-ready .select-confirm-btn {
     height: 100vh;
     border-radius: 0;
     padding: 0;
+    background: var(--dark-purple);
   }
 
 
@@ -609,6 +604,8 @@ body.selection-ready .select-confirm-btn {
   padding: 0;
   display: flex;
   flex-direction: column;
+  border-radius: 32px;
+  background: var(--offwhite-glass);
 }
 
 .context-modal-header {
@@ -626,7 +623,7 @@ body.selection-ready .select-confirm-btn {
 
 .context-modal-title {
   font-size: 17px;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--text-color);
   text-align: center;
 }
@@ -645,7 +642,7 @@ body.selection-ready .select-confirm-btn {
 }
 
 .context-modal-close:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(212, 202, 255, 0.1);
 }
 
 .context-modal-close .material-symbols-outlined {
@@ -668,6 +665,7 @@ body.selection-ready .select-confirm-btn {
     width: 100vw;
     height: 100vh;
     border-radius: 0;
+    background: var(--dark-purple);
   }
 }
 
@@ -685,8 +683,8 @@ body.selection-ready .select-confirm-btn {
 }
 
 .section-title {
-  font-size: 22px;
-  font-weight: 400;
+  font-size: 17px;
+  font-weight: 500;
   color: var(--text-color);
   margin: 0;
   line-height: 1.2;
@@ -694,8 +692,8 @@ body.selection-ready .select-confirm-btn {
 
 .section-description {
   font-size: 17px;
-  font-weight: 400;
-  color: #8a8a8a;
+  font-weight: 300;
+  color: rgba(208, 198, 255, 0.6);
   margin: 0;
   line-height: 1.4;
 }
@@ -706,7 +704,7 @@ body.selection-ready .select-confirm-btn {
   gap: 10px;
 }
 
-/* Primary Button (Blue) */
+/* Primary Button (Solid Offwhite) */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -714,15 +712,20 @@ body.selection-ready .select-confirm-btn {
   gap: 10px;
   padding: 12px 20px;
   height: 48px;
-  font-size: var(--font-body-small-size);
-  font-weight: var(--font-body-small-weight);
+  font-size: 17px;
+  font-weight: 300;
   font-family: inherit;
-  color: var(--text-color);
-  background: var(--color-accent);
+  color: var(--dark-purple);
+  background: var(--offwhite);
   border: none;
   border-radius: 16px;
   cursor: pointer;
   transition: opacity 0.2s;
+}
+
+/* When btn-primary has an icon, adjust left padding */
+.btn-primary:has(.material-symbols-outlined) {
+  padding-left: 12px;
 }
 
 .btn-primary:hover {
@@ -736,9 +739,10 @@ body.selection-ready .select-confirm-btn {
 
 .btn-primary .material-symbols-outlined {
   font-size: var(--icon-size-sm);
+  color: var(--dark-purple);
 }
 
-/* White Button */
+/* Alias for backward compatibility */
 .btn-white {
   display: inline-flex;
   align-items: center;
@@ -747,10 +751,10 @@ body.selection-ready .select-confirm-btn {
   padding: 12px 20px;
   height: 48px;
   font-size: 17px;
-  font-weight: 400;
+  font-weight: 300;
   font-family: inherit;
-  color: #171719;
-  background: #FFFFFF;
+  color: var(--dark-purple);
+  background: var(--offwhite);
   border: none;
   border-radius: 16px;
   cursor: pointer;
@@ -773,10 +777,10 @@ body.selection-ready .select-confirm-btn {
 
 .btn-white .material-symbols-outlined {
   font-size: var(--icon-size-sm);
-  color: #171719;
+  color: var(--dark-purple);
 }
 
-/* Secondary Button (Gray) */
+/* Secondary Button (Ghost/Transparent) */
 .btn-secondary {
   display: inline-flex;
   align-items: center;
@@ -784,10 +788,10 @@ body.selection-ready .select-confirm-btn {
   padding: 12px 20px;
   height: 48px;
   font-size: 17px;
-  font-weight: 400;
+  font-weight: 300;
   font-family: inherit;
   color: var(--text-color);
-  background: var(--figma-surface);
+  background: transparent;
   border: none;
   border-radius: 16px;
   cursor: pointer;
@@ -795,7 +799,7 @@ body.selection-ready .select-confirm-btn {
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(212, 202, 255, 0.06);
 }
 
 .btn-secondary:disabled {
@@ -814,7 +818,7 @@ body.selection-ready .select-confirm-btn {
   color: var(--text-color);
   font-family: inherit;
   font-size: 17px;
-  font-weight: 400;
+  font-weight: 300;
   resize: none;
   box-sizing: border-box;
   line-height: 1.4;
@@ -822,13 +826,13 @@ body.selection-ready .select-confirm-btn {
 
 #context-textarea:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(212, 202, 255, 0.1);
 }
 
 #context-textarea::placeholder {
-  color: #8a8a8a;
+  color: rgba(208, 198, 255, 0.5);
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 300;
 }
 
 /* File List */
@@ -860,7 +864,7 @@ body.selection-ready .select-confirm-btn {
   align-items: center;
   gap: 10px;
   font-size: 17px;
-  font-weight: 400;
+  font-weight: 300;
   color: var(--text-color);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -898,7 +902,7 @@ body.selection-ready .select-confirm-btn {
 .context-status {
   font-size: var(--font-caption-size);
   font-weight: var(--font-caption-weight);
-  color: var(--color-accent);
+  color: var(--light-purple);
 }
 
 /* Context indicator in menu button */
@@ -907,7 +911,7 @@ body.selection-ready .select-confirm-btn {
   display: inline-block;
   width: 6px;
   height: 6px;
-  background: var(--color-accent);
+  background: var(--light-purple);
   border-radius: 50%;
   margin-left: 8px;
   vertical-align: middle;

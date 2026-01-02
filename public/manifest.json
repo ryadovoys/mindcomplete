@@ -1,11 +1,11 @@
 {
-  "name": "Mindcomplete",
-  "short_name": "Mindcomplete",
+  "name": "purple valley",
+  "short_name": "purple valley",
   "description": "AI-powered writing assistant that completes your thoughts in real-time.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#0e0a27",
+  "theme_color": "#0e0a27",
   "icons": [
     {
       "src": "/mindcomplete-favicon.png",
