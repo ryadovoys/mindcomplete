@@ -1136,8 +1136,8 @@ class PredictionManager {
     const selectBtn = document.querySelector('.select-menu-btn');
     if (selectBtn) selectBtn.classList.add('active');
 
-    const burgerIcon = document.querySelector('.burger-btn .material-symbols-outlined');
-    if (burgerIcon) burgerIcon.textContent = 'close';
+    const settingsIcon = document.querySelector('#settings-btn .material-symbols-outlined');
+    if (settingsIcon) settingsIcon.textContent = 'close';
   }
 
   disableSelectMode() {
@@ -1159,8 +1159,8 @@ class PredictionManager {
     const selectBtn = document.querySelector('.select-menu-btn');
     if (selectBtn) selectBtn.classList.remove('active');
 
-    const burgerIcon = document.querySelector('.burger-btn .material-symbols-outlined');
-    if (burgerIcon) burgerIcon.textContent = 'edit';
+    const settingsIcon = document.querySelector('#settings-btn .material-symbols-outlined');
+    if (settingsIcon) settingsIcon.textContent = 'app_registration';
   }
 
   handleSelectModeSelection(offset) {
@@ -1212,71 +1212,62 @@ class ContextManager {
   constructor() {
     this.sessionId = null;
     this.files = [];
+    this.rulesText = '';
     this.estimatedTokens = 0;
 
     this.modal = document.getElementById('context-modal');
-    this.uploadZone = document.getElementById('upload-zone');
     this.uploadBtn = document.getElementById('upload-btn');
     this.fileInput = document.getElementById('file-input');
     this.filesContainer = document.getElementById('context-files');
-    this.clearBtn = document.getElementById('context-clear-btn');
+    this.removeFilesBtn = document.getElementById('remove-files-btn');
     this.statusEl = document.getElementById('context-status');
     this.contextMenuBtn = document.querySelector('.context-menu-btn');
     this.textarea = document.getElementById('context-textarea');
-    this.addTextBtn = document.getElementById('add-text-btn');
+    this.saveRulesBtn = document.getElementById('save-rules-btn');
+    this.clearRulesBtn = document.getElementById('clear-rules-btn');
 
     this.init();
   }
 
   init() {
-    if (!this.uploadZone || !this.fileInput) return;
+    if (!this.uploadBtn || !this.fileInput) return;
 
     // Restore session from localStorage if available
     const savedSessionId = localStorage.getItem('mindcomplete_session_id');
     const savedFiles = localStorage.getItem('mindcomplete_files');
     const savedTokens = localStorage.getItem('mindcomplete_tokens');
+    const savedRules = localStorage.getItem('mindcomplete_rules');
+
     if (savedSessionId && savedFiles) {
       this.sessionId = savedSessionId;
       this.files = JSON.parse(savedFiles);
       this.estimatedTokens = parseInt(savedTokens) || 0;
-      this.updateUI();
     }
 
-    // Click to upload (desktop zone)
-    this.uploadZone.addEventListener('click', () => this.fileInput.click());
-
-    // Click to upload (mobile button)
-    if (this.uploadBtn) {
-      this.uploadBtn.addEventListener('click', () => this.fileInput.click());
+    // Restore rules text
+    if (savedRules) {
+      this.rulesText = savedRules;
+      if (this.textarea) {
+        this.textarea.value = savedRules;
+      }
     }
+
+    this.updateUI();
+
+    // Click to upload (button only)
+    this.uploadBtn.addEventListener('click', () => this.fileInput.click());
 
     // File input change
     this.fileInput.addEventListener('change', (e) => this.handleFiles(e.target.files));
 
-    // Drag and drop
-    this.uploadZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      this.uploadZone.classList.add('dragover');
-    });
-
-    this.uploadZone.addEventListener('dragleave', () => {
-      this.uploadZone.classList.remove('dragover');
-    });
-
-    this.uploadZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      this.uploadZone.classList.remove('dragover');
-      this.handleFiles(e.dataTransfer.files);
-    });
-
-    // Clear button
-    if (this.clearBtn) {
-      this.clearBtn.addEventListener('click', () => this.clearContext());
+    // Remove files button
+    if (this.removeFilesBtn) {
+      this.removeFilesBtn.addEventListener('click', () => this.clearFiles());
     }
 
     // Modal close
     if (this.modal) {
-      const closeBtn = this.modal.querySelector('.modal-close');
+      const closeBtn = document.getElementById('context-modal-close');
       if (closeBtn) {
         closeBtn.addEventListener('click', () => this.closeModal());
       }
@@ -1285,10 +1276,59 @@ class ContextManager {
       });
     }
 
-    // Add text button
-    if (this.addTextBtn) {
-      this.addTextBtn.addEventListener('click', () => this.handleTextAdd());
+    // Save rules button
+    if (this.saveRulesBtn) {
+      this.saveRulesBtn.addEventListener('click', () => this.handleSaveRules());
     }
+
+    // Clear rules button
+    if (this.clearRulesBtn) {
+      this.clearRulesBtn.addEventListener('click', () => this.handleClearRules());
+    }
+  }
+
+  handleSaveRules() {
+    if (!this.textarea) return;
+
+    const text = this.textarea.value.trim();
+    this.rulesText = text;
+
+    // Save to localStorage
+    if (text) {
+      localStorage.setItem('mindcomplete_rules', text);
+    } else {
+      localStorage.removeItem('mindcomplete_rules');
+    }
+
+    if (this.statusEl) {
+      this.statusEl.textContent = text ? 'Rules saved' : 'Rules cleared';
+      setTimeout(() => {
+        if (this.statusEl && (this.statusEl.textContent === 'Rules saved' || this.statusEl.textContent === 'Rules cleared')) {
+          this.statusEl.textContent = this.files.length > 0 ? `~${this.estimatedTokens.toLocaleString()} tokens` : '';
+        }
+      }, 2000);
+    }
+
+    this.updateUI();
+  }
+
+  handleClearRules() {
+    this.rulesText = '';
+    if (this.textarea) {
+      this.textarea.value = '';
+    }
+    localStorage.removeItem('mindcomplete_rules');
+
+    if (this.statusEl) {
+      this.statusEl.textContent = 'Rules cleared';
+      setTimeout(() => {
+        if (this.statusEl && this.statusEl.textContent === 'Rules cleared') {
+          this.statusEl.textContent = this.files.length > 0 ? `~${this.estimatedTokens.toLocaleString()} tokens` : '';
+        }
+      }, 2000);
+    }
+
+    this.updateUI();
   }
 
   async handleFiles(fileList) {
@@ -1349,39 +1389,12 @@ class ContextManager {
     }
   }
 
-  async handleTextAdd() {
-    if (!this.textarea) return;
-
-    const text = this.textarea.value.trim();
-    if (!text) {
-      if (this.statusEl) {
-        this.statusEl.textContent = 'Please enter some text';
-      }
-      return;
-    }
-
-    // Generate timestamp-based filename
-    const now = new Date();
-    const filename = `text-${now.toISOString().slice(0, 16).replace('T', '-').replace(':', '-')}.txt`;
-
-    // Create a virtual text file
-    const file = new File([text], filename, { type: 'text/plain' });
-
-    // Use existing handleFiles method
-    await this.handleFiles([file]);
-
-    // Clear textarea on success (if no error shown)
-    if (this.statusEl && !this.statusEl.textContent.startsWith('Error')) {
-      this.textarea.value = '';
-    }
-  }
-
-  async clearContext() {
+  async clearFiles() {
     if (this.sessionId) {
       try {
         await fetch(`/api/context/${this.sessionId}`, { method: 'DELETE' });
       } catch (e) {
-        console.error('Error clearing context:', e);
+        console.error('Error clearing files:', e);
       }
     }
 
@@ -1389,7 +1402,7 @@ class ContextManager {
     this.files = [];
     this.estimatedTokens = 0;
 
-    // Clear localStorage
+    // Clear file-related localStorage (keep rules)
     localStorage.removeItem('mindcomplete_session_id');
     localStorage.removeItem('mindcomplete_files');
     localStorage.removeItem('mindcomplete_tokens');
@@ -1397,43 +1410,78 @@ class ContextManager {
     this.updateUI();
   }
 
+  async removeFile(index) {
+    if (index < 0 || index >= this.files.length) return;
+
+    // Remove from local array
+    this.files.splice(index, 1);
+
+    // If no files left, clear session on server
+    if (this.files.length === 0) {
+      await this.clearFiles();
+    } else {
+      // Update localStorage
+      localStorage.setItem('mindcomplete_files', JSON.stringify(this.files));
+      this.updateUI();
+    }
+  }
+
+  async clearContext() {
+    await this.clearFiles();
+    this.handleClearRules();
+  }
+
   updateUI() {
-    // Update files list
+    // Update files list with remove buttons
     if (this.filesContainer) {
-      this.filesContainer.innerHTML = this.files
-        .map(
-          (file) => `
-        <div class="context-file">
-          <span class="context-file-name">
-            <span class="material-symbols-outlined">description</span>
-            ${file.name || file}
-          </span>
-        </div>
-      `
-        )
-        .join('');
+      if (this.files.length > 0) {
+        this.filesContainer.innerHTML = this.files
+          .map(
+            (file, index) => `
+          <div class="context-file" data-index="${index}">
+            <span class="context-file-name">
+              <span class="material-symbols-outlined">description</span>
+              ${file.name || file}
+            </span>
+            <button class="context-file-remove" data-index="${index}">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+        `
+          )
+          .join('');
+
+        // Add click handlers for individual file removal
+        this.filesContainer.querySelectorAll('.context-file-remove').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.dataset.index);
+            this.removeFile(idx);
+          });
+        });
+      } else {
+        this.filesContainer.innerHTML = '';
+      }
+    }
+
+    // Update remove files button state
+    if (this.removeFilesBtn) {
+      this.removeFilesBtn.disabled = this.files.length === 0;
     }
 
     // Update status
-    if (this.files.length > 0) {
-      if (this.statusEl) {
+    if (this.files.length > 0 && this.statusEl) {
+      if (!this.statusEl.textContent.startsWith('Rules') && !this.statusEl.textContent.startsWith('Error') && !this.statusEl.textContent.startsWith('Uploading')) {
         this.statusEl.textContent = `~${this.estimatedTokens.toLocaleString()} tokens`;
       }
-      if (this.clearBtn) {
-        this.clearBtn.disabled = false;
-      }
-    } else {
-      if (this.statusEl) {
-        this.statusEl.textContent = '';
-      }
-      if (this.clearBtn) {
-        this.clearBtn.disabled = true;
-      }
+    } else if (this.statusEl && !this.statusEl.textContent.startsWith('Rules') && !this.statusEl.textContent.startsWith('Error')) {
+      this.statusEl.textContent = '';
     }
 
-    // Update menu button indicator
+    // Update menu button indicator (has context if files OR rules exist)
     if (this.contextMenuBtn) {
-      this.contextMenuBtn.classList.toggle('has-context', this.files.length > 0);
+      const hasContext = this.files.length > 0 || this.rulesText.length > 0;
+      this.contextMenuBtn.classList.toggle('has-context', hasContext);
     }
   }
 
@@ -1452,6 +1500,10 @@ class ContextManager {
   getSessionId() {
     return this.sessionId;
   }
+
+  getRulesText() {
+    return this.rulesText;
+  }
 }
 
 // Initialize when DOM is ready
@@ -1463,10 +1515,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const modal = document.getElementById('about-modal');
   const logo = document.querySelector('.logo');
   const modalClose = document.querySelector('.modal-close');
-
-  setTimeout(() => {
-    logo.classList.add('animate');
-  }, 100);
 
   const openModal = () => modal.classList.add('visible');
   logo.addEventListener('click', openModal);
@@ -1487,9 +1535,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // BURGER MENU FUNCTIONALITY
-  const burgerBtn = document.querySelector('.burger-btn');
-  const burgerIcon = burgerBtn.querySelector('.material-symbols-outlined');
+  // MENU FUNCTIONALITY
+  const settingsBtn = document.getElementById('settings-btn');
+  const settingsIcon = settingsBtn.querySelector('.material-symbols-outlined');
   const menuOverlay = document.querySelector('.menu-overlay');
   const shareMenuBtn = document.querySelector('.share-menu-btn');
   const clearMenuBtn = document.querySelector('.clear-menu-btn');
@@ -1499,7 +1547,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const openMenu = () => {
     menuOverlay.classList.add('visible');
-    if (burgerIcon) burgerIcon.textContent = 'close';
+    if (settingsIcon) settingsIcon.textContent = 'close';
     if (menuReadyTimeout) {
       clearTimeout(menuReadyTimeout);
     }
@@ -1517,15 +1565,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     menuOverlay.classList.remove('menu-ready');
     menuOverlay.classList.remove('visible');
-    if (!predictionManager.selectModeActive && burgerIcon) {
-      burgerIcon.textContent = 'edit';
-    }
+    if (settingsIcon) settingsIcon.textContent = 'app_registration';
   };
 
-  burgerBtn.addEventListener('click', () => {
+  settingsBtn.addEventListener('click', () => {
     if (predictionManager.selectModeActive) {
       predictionManager.disableSelectMode();
-      if (burgerIcon) burgerIcon.textContent = 'edit';
+      if (settingsIcon) settingsIcon.textContent = 'app_registration';
       return;
     }
 

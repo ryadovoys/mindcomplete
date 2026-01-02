@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Writecomplete</title>
+  <title>Storyflo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -20,25 +20,22 @@
 <body>
   <header class="header">
     <div class="header-left">
-      <div class="logo">
-        <span class="logo-write">write</span>
-        <span class="logo-separator"></span>
-        <span class="logo-gradient"></span>
-        <span class="logo-complete">complete</span>
-      </div>
+      <button class="icon-btn" id="menu-btn" aria-label="Menu">
+        <span class="material-symbols-outlined">dehaze</span>
+      </button>
+      <div class="logo">Storyflo</div>
     </div>
-    <div class="header-actions">
-      <button class="select-confirm-btn" aria-label="Confirm selection">
-        <span class="material-symbols-outlined">check</span>
-      </button>
-      <button class="theme-toggle-btn" aria-label="Toggle theme">
-        <span class="material-symbols-outlined">dark_mode</span>
-      </button>
-      <button class="burger-btn" aria-label="Menu">
-        <span class="material-symbols-outlined">edit</span>
+    <div class="header-right">
+      <button class="icon-btn" id="settings-btn" aria-label="Settings">
+        <span class="material-symbols-outlined">app_registration</span>
       </button>
     </div>
   </header>
+
+  <!-- Select confirm button (floating) -->
+  <button class="select-confirm-btn" aria-label="Confirm selection">
+    <span class="material-symbols-outlined">check</span>
+  </button>
 
   <!-- Gradient overlay to fade text under header -->
   <div class="header-gradient-overlay"></div>
@@ -47,15 +44,19 @@
   <div class="menu-overlay">
     <div class="menu-content">
       <button class="menu-item context-menu-btn">
+        <span class="material-symbols-outlined">apps</span>
         <span class="menu-label">Manage context</span>
       </button>
       <button class="menu-item select-menu-btn">
-        <span class="menu-label">Select text</span>
+        <span class="material-symbols-outlined">text_select_end</span>
+        <span class="menu-label">Select part</span>
       </button>
       <button class="menu-item share-menu-btn">
+        <span class="material-symbols-outlined">ios_share</span>
         <span class="menu-label">Share</span>
       </button>
       <button class="menu-item clear-menu-btn">
+        <span class="material-symbols-outlined">ink_eraser</span>
         <span class="menu-label">Clear</span>
       </button>
     </div>
@@ -72,13 +73,13 @@
   <div class="modal" id="about-modal">
     <div class="modal-content">
       <button class="modal-close">&times;</button>
-      <h2>About Writecomplete</h2>
-      <p>Writecomplete helps you expand your ideas by completing your thoughts with AI. Start typing, pause, and watch your ideas flow.</p>
+      <h2>About Storyflo</h2>
+      <p>Storyflo helps you expand your ideas by completing your thoughts with AI. Start typing, pause, and watch your ideas flow.</p>
 
       <p>Click in the middle to accept part. Tab to accept full suggestion</p>
 
       <div class="modal-donate">
-        <p>Enjoying Writecomplete?</p>
+        <p>Enjoying Storyflo?</p>
         <a href="https://buymeacoffee.com/yourusername" target="_blank" rel="noopener noreferrer" class="donate-btn">
           <span>☕</span> Buy me a coffee
         </a>
@@ -88,43 +89,48 @@
 
   <!-- Context Upload Modal -->
   <div class="modal" id="context-modal">
-    <div class="modal-content">
-      <button class="modal-close">&times;</button>
-      <h2>Add Context</h2>
-      <p>Upload files to help the AI understand what you're writing about.</p>
-
-      <div class="upload-zone" id="upload-zone">
-        <span class="material-symbols-outlined upload-icon">upload_file</span>
-        <p>Drop files here or click to browse</p>
-        <p class="upload-hint">PDF, TXT, or MD files (max 10MB each, up to 5 files)</p>
-      </div>
-
-      <div class="upload-mobile" id="upload-mobile">
-        <button class="upload-btn" id="upload-btn">
-          <span class="material-symbols-outlined">upload_file</span>
-          Upload Files
-        </button>
-        <p class="upload-mobile-hint">PDF, TXT, or MD files<br>Max 10MB each, up to 5 files</p>
-      </div>
-
-      <input type="file" id="file-input" multiple accept=".pdf,.txt,.md,text/plain,text/markdown,application/pdf" class="visually-hidden">
-
-      <!-- Text input section -->
-      <div class="text-input-section">
-        <p class="text-input-label">Or add your own text:</p>
-        <textarea id="context-textarea" placeholder="Paste or type your reference text here..."></textarea>
-        <button class="add-text-btn" id="add-text-btn">
-          <span class="material-symbols-outlined">add</span>
-          Add Text
+    <div class="modal-content context-modal-content">
+      <!-- Modal Header -->
+      <div class="context-modal-header">
+        <div class="header-spacer"></div>
+        <span class="context-modal-title">Manage context</span>
+        <button class="context-modal-close" id="context-modal-close">
+          <span class="material-symbols-outlined">close</span>
         </button>
       </div>
 
-      <div class="context-files" id="context-files"></div>
+      <!-- Modal Body -->
+      <div class="context-modal-body">
+        <!-- Section 1: Add Rules -->
+        <div class="context-section">
+          <div class="section-header">
+            <h3 class="section-title">Add rules</h3>
+            <p class="section-description">This is a field to add context to make magic complete understand you faster.</p>
+          </div>
+          <textarea id="context-textarea"></textarea>
+          <div class="section-buttons">
+            <button class="btn-white" id="save-rules-btn">Save rules</button>
+            <button class="btn-secondary" id="clear-rules-btn">Clear rules</button>
+          </div>
+        </div>
 
-      <div class="context-actions">
-        <button class="context-clear-btn" id="context-clear-btn" disabled>
-          Clear Context
-        </button>
+        <!-- Section 2: Upload Files -->
+        <div class="context-section">
+          <div class="section-header">
+            <h3 class="section-title">Upload files</h3>
+            <p class="section-description">Upload files to help the AI understand what you're writing about.</p>
+          </div>
+          <div class="context-files" id="context-files"></div>
+          <input type="file" id="file-input" multiple accept=".pdf,.txt,.md,text/plain,text/markdown,application/pdf" class="visually-hidden">
+          <div class="section-buttons">
+            <button class="btn-white" id="upload-btn">
+              <span class="material-symbols-outlined">attach_file</span>
+              Upload files
+            </button>
+            <button class="btn-secondary" id="remove-files-btn">Remove files</button>
+          </div>
+        </div>
+
         <div class="context-status" id="context-status"></div>
       </div>
     </div>
