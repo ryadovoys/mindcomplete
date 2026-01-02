@@ -1853,16 +1853,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Theme toggle button (in header)
+  // Theme toggle button (in header or menu)
   const themeToggleBtn = document.querySelector('.theme-toggle-btn');
   if (themeToggleBtn) {
     const themeIcon = themeToggleBtn.querySelector('.material-symbols-outlined');
+    const themeLabel = themeToggleBtn.querySelector('.menu-label');
 
     const updateThemeButton = () => {
       const isLight = document.documentElement.getAttribute('data-theme') === 'light';
       if (themeIcon) {
         // Show moon (dark_mode) when in light theme, sun (light_mode) when in dark theme
         themeIcon.textContent = isLight ? 'dark_mode' : 'light_mode';
+      }
+      if (themeLabel) {
+        themeLabel.textContent = isLight ? 'Dark mode' : 'Light mode';
       }
     };
 
@@ -1871,6 +1875,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const isCurrentlyLight = html.getAttribute('data-theme') === 'light';
       html.setAttribute('data-theme', isCurrentlyLight ? 'dark' : 'light');
       updateThemeButton();
+      closeMenu(); // Close menu after toggling
     });
 
     // Initialize button icon based on current theme

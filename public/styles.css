@@ -50,6 +50,13 @@
   --icon-size-lg: 40px;
   /* Gradient Background */
   --bg-gradient: linear-gradient(180deg, #0E0A27 0%, #1E1442 100%);
+
+  /* Shadows */
+  --menu-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  --modal-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+
+  /* Input background for dark mode */
+  --input-bg: rgba(212, 202, 255, 0.1);
 }
 
 /* Light theme - keeping for future use */
@@ -64,8 +71,17 @@
   --surface-hover: rgba(var(--text-color-rgb), 0.12);
   --border-color: rgba(var(--text-color-rgb), 0.1);
   --overlay-color: rgba(0, 0, 0, 0.15);
-  --modal-overlay: rgba(0, 0, 0, 0.5);
+  --modal-overlay: rgba(0, 0, 0, 0.2);
   --bg-gradient: linear-gradient(180deg, #F2F1ED 0%, #F2F1ED 100%);
+
+  /* Update glass/surface variables for light mode visibility */
+  --offwhite-glass: rgba(255, 255, 255, 0.85);
+  --figma-surface: rgba(255, 255, 255, 0.85);
+  --menu-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  --modal-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+
+  /* Input background for light mode - pure white */
+  --input-bg: #FFFFFF;
 }
 
 html,
@@ -231,6 +247,8 @@ h2 {
   transform: translateY(-6px);
   opacity: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
+  min-width: 194px;
+  box-shadow: var(--menu-shadow);
 }
 
 .menu-overlay.menu-ready .menu-content {
@@ -314,6 +332,7 @@ body.select-mode-active .inline-prediction {
   padding: 48px;
   max-width: 500px;
   position: relative;
+  box-shadow: var(--modal-shadow);
 }
 
 .modal-content h2 {
@@ -615,7 +634,7 @@ body.selection-ready .select-confirm-btn {
     height: 100vh;
     max-width: 100vw;
     border-radius: 0;
-    background: var(--dark-purple);
+    background: var(--bg-color);
     border: none;
     padding: 60px 20px 20px 20px;
     backdrop-filter: none;
@@ -636,7 +655,7 @@ body.selection-ready .select-confirm-btn {
     height: 100vh;
     border-radius: 0;
     padding: 0;
-    background: var(--dark-purple);
+    background: var(--bg-color);
   }
 
   /* Image guidance modal on mobile - floating centered */
@@ -710,6 +729,7 @@ body.selection-ready .select-confirm-btn {
   flex-direction: column;
   border-radius: 32px;
   background: var(--offwhite-glass);
+  box-shadow: var(--modal-shadow);
 }
 
 .context-modal-header {
@@ -771,7 +791,7 @@ body.selection-ready .select-confirm-btn {
     width: 100vw;
     height: 100vh;
     border-radius: 0;
-    background: var(--dark-purple);
+    background: var(--bg-color);
   }
 }
 
@@ -799,7 +819,7 @@ body.selection-ready .select-confirm-btn {
 .section-description {
   font-size: var(--font-body-small-size);
   font-weight: var(--font-body-small-weight);
-  color: rgba(208, 198, 255, 0.6);
+  color: var(--ghost-color);
   margin: 0;
   line-height: 1.4;
 }
@@ -935,7 +955,7 @@ body.selection-ready .select-confirm-btn {
   width: 100%;
   height: 153px;
   padding: 12px;
-  background: var(--figma-surface);
+  background: var(--input-bg);
   border: none;
   border-radius: 16px;
   color: var(--text-color);
@@ -949,7 +969,6 @@ body.selection-ready .select-confirm-btn {
 
 #context-textarea:focus {
   outline: none;
-  background: rgba(212, 202, 255, 0.1);
 }
 
 #context-textarea::placeholder {
