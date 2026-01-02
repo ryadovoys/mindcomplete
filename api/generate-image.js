@@ -1,6 +1,6 @@
 const CONFIG = {
   PROMPT_MODEL: 'xiaomi/mimo-v2-flash:free',
-  IMAGE_MODEL: 'sourceful/riverflow-v2-fast-preview',
+  IMAGE_MODEL: 'bytedance-seed/seedream-4.5',
   STYLE_SUFFIX: ', in the style of Hayao Miyazaki Studio Ghibli anime',
 };
 

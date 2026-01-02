@@ -1659,6 +1659,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const imageGuidanceTextarea = document.getElementById('image-guidance-textarea');
   const applyGuidanceBtn = document.getElementById('apply-guidance-btn');
   const skipGuidanceBtn = document.getElementById('skip-guidance-btn');
+  const imageGuidanceCloseBtn = document.getElementById('image-guidance-close');
 
   // Function to generate image with optional guidance
   async function generateImageWithGuidance(text, guidance = '') {
@@ -1776,6 +1777,13 @@ document.addEventListener('DOMContentLoaded', () => {
       skipGuidanceBtn.addEventListener('click', () => {
         imageGuidanceModal.classList.remove('visible');
         generateImageWithGuidance(pendingImageText, '');
+      });
+    }
+
+    // Close button (cancel without generating)
+    if (imageGuidanceCloseBtn) {
+      imageGuidanceCloseBtn.addEventListener('click', () => {
+        imageGuidanceModal.classList.remove('visible');
       });
     }
 
