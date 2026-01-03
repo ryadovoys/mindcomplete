@@ -7,6 +7,7 @@ import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { parseFile, combineContexts } from './fileParser.js';
 import { setContext, getContext, deleteContext } from './contextStore.js';
+import { createValley, getValleys, getValley, deleteValley } from './valleysStore.js';
 
 const CONFIG = {
   MAX_TOKENS: 400,
@@ -93,6 +94,54 @@ app.post('/api/context', handleUpload, async (req, res) => {
 app.delete('/api/context/:sessionId', async (req, res) => {
   await deleteContext(req.params.sessionId);
   res.json({ success: true });
+});
+
+// Valleys API routes
+app.get('/api/valleys', async (req, res) => {
+  try {
+    const valleys = await getValleys();
+    res.json({ valleys });
+  } catch (error) {
+    console.error('Get valleys error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/valleys', async (req, res) => {
+  try {
+    const { title, text, rules, contextSessionId } = req.body;
+    if (!text) {
+      return res.status(400).json({ error: 'Text is required' });
+    }
+    const valley = await createValley({ title, text, rules, contextSessionId });
+    res.json(valley);
+  } catch (error) {
+    console.error('Create valley error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/valleys/:id', async (req, res) => {
+  try {
+    const valley = await getValley(req.params.id);
+    if (!valley) {
+      return res.status(404).json({ error: 'Valley not found' });
+    }
+    res.json(valley);
+  } catch (error) {
+    console.error('Get valley error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/valleys/:id', async (req, res) => {
+  try {
+    await deleteValley(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete valley error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 app.post('/api/predict', async (req, res) => {

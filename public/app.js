@@ -1501,10 +1501,198 @@ class ContextManager {
   }
 }
 
+// Valleys Manager - handles saving and loading valleys
+class ValleysManager {
+  constructor() {
+    this.valleys = [];
+    this.modal = document.getElementById('valleys-modal');
+    this.listContainer = document.getElementById('valleys-list');
+    this.emptyState = document.getElementById('valleys-empty');
+    this.init();
+  }
+
+  init() {
+    // Modal close button
+    const closeBtn = document.getElementById('valleys-modal-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.closeModal());
+    }
+
+    // Close on backdrop click
+    if (this.modal) {
+      this.modal.addEventListener('click', (e) => {
+        if (e.target === this.modal) this.closeModal();
+      });
+    }
+  }
+
+  generateTitle(text) {
+    // Take first 30 chars, cut at last space, add ellipsis if truncated
+    const cleaned = text.replace(/\s+/g, ' ').trim();
+    if (cleaned.length <= 30) return cleaned || 'Untitled';
+    const truncated = cleaned.slice(0, 30);
+    const lastSpace = truncated.lastIndexOf(' ');
+    return (lastSpace > 10 ? truncated.slice(0, lastSpace) : truncated) + '...';
+  }
+
+  async saveValley() {
+    const editor = document.querySelector('.editor');
+    const text = editor.textContent.trim();
+
+    if (!text) {
+      return { success: false, error: 'Nothing to save' };
+    }
+
+    const title = this.generateTitle(text);
+    const rules = window.contextManager?.getRulesText() || '';
+    const contextSessionId = window.contextManager?.getSessionId() || null;
+
+    try {
+      const response = await fetch('/api/valleys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, text, rules, contextSessionId })
+      });
+
+      if (!response.ok) throw new Error('Failed to save valley');
+
+      const data = await response.json();
+      return { success: true, valley: data };
+    } catch (error) {
+      console.error('Save valley error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async loadValleys() {
+    try {
+      const response = await fetch('/api/valleys');
+      if (!response.ok) throw new Error('Failed to load valleys');
+
+      const data = await response.json();
+      this.valleys = data.valleys || [];
+      this.renderList();
+    } catch (error) {
+      console.error('Load valleys error:', error);
+      this.valleys = [];
+      this.renderList();
+    }
+  }
+
+  async loadValley(id) {
+    try {
+      const response = await fetch(`/api/valleys/${id}`);
+      if (!response.ok) throw new Error('Failed to load valley');
+
+      const valley = await response.json();
+
+      // Restore editor content
+      const editor = document.querySelector('.editor');
+      editor.textContent = valley.text;
+
+      // Restore rules
+      if (valley.rules && window.contextManager) {
+        window.contextManager.rulesText = valley.rules;
+        const textarea = document.getElementById('context-textarea');
+        if (textarea) textarea.value = valley.rules;
+        localStorage.setItem('mindcomplete_rules', valley.rules);
+        window.contextManager.updateUI();
+      }
+
+      this.closeModal();
+      editor.focus();
+    } catch (error) {
+      console.error('Load valley error:', error);
+    }
+  }
+
+  async deleteValley(id) {
+    try {
+      const response = await fetch(`/api/valleys/${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to delete valley');
+
+      this.valleys = this.valleys.filter((v) => v.id !== id);
+      this.renderList();
+    } catch (error) {
+      console.error('Delete valley error:', error);
+    }
+  }
+
+  renderList() {
+    if (!this.listContainer) return;
+
+    if (this.valleys.length === 0) {
+      this.listContainer.innerHTML = '';
+      return;
+    }
+
+    this.listContainer.innerHTML = this.valleys
+      .map(
+        (valley) => `
+      <div class="valley-item" data-id="${valley.id}">
+        <div class="valley-item-content">
+          <span class="valley-item-title">${this.escapeHtml(valley.title)}</span>
+          <span class="valley-item-date">${this.formatDate(valley.created_at)}</span>
+        </div>
+        <button class="valley-item-delete" data-id="${valley.id}">
+          <span class="material-symbols-outlined">delete</span>
+        </button>
+      </div>
+    `
+      )
+      .join('');
+
+    // Add click handlers
+    this.listContainer.querySelectorAll('.valley-item').forEach((item) => {
+      item.addEventListener('click', (e) => {
+        if (!e.target.closest('.valley-item-delete')) {
+          this.loadValley(item.dataset.id);
+        }
+      });
+    });
+
+    this.listContainer.querySelectorAll('.valley-item-delete').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.deleteValley(btn.dataset.id);
+      });
+    });
+  }
+
+  escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  formatDate(dateStr) {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = now - date;
+
+    if (diff < 60000) return 'Just now';
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+    if (diff < 604800000) return `${Math.floor(diff / 86400000)}d ago`;
+
+    return date.toLocaleDateString();
+  }
+
+  openModal() {
+    this.loadValleys();
+    if (this.modal) this.modal.classList.add('visible');
+  }
+
+  closeModal() {
+    if (this.modal) this.modal.classList.remove('visible');
+  }
+}
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   const predictionManager = new PredictionManager();
   window.contextManager = new ContextManager();
+  window.valleysManager = new ValleysManager();
 
   // Modal handling
   const modal = document.getElementById('about-modal');
@@ -1705,6 +1893,47 @@ document.addEventListener('DOMContentLoaded', () => {
       closeMenu();
     });
   }
+
+  // Valleys menu button (left menu)
+  const valleysMenuBtn = document.querySelector('.valleys-menu-btn');
+  if (valleysMenuBtn) {
+    valleysMenuBtn.addEventListener('click', () => {
+      window.valleysManager.openModal();
+      closeMenu(leftMenuOverlay, menuIcon, 'dehaze');
+    });
+  }
+
+  // Save valley button (right menu)
+  const saveValleyBtn = document.querySelector('.save-valley-btn');
+  if (saveValleyBtn) {
+    saveValleyBtn.addEventListener('click', async () => {
+      const saveLabel = saveValleyBtn.querySelector('.menu-label');
+      const originalText = saveLabel ? saveLabel.textContent : 'Save valley';
+
+      const result = await window.valleysManager.saveValley();
+
+      if (result.success) {
+        if (saveLabel) saveLabel.textContent = 'Saved!';
+        setTimeout(() => {
+          if (saveLabel) saveLabel.textContent = originalText;
+          closeMenu();
+        }, 800);
+      } else {
+        if (saveLabel) saveLabel.textContent = result.error || 'Error';
+        setTimeout(() => {
+          if (saveLabel) saveLabel.textContent = originalText;
+        }, 1500);
+      }
+    });
+  }
+
+  // Close valleys modal on Escape
+  document.addEventListener('keydown', (e) => {
+    const valleysModal = document.getElementById('valleys-modal');
+    if (e.key === 'Escape' && valleysModal?.classList.contains('visible')) {
+      window.valleysManager.closeModal();
+    }
+  });
 
   // Create image button and guidance modal
   const createImageBtn = document.querySelector('.create-image-btn');
