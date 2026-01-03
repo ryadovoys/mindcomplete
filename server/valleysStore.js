@@ -7,7 +7,7 @@ const memoryStore = new Map();
 // Track if we should use memory fallback (e.g., when table doesn't exist)
 let useMemoryFallback = !supabase;
 
-export async function createValley(valleyData) {
+export async function createValley(valleyData, userId) {
   const id = uuidv4();
   const now = new Date().toISOString();
 
@@ -16,6 +16,7 @@ export async function createValley(valleyData) {
       .from('valleys')
       .insert({
         id,
+        user_id: userId,
         title: valleyData.title,
         text: valleyData.text,
         rules: valleyData.rules || null,
@@ -31,20 +32,21 @@ export async function createValley(valleyData) {
       if (error.code === 'PGRST205' || error.message?.includes('valleys')) {
         console.warn('Valleys table not found in Supabase, using memory fallback');
         useMemoryFallback = true;
-        return createValleyInMemory(id, valleyData, now);
+        return createValleyInMemory(id, valleyData, now, userId);
       }
       console.error('Supabase createValley error:', error);
       throw new Error('Failed to create valley');
     }
     return data;
   } else {
-    return createValleyInMemory(id, valleyData, now);
+    return createValleyInMemory(id, valleyData, now, userId);
   }
 }
 
-function createValleyInMemory(id, valleyData, now) {
+function createValleyInMemory(id, valleyData, now, userId) {
   const valley = {
     id,
+    user_id: userId,
     title: valleyData.title,
     text: valleyData.text,
     rules: valleyData.rules || null,
@@ -56,17 +58,24 @@ function createValleyInMemory(id, valleyData, now) {
   return { id, title: valley.title, created_at: valley.created_at };
 }
 
-function getValleysFromMemory() {
+function getValleysFromMemory(userId) {
   return Array.from(memoryStore.values())
+    .filter(v => v.user_id === userId)
     .map(v => ({ id: v.id, title: v.title, created_at: v.created_at }))
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 }
 
-export async function getValleys() {
+export async function getValleys(userId) {
+  // If no userId, return empty array (guest mode)
+  if (!userId) {
+    return [];
+  }
+
   if (supabase && !useMemoryFallback) {
     const { data, error } = await supabase
       .from('valleys')
       .select('id, title, created_at')
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -74,23 +83,24 @@ export async function getValleys() {
       if (error.code === 'PGRST205' || error.message?.includes('valleys')) {
         console.warn('Valleys table not found in Supabase, using memory fallback');
         useMemoryFallback = true;
-        return getValleysFromMemory();
+        return getValleysFromMemory(userId);
       }
       console.error('Supabase getValleys error:', error);
       throw new Error('Failed to fetch valleys');
     }
     return data || [];
   } else {
-    return getValleysFromMemory();
+    return getValleysFromMemory(userId);
   }
 }
 
-export async function getValley(id) {
+export async function getValley(id, userId) {
   if (supabase && !useMemoryFallback) {
     const { data, error } = await supabase
       .from('valleys')
       .select('*')
       .eq('id', id)
+      .eq('user_id', userId)
       .single();
 
     if (error) {
@@ -98,35 +108,64 @@ export async function getValley(id) {
       if (error.code === 'PGRST205' || error.message?.includes('valleys')) {
         console.warn('Valleys table not found in Supabase, using memory fallback');
         useMemoryFallback = true;
-        return memoryStore.get(id) || null;
+        const valley = memoryStore.get(id);
+        return (valley && valley.user_id === userId) ? valley : null;
       }
       return null;
     }
     return data;
   } else {
-    return memoryStore.get(id) || null;
+    const valley = memoryStore.get(id);
+    return (valley && valley.user_id === userId) ? valley : null;
   }
 }
 
-export async function deleteValley(id) {
+export async function deleteValley(id, userId) {
   if (supabase && !useMemoryFallback) {
     const { error } = await supabase
       .from('valleys')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', userId);
 
     if (error) {
       // If table doesn't exist, fall back to memory
       if (error.code === 'PGRST205' || error.message?.includes('valleys')) {
         console.warn('Valleys table not found in Supabase, using memory fallback');
         useMemoryFallback = true;
-        memoryStore.delete(id);
+        const valley = memoryStore.get(id);
+        if (valley && valley.user_id === userId) {
+          memoryStore.delete(id);
+        }
         return;
       }
       console.error('Supabase deleteValley error:', error);
       throw new Error('Failed to delete valley');
     }
   } else {
-    memoryStore.delete(id);
+    const valley = memoryStore.get(id);
+    if (valley && valley.user_id === userId) {
+      memoryStore.delete(id);
+    }
+  }
+}
+
+export async function deleteUserValleys(userId) {
+  if (supabase && !useMemoryFallback) {
+    const { error } = await supabase
+      .from('valleys')
+      .delete()
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Supabase deleteUserValleys error:', error);
+    }
+  } else {
+    // Delete all valleys for user from memory
+    for (const [id, valley] of memoryStore.entries()) {
+      if (valley.user_id === userId) {
+        memoryStore.delete(id);
+      }
+    }
   }
 }

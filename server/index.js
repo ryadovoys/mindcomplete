@@ -7,7 +7,8 @@ import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { parseFile, combineContexts } from './fileParser.js';
 import { setContext, getContext, deleteContext } from './contextStore.js';
-import { createValley, getValleys, getValley, deleteValley } from './valleysStore.js';
+import { createValley, getValleys, getValley, deleteValley, deleteUserValleys } from './valleysStore.js';
+import { supabase } from './supabaseClient.js';
 
 const CONFIG = {
   MAX_TOKENS: 400,
@@ -61,6 +62,23 @@ const handleUpload = (req, res, next) => {
   });
 };
 
+// Helper to get user from JWT token
+async function getUserFromToken(authHeader) {
+  if (!authHeader || !authHeader.startsWith('Bearer ') || !supabase) {
+    return null;
+  }
+
+  const token = authHeader.replace('Bearer ', '');
+
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error) return null;
+    return user;
+  } catch (e) {
+    return null;
+  }
+}
+
 // Upload context files
 app.post('/api/context', handleUpload, async (req, res) => {
   try {
@@ -99,7 +117,12 @@ app.delete('/api/context/:sessionId', async (req, res) => {
 // Valleys API routes
 app.get('/api/valleys', async (req, res) => {
   try {
-    const valleys = await getValleys();
+    const user = await getUserFromToken(req.headers.authorization);
+    // If not authenticated, return empty list (guest mode)
+    if (!user) {
+      return res.json({ valleys: [] });
+    }
+    const valleys = await getValleys(user.id);
     res.json({ valleys });
   } catch (error) {
     console.error('Get valleys error:', error);
@@ -109,11 +132,15 @@ app.get('/api/valleys', async (req, res) => {
 
 app.post('/api/valleys', async (req, res) => {
   try {
+    const user = await getUserFromToken(req.headers.authorization);
+    if (!user) {
+      return res.status(401).json({ error: 'Sign in to save valleys' });
+    }
     const { title, text, rules, contextSessionId } = req.body;
     if (!text) {
       return res.status(400).json({ error: 'Text is required' });
     }
-    const valley = await createValley({ title, text, rules, contextSessionId });
+    const valley = await createValley({ title, text, rules, contextSessionId }, user.id);
     res.json(valley);
   } catch (error) {
     console.error('Create valley error:', error);
@@ -123,7 +150,11 @@ app.post('/api/valleys', async (req, res) => {
 
 app.get('/api/valleys/:id', async (req, res) => {
   try {
-    const valley = await getValley(req.params.id);
+    const user = await getUserFromToken(req.headers.authorization);
+    if (!user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    const valley = await getValley(req.params.id, user.id);
     if (!valley) {
       return res.status(404).json({ error: 'Valley not found' });
     }
@@ -136,10 +167,38 @@ app.get('/api/valleys/:id', async (req, res) => {
 
 app.delete('/api/valleys/:id', async (req, res) => {
   try {
-    await deleteValley(req.params.id);
+    const user = await getUserFromToken(req.headers.authorization);
+    if (!user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    await deleteValley(req.params.id, user.id);
     res.json({ success: true });
   } catch (error) {
     console.error('Delete valley error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete account route
+app.delete('/api/auth/delete-account', async (req, res) => {
+  try {
+    const user = await getUserFromToken(req.headers.authorization);
+    if (!user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    // Delete user's valleys
+    await deleteUserValleys(user.id);
+
+    // Delete the user account (requires service role key)
+    if (supabase) {
+      const { error } = await supabase.auth.admin.deleteUser(user.id);
+      if (error) throw error;
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete account error:', error);
     res.status(500).json({ error: error.message });
   }
 });

@@ -5,21 +5,22 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Color Tokens - 6 Figma Variables */
+/* Color Tokens - 7 Figma Variables */
 :root {
   /* Core Figma Colors - Dark Mode (default) */
-  --background: #1A143B;
-  --accent: #8760FF;
-  --text: #EEEBFD;
-  --modal-background: #272147;
-  --input-background: #373156;
-  --text-btn: #EEEBFD;
+  --background: #212429;
+  --accent: #A85DD7;
+  --text: #E7E8EC;
+  --modal-background: #2C2F34;
+  --input-background: #393B40;
+  --text-btn: #212429;
+  --btn-background: #E7E8EC;
 
   /* Derived (opacity variants) */
-  --text-rgb: 238, 235, 253;
+  --text-rgb: 231, 232, 236;
   --ghost: rgba(var(--text-rgb), 0.5);
   --placeholder: rgba(var(--text-rgb), 0.5);
-  --modal-overlay: rgba(26, 20, 59, 0.8);
+  --modal-overlay: rgba(33, 36, 41, 0.8);
 
   /* Typography - Light weight (300) per Figma (px not pt!) */
   --font-h1-size: 28px;
@@ -45,17 +46,18 @@
   --modal-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
 }
 
-/* Light theme - 6 Figma Variables swapped */
+/* Light theme - 7 Figma Variables swapped */
 [data-theme="light"] {
-  --background: #EEEBFD;
-  --accent: #8760FF;
-  --text: #1A143B;
+  --background: #E7E8EC;
+  --accent: #A85DD7;
+  --text: #212429;
   --modal-background: #FFFFFF;
-  --input-background: #EEEBFD;
-  --text-btn: #EEEBFD;
+  --input-background: #F3F3F6;
+  --text-btn: #E7E8EC;
+  --btn-background: #212429;
 
   /* Derived (opacity variants) */
-  --text-rgb: 26, 20, 59;
+  --text-rgb: 33, 36, 41;
   --ghost: rgba(var(--text-rgb), 0.5);
   --placeholder: rgba(var(--text-rgb), 0.5);
   --modal-overlay: rgba(0, 0, 0, 0.2);
@@ -163,7 +165,7 @@ h2 {
 
 /* Logo */
 .logo {
-  height: 30px;
+  height: 26px;
   width: auto;
 }
 
@@ -824,7 +826,7 @@ body.selection-ready .select-confirm-btn {
   font-weight: var(--font-body-small-weight);
   font-family: inherit;
   color: var(--text-btn);
-  background: var(--accent);
+  background: var(--btn-background);
   border: none;
   border-radius: 16px;
   cursor: pointer;
@@ -1260,4 +1262,156 @@ body.selection-ready .select-confirm-btn {
   font-size: 24px;
   margin-right: 8px;
   animation: spin 1s linear infinite;
+}
+
+/* Auth Modal Styles */
+.auth-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+  border-radius: 16px;
+  background: var(--input-background);
+  padding: 4px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: var(--font-body-small-size);
+  font-weight: var(--font-body-small-weight);
+  color: var(--ghost);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.auth-tab.active {
+  background: var(--btn-background);
+  color: var(--text-btn);
+}
+
+.auth-input {
+  width: 100%;
+  height: 48px;
+  padding: 12px;
+  background: var(--input-background);
+  border: none;
+  border-radius: 16px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--font-body-size);
+  font-weight: var(--font-body-weight);
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+
+.auth-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.auth-input::placeholder {
+  color: var(--ghost);
+}
+
+.auth-error {
+  color: #e74c3c;
+  font-size: var(--font-caption-size);
+  min-height: 20px;
+  margin-bottom: 10px;
+}
+
+.auth-error:empty {
+  display: none;
+}
+
+.auth-error.success {
+  color: var(--accent);
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(var(--text-rgb), 0.1);
+}
+
+.auth-divider span {
+  padding: 0 16px;
+  color: var(--ghost);
+  font-size: var(--font-caption-size);
+}
+
+.btn-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 48px;
+  padding: 12px 20px;
+  background: var(--input-background);
+  border: none;
+  border-radius: 16px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--font-body-small-size);
+  font-weight: var(--font-body-small-weight);
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+@media (hover: hover) {
+  .btn-social:hover {
+    opacity: 0.8;
+  }
+}
+
+/* Account Modal Styles */
+.account-email {
+  padding: 16px;
+  background: var(--input-background);
+  border-radius: 16px;
+  font-size: var(--font-body-size);
+  color: var(--text);
+  margin-bottom: 20px;
+  word-break: break-all;
+}
+
+.account-buttons {
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  height: 48px;
+  font-size: var(--font-body-small-size);
+  font-weight: var(--font-body-small-weight);
+  font-family: inherit;
+  color: #e74c3c;
+  background: transparent;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+@media (hover: hover) {
+  .btn-danger:hover {
+    background: rgba(231, 76, 60, 0.1);
+  }
 }

@@ -1543,18 +1543,32 @@ class ValleysManager {
       return { success: false, error: 'Nothing to save' };
     }
 
+    // Check if user is authenticated
+    if (!window.authManager?.isAuthenticated()) {
+      // Open auth modal instead of saving
+      window.authManager?.openModal();
+      return { success: false, error: 'Sign in to save valleys' };
+    }
+
     const title = this.generateTitle(text);
     const rules = window.contextManager?.getRulesText() || '';
     const contextSessionId = window.contextManager?.getSessionId() || null;
 
     try {
+      const token = await window.authManager.getAccessToken();
       const response = await fetch('/api/valleys', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ title, text, rules, contextSessionId })
       });
 
-      if (!response.ok) throw new Error('Failed to save valley');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to save valley');
+      }
 
       const data = await response.json();
       return { success: true, valley: data };
@@ -1566,7 +1580,10 @@ class ValleysManager {
 
   async loadValleys() {
     try {
-      const response = await fetch('/api/valleys');
+      const token = await window.authManager?.getAccessToken();
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+      const response = await fetch('/api/valleys', { headers });
       if (!response.ok) throw new Error('Failed to load valleys');
 
       const data = await response.json();
@@ -1581,7 +1598,10 @@ class ValleysManager {
 
   async loadValley(id) {
     try {
-      const response = await fetch(`/api/valleys/${id}`);
+      const token = await window.authManager?.getAccessToken();
+      const response = await fetch(`/api/valleys/${id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (!response.ok) throw new Error('Failed to load valley');
 
       const valley = await response.json();
@@ -1608,7 +1628,11 @@ class ValleysManager {
 
   async deleteValley(id) {
     try {
-      const response = await fetch(`/api/valleys/${id}`, { method: 'DELETE' });
+      const token = await window.authManager?.getAccessToken();
+      const response = await fetch(`/api/valleys/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (!response.ok) throw new Error('Failed to delete valley');
 
       this.valleys = this.valleys.filter((v) => v.id !== id);
@@ -1688,11 +1712,317 @@ class ValleysManager {
   }
 }
 
+// Auth Manager - handles user authentication
+class AuthManager {
+  constructor() {
+    this.user = null;
+    this.modal = document.getElementById('auth-modal');
+    this.accountModal = document.getElementById('account-modal');
+    this.authTitle = document.getElementById('auth-modal-title');
+    this.emailInput = document.getElementById('auth-email');
+    this.passwordInput = document.getElementById('auth-password');
+    this.submitBtn = document.getElementById('auth-submit-btn');
+    this.errorEl = document.getElementById('auth-error');
+    this.accountEmailEl = document.getElementById('account-email');
+    this.currentTab = 'signin';
+
+    this.init();
+  }
+
+  async init() {
+    // Wait for supabase to be available
+    await this.waitForSupabase();
+
+    // Check for existing session
+    const { data: { session } } = await window.supabase.auth.getSession();
+    if (session) {
+      this.user = session.user;
+      this.updateMenuState();
+    }
+
+    // Listen for auth state changes
+    window.supabase.auth.onAuthStateChange((event, session) => {
+      this.user = session?.user || null;
+      this.updateMenuState();
+
+      if (event === 'SIGNED_IN') {
+        this.closeModal();
+        // Reload valleys if manager exists
+        if (window.valleysManager) {
+          window.valleysManager.loadValleys();
+        }
+      }
+      if (event === 'SIGNED_OUT') {
+        // Clear valleys list
+        if (window.valleysManager) {
+          window.valleysManager.valleys = [];
+          window.valleysManager.renderList();
+        }
+      }
+    });
+
+    this.bindEvents();
+  }
+
+  waitForSupabase() {
+    return new Promise((resolve) => {
+      if (window.supabase) {
+        resolve();
+      } else {
+        const check = setInterval(() => {
+          if (window.supabase) {
+            clearInterval(check);
+            resolve();
+          }
+        }, 50);
+      }
+    });
+  }
+
+  bindEvents() {
+    // Auth modal close
+    const closeBtn = document.getElementById('auth-modal-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.closeModal());
+    }
+    if (this.modal) {
+      this.modal.addEventListener('click', (e) => {
+        if (e.target === this.modal) this.closeModal();
+      });
+    }
+
+    // Tab switching
+    document.querySelectorAll('.auth-tab').forEach(tab => {
+      tab.addEventListener('click', () => this.switchTab(tab.dataset.tab));
+    });
+
+    // Form submission
+    if (this.submitBtn) {
+      this.submitBtn.addEventListener('click', () => this.handleSubmit());
+    }
+
+    // Enter key submits form
+    if (this.emailInput) {
+      this.emailInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') this.handleSubmit();
+      });
+    }
+    if (this.passwordInput) {
+      this.passwordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') this.handleSubmit();
+      });
+    }
+
+    // Google sign in
+    const googleBtn = document.getElementById('google-signin-btn');
+    if (googleBtn) {
+      googleBtn.addEventListener('click', () => this.signInWithGoogle());
+    }
+
+    // Account modal
+    const accountCloseBtn = document.getElementById('account-modal-close');
+    if (accountCloseBtn) {
+      accountCloseBtn.addEventListener('click', () => this.closeAccountModal());
+    }
+    if (this.accountModal) {
+      this.accountModal.addEventListener('click', (e) => {
+        if (e.target === this.accountModal) this.closeAccountModal();
+      });
+    }
+
+    // Sign out
+    const signoutBtn = document.getElementById('signout-btn');
+    if (signoutBtn) {
+      signoutBtn.addEventListener('click', () => this.signOut());
+    }
+
+    // Delete account
+    const deleteBtn = document.getElementById('delete-account-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () => this.deleteAccount());
+    }
+
+    // Escape key closes modals
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (this.modal?.classList.contains('visible')) {
+          this.closeModal();
+        }
+        if (this.accountModal?.classList.contains('visible')) {
+          this.closeAccountModal();
+        }
+      }
+    });
+  }
+
+  switchTab(tab) {
+    this.currentTab = tab;
+    document.querySelectorAll('.auth-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === tab);
+    });
+    if (this.authTitle) {
+      this.authTitle.textContent = tab === 'signin' ? 'Sign In' : 'Sign Up';
+    }
+    if (this.submitBtn) {
+      this.submitBtn.textContent = tab === 'signin' ? 'Sign In' : 'Sign Up';
+    }
+    if (this.errorEl) {
+      this.errorEl.textContent = '';
+      this.errorEl.classList.remove('success');
+    }
+  }
+
+  async handleSubmit() {
+    const email = this.emailInput?.value.trim();
+    const password = this.passwordInput?.value;
+
+    if (!email || !password) {
+      this.showError('Please fill in all fields');
+      return;
+    }
+
+    if (this.submitBtn) this.submitBtn.disabled = true;
+    this.showError('');
+
+    try {
+      if (this.currentTab === 'signin') {
+        const { error } = await window.supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await window.supabase.auth.signUp({
+          email,
+          password
+        });
+        if (error) throw error;
+        this.showError('Check your email to confirm your account', true);
+      }
+    } catch (error) {
+      this.showError(error.message);
+    } finally {
+      if (this.submitBtn) this.submitBtn.disabled = false;
+    }
+  }
+
+  showError(message, isSuccess = false) {
+    if (this.errorEl) {
+      this.errorEl.textContent = message;
+      this.errorEl.classList.toggle('success', isSuccess);
+    }
+  }
+
+  async signInWithGoogle() {
+    const { error } = await window.supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+    if (error) {
+      this.showError(error.message);
+    }
+  }
+
+  async signOut() {
+    await window.supabase.auth.signOut();
+    this.closeAccountModal();
+  }
+
+  async deleteAccount() {
+    if (!confirm('Are you sure you want to delete your account? This will delete all your valleys and cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { data: { session } } = await window.supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const response = await fetch('/api/auth/delete-account', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete account');
+      }
+
+      await window.supabase.auth.signOut();
+      this.closeAccountModal();
+    } catch (error) {
+      alert('Failed to delete account: ' + error.message);
+    }
+  }
+
+  updateMenuState() {
+    const profileBtn = document.querySelector('.profile-menu-btn');
+    const profileLabel = profileBtn?.querySelector('.menu-label');
+    const profileIcon = profileBtn?.querySelector('.material-symbols-outlined');
+
+    if (this.user) {
+      if (profileLabel) profileLabel.textContent = 'Account';
+      if (profileIcon) profileIcon.textContent = 'account_circle';
+    } else {
+      if (profileLabel) profileLabel.textContent = 'Sign In';
+      if (profileIcon) profileIcon.textContent = 'person';
+    }
+  }
+
+  openModal() {
+    if (this.modal) {
+      this.modal.classList.add('visible');
+      if (this.emailInput) this.emailInput.value = '';
+      if (this.passwordInput) this.passwordInput.value = '';
+      this.showError('');
+      this.switchTab('signin');
+    }
+  }
+
+  closeModal() {
+    if (this.modal) {
+      this.modal.classList.remove('visible');
+    }
+  }
+
+  openAccountModal() {
+    if (this.accountModal && this.user) {
+      if (this.accountEmailEl) {
+        this.accountEmailEl.textContent = this.user.email;
+      }
+      this.accountModal.classList.add('visible');
+    }
+  }
+
+  closeAccountModal() {
+    if (this.accountModal) {
+      this.accountModal.classList.remove('visible');
+    }
+  }
+
+  isAuthenticated() {
+    return !!this.user;
+  }
+
+  getUserId() {
+    return this.user?.id || null;
+  }
+
+  async getAccessToken() {
+    const { data: { session } } = await window.supabase.auth.getSession();
+    return session?.access_token || null;
+  }
+}
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   const predictionManager = new PredictionManager();
   window.contextManager = new ContextManager();
   window.valleysManager = new ValleysManager();
+  window.authManager = new AuthManager();
 
   // Modal handling
   const modal = document.getElementById('about-modal');
@@ -1821,6 +2151,19 @@ document.addEventListener('DOMContentLoaded', () => {
     aboutMenuBtn.addEventListener('click', () => {
       openModal();
       closeMenu();
+    });
+  }
+
+  // Profile/Sign In menu button
+  const profileMenuBtn = document.querySelector('.profile-menu-btn');
+  if (profileMenuBtn) {
+    profileMenuBtn.addEventListener('click', () => {
+      closeMenu();
+      if (window.authManager?.isAuthenticated()) {
+        window.authManager.openAccountModal();
+      } else {
+        window.authManager?.openModal();
+      }
     });
   }
 
