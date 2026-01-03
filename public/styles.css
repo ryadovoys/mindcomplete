@@ -8,7 +8,7 @@
 /* Color Tokens */
 :root {
   /* Purple Valley Brand Colors */
-  --dark-purple: #0e0a27;
+  --dark-purple: #1A143B;
   --offwhite: #EEEBFD;
   --light-purple: #7952ed;
   --offwhite-glass: rgba(238, 235, 253, 0.06);
@@ -50,7 +50,7 @@
   --icon-size-sm: 24px;
   --icon-size-lg: 40px;
   /* Gradient Background */
-  --bg-gradient: linear-gradient(180deg, #0E0A27 0%, #181430 100%);
+  --bg-gradient: #1A143B;
 
   /* Shadows */
   --menu-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
@@ -457,7 +457,7 @@ body.mobile-touch:not(.select-mode-active) .inline-prediction {
 
 .editor:empty::before {
   content: attr(data-placeholder);
-  color: var(--placeholder-color);
+  color: rgba(var(--text-color-rgb), 0.3);
   pointer-events: none;
 }
 
