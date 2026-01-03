@@ -9,10 +9,10 @@
 :root {
   /* Purple Valley Brand Colors */
   --dark-purple: #0e0a27;
-  --offwhite: #d0c6ff;
+  --offwhite: #EEEBFD;
   --light-purple: #7952ed;
-  --offwhite-glass: rgba(212, 202, 255, 0.06);
-  --offwhite-rgb: 208, 198, 255;
+  --offwhite-glass: rgba(238, 235, 253, 0.06);
+  --offwhite-rgb: 238, 235, 253;
 
   /* Semantic tokens */
   --bg-color: var(--dark-purple);
@@ -57,12 +57,16 @@
   --modal-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
 
   /* Input background for dark mode */
-  --input-bg: rgba(212, 202, 255, 0.1);
+  --input-bg: rgba(238, 235, 253, 0.1);
+
+  /* Button Colors */
+  --primary-btn-bg: var(--offwhite);
+  --primary-btn-text: var(--dark-purple);
 }
 
 /* Light theme - keeping for future use */
 [data-theme="light"] {
-  --bg-color: #F2F1ED;
+  --bg-color: #EEEBFD;
   --text-color: var(--dark-purple);
   --text-color-rgb: 14, 10, 39;
   --ghost-color: rgba(var(--text-color-rgb), 0.4);
@@ -73,7 +77,7 @@
   --border-color: rgba(var(--text-color-rgb), 0.1);
   --overlay-color: rgba(0, 0, 0, 0.15);
   --modal-overlay: rgba(0, 0, 0, 0.2);
-  --bg-gradient: linear-gradient(180deg, #F2F1ED 0%, #F2F1ED 100%);
+  --bg-gradient: linear-gradient(180deg, #EEEBFD 0%, #EEEBFD 100%);
 
   /* Update glass/surface variables for light mode visibility */
   --offwhite-glass: rgba(255, 255, 255, 0.85);
@@ -83,6 +87,10 @@
 
   /* Input background for light mode - pure white */
   --input-bg: #FFFFFF;
+
+  /* Button Colors */
+  --primary-btn-bg: #8760FF;
+  --primary-btn-text: #FFFFFF;
 }
 
 html,
@@ -832,7 +840,7 @@ body.selection-ready .select-confirm-btn {
 
 .btn-primary .material-symbols-outlined {
   font-size: var(--icon-size-sm);
-  color: var(--dark-purple);
+  color: var(--primary-btn-text);
 }
 
 /* Alias for backward compatibility */
@@ -846,8 +854,8 @@ body.selection-ready .select-confirm-btn {
   font-size: var(--font-caption-size);
   font-weight: var(--font-caption-weight);
   font-family: inherit;
-  color: var(--dark-purple);
-  background: var(--offwhite);
+  color: var(--primary-btn-text);
+  background: var(--primary-btn-bg);
   border: none;
   border-radius: 16px;
   cursor: pointer;
@@ -872,7 +880,7 @@ body.selection-ready .select-confirm-btn {
 
 .btn-white .material-symbols-outlined {
   font-size: var(--icon-size-sm);
-  color: var(--dark-purple);
+  color: var(--primary-btn-text);
 }
 
 /* Secondary Button (Ghost/Transparent) */
@@ -926,7 +934,7 @@ body.selection-ready .select-confirm-btn {
 }
 
 #context-textarea::placeholder {
-  color: rgba(208, 198, 255, 0.5);
+  color: var(--ghost-color);
   font-size: var(--font-body-small-size);
   font-weight: 300;
 }
@@ -1097,7 +1105,7 @@ body.selection-ready .select-confirm-btn {
 }
 
 #image-guidance-textarea::placeholder {
-  color: rgba(208, 198, 255, 0.5);
+  color: var(--ghost-color);
   font-size: var(--font-body-small-size);
   font-weight: 300;
 }
