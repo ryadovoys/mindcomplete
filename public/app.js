@@ -1524,6 +1524,21 @@ class ValleysManager {
         if (e.target === this.modal) this.closeModal();
       });
     }
+
+    // New valley button
+    const newValleyBtn = document.getElementById('new-valley-btn');
+    if (newValleyBtn) {
+      newValleyBtn.addEventListener('click', () => this.newValley());
+    }
+  }
+
+  newValley() {
+    const editor = document.querySelector('.editor');
+    if (editor) {
+      editor.textContent = '';
+      editor.focus();
+    }
+    this.closeModal();
   }
 
   generateTitle(text) {
@@ -2434,20 +2449,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeLabel = themeToggleBtn.querySelector('.menu-label');
 
     const updateThemeButton = () => {
-      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      // Light mode is now the default (no attribute or any value other than 'dark')
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
       if (themeIcon) {
-        // Show moon (dark_mode) when in light theme, sun (light_mode) when in dark theme
-        themeIcon.textContent = isLight ? 'dark_mode' : 'light_mode';
+        // Show sun (light_mode) when in dark theme, moon (dark_mode) when in light theme
+        themeIcon.textContent = isDark ? 'light_mode' : 'dark_mode';
       }
       if (themeLabel) {
-        themeLabel.textContent = isLight ? 'Dark mode' : 'Light mode';
+        themeLabel.textContent = isDark ? 'Light mode' : 'Dark mode';
       }
     };
 
     themeToggleBtn.addEventListener('click', () => {
       const html = document.documentElement;
-      const isCurrentlyLight = html.getAttribute('data-theme') === 'light';
-      html.setAttribute('data-theme', isCurrentlyLight ? 'dark' : 'light');
+      const isCurrentlyDark = html.getAttribute('data-theme') === 'dark';
+      html.setAttribute('data-theme', isCurrentlyDark ? 'light' : 'dark');
       updateThemeButton();
       closeMenu(); // Close menu after toggling
     });
