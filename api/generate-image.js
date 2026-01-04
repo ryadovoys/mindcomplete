@@ -125,15 +125,19 @@ async function generateImageReplicate(prompt, apiKey) {
   const model = CONFIG.REPLICATE_MODEL;
   console.log('Using Replicate model:', model);
 
+  // Use the models endpoint for latest version
+  const [owner, name] = model.split('/');
+  const endpoint = `https://api.replicate.com/v1/models/${owner}/${name}/predictions`;
+  console.log('Replicate endpoint:', endpoint);
+
   // Create prediction
-  const response = await fetch('https://api.replicate.com/v1/predictions', {
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: model,
       input: {
         prompt: prompt
       }
