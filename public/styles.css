@@ -109,7 +109,7 @@ body {
   background: var(--background);
   background-attachment: fixed;
   color: var(--text);
-  font-family: "Google Sans Flex", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-family: "Google Sans Flex", "Inter", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
   font-optical-sizing: auto;
   font-size: var(--font-body-size);
   font-weight: var(--font-body-weight);
@@ -118,7 +118,7 @@ body {
 
 /* Headings */
 h1 {
-  font-family: "Google Sans Flex", Georgia, sans-serif;
+  font-family: "Google Sans Flex", "Inter", Georgia, sans-serif;
   font-optical-sizing: auto;
   font-size: var(--font-h1-size);
   font-weight: var(--font-h1-weight);
@@ -127,7 +127,7 @@ h1 {
 }
 
 h2 {
-  font-family: "Google Sans Flex", Georgia, sans-serif;
+  font-family: "Google Sans Flex", "Inter", Georgia, sans-serif;
   font-optical-sizing: auto;
   font-size: var(--font-h2-size);
   font-weight: var(--font-h2-weight);
@@ -201,7 +201,7 @@ h2 {
 
 /* Logo */
 .logo {
-  font-family: "Google Sans Flex", sans-serif;
+  font-family: "Google Sans Flex", "Inter", sans-serif;
   font-size: 28px;
   font-weight: 200;
   color: var(--text);
@@ -371,7 +371,7 @@ body.select-mode-active .inline-prediction {
 /* Inline prediction - appears directly in editor */
 .inline-prediction {
   display: inline;
-  font-family: "Google Sans Flex", Georgia, sans-serif;
+  font-family: "Google Sans Flex", "Inter", Georgia, sans-serif;
   font-optical-sizing: auto;
   color: var(--text-prediction);
   cursor: pointer;
@@ -429,7 +429,7 @@ body.mobile-touch:not(.select-mode-active) .inline-prediction {
   position: relative;
   width: 100%;
   min-height: 200px;
-  font-family: "Google Sans Flex", Georgia, sans-serif;
+  font-family: "Google Sans Flex", "Inter", Georgia, sans-serif;
   font-optical-sizing: auto;
   font-size: var(--font-h1-size);
   line-height: 1.2;
@@ -444,7 +444,7 @@ body.mobile-touch:not(.select-mode-active) .inline-prediction {
 }
 
 .editor h1 {
-  font-family: "Google Sans Flex", Georgia, sans-serif;
+  font-family: "Google Sans Flex", "Inter", Georgia, sans-serif;
   font-optical-sizing: auto;
   font-size: var(--font-h1-size);
   font-weight: var(--font-h1-weight);
@@ -452,7 +452,7 @@ body.mobile-touch:not(.select-mode-active) .inline-prediction {
 }
 
 .editor h2 {
-  font-family: "Google Sans Flex", Georgia, sans-serif;
+  font-family: "Google Sans Flex", "Inter", Georgia, sans-serif;
   font-optical-sizing: auto;
   font-size: var(--font-h2-size);
   font-weight: var(--font-h2-weight);
