@@ -339,9 +339,15 @@ ${rules}
 // Image generation config
 const IMAGE_CONFIG = {
   PROMPT_MODEL: 'xiaomi/mimo-v2-flash:free',
-  IMAGE_MODEL: 'bytedance-seed/seedream-4.5',
+  OPENROUTER_IMAGE_MODEL: 'bytedance-seed/seedream-4.5',
+  REPLICATE_MODEL: process.env.REPLICATE_MODEL || 'prunaai/z-image-turbo',
   STYLE_SUFFIX: ', in the style of Hayao Miyazaki Studio Ghibli anime, soft watercolor palette, detailed hand-painted backgrounds, whimsical atmosphere, warm lighting',
 };
+
+// Get which provider to use: "openrouter" or "replicate"
+function getImageProvider() {
+  return process.env.IMAGE_PROVIDER || 'openrouter';
+}
 
 // Generate image prompt from text using LLM
 async function generateImagePrompt(text, apiKey, guidance = '') {
@@ -384,9 +390,9 @@ Output ONLY the image prompt, nothing else. No quotes, no explanations.`;
 }
 
 // Generate image using OpenRouter (via chat completions endpoint)
-async function generateImage(prompt, apiKey) {
+async function generateImageOpenRouter(prompt, apiKey) {
   const requestBody = {
-    model: IMAGE_CONFIG.IMAGE_MODEL,
+    model: IMAGE_CONFIG.OPENROUTER_IMAGE_MODEL,
     messages: [
       {
         role: 'user',
@@ -395,7 +401,7 @@ async function generateImage(prompt, apiKey) {
     ]
   };
 
-  console.log('Image API request:', JSON.stringify(requestBody, null, 2));
+  console.log('OpenRouter image request:', JSON.stringify(requestBody, null, 2));
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -409,7 +415,7 @@ async function generateImage(prompt, apiKey) {
   });
 
   const responseText = await response.text();
-  console.log('Image API response status:', response.status);
+  console.log('OpenRouter response status:', response.status);
 
   if (!response.ok) {
     throw new Error(`Failed to generate image: ${responseText}`);
@@ -474,10 +480,104 @@ async function generateImage(prompt, apiKey) {
       throw new Error('No image URL found in response');
     }
 
-    return { data: [{ url: imageUrl }] };
+    return { url: imageUrl };
   } catch (e) {
     console.error('Parse error:', e.message);
     throw new Error(`Failed to parse response: ${e.message}`);
+  }
+}
+
+// Generate image using Replicate
+async function generateImageReplicate(prompt) {
+  const apiKey = process.env.REPLICATE_API_KEY;
+  if (!apiKey) {
+    throw new Error('REPLICATE_API_KEY not configured');
+  }
+
+  const model = IMAGE_CONFIG.REPLICATE_MODEL;
+  console.log('Using Replicate model:', model);
+
+  // Create prediction
+  const response = await fetch('https://api.replicate.com/v1/predictions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: model,
+      input: {
+        prompt: prompt
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Replicate create prediction error:', errorText);
+    throw new Error('Failed to create Replicate prediction');
+  }
+
+  let prediction = await response.json();
+  console.log('Replicate prediction created:', prediction.id, 'status:', prediction.status);
+
+  // Poll for completion (max 60 seconds)
+  const maxAttempts = 60;
+  let attempts = 0;
+
+  while (prediction.status !== 'succeeded' && prediction.status !== 'failed' && attempts < maxAttempts) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const pollResponse = await fetch(prediction.urls.get, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      }
+    });
+
+    if (!pollResponse.ok) {
+      throw new Error('Failed to poll Replicate prediction');
+    }
+
+    prediction = await pollResponse.json();
+    attempts++;
+
+    if (attempts % 5 === 0) {
+      console.log('Replicate polling attempt', attempts, 'status:', prediction.status);
+    }
+  }
+
+  if (prediction.status === 'failed') {
+    console.error('Replicate prediction failed:', prediction.error);
+    throw new Error(prediction.error || 'Replicate prediction failed');
+  }
+
+  if (prediction.status !== 'succeeded') {
+    throw new Error('Replicate prediction timed out');
+  }
+
+  // Get the output URL - usually an array with the image URL
+  const output = prediction.output;
+  let imageUrl = null;
+
+  if (Array.isArray(output) && output.length > 0) {
+    imageUrl = output[0];
+  } else if (typeof output === 'string') {
+    imageUrl = output;
+  }
+
+  console.log('Replicate image generated:', imageUrl?.substring(0, 100));
+  return { url: imageUrl };
+}
+
+// Generate image using configured provider
+async function generateImage(prompt, apiKey) {
+  const provider = getImageProvider();
+  console.log('Using image provider:', provider);
+
+  if (provider === 'replicate') {
+    return generateImageReplicate(prompt);
+  } else {
+    return generateImageOpenRouter(prompt, apiKey);
   }
 }
 
@@ -488,6 +588,11 @@ app.post('/api/generate-image', async (req, res) => {
     return res.status(400).json({ error: 'Text is required' });
   }
 
+  // Check for required API keys
+  const provider = getImageProvider();
+  if (provider === 'replicate' && !process.env.REPLICATE_API_KEY) {
+    return res.status(500).json({ error: 'REPLICATE_API_KEY not configured' });
+  }
   if (!process.env.OPENROUTER_API_KEY) {
     return res.status(500).json({ error: 'OPENROUTER_API_KEY not configured' });
   }

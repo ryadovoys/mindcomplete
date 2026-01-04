@@ -9,19 +9,38 @@
 :root {
   /* Core Figma Colors - Light Mode (default) */
   --background: #F8F4F5;
-  --accent: #F7A3C7;
-  --text: #240A2F;
+  --accent: #E6B7E1;
+  --text: #4A0325;
   --input-background: #FFFFFF;
   --text-btn: #0A0814;
-  --btn-background: #F7A3C7;
-  --text-prediction: rgba(36, 10, 47, 0.5);
+  --btn-background: #E6B7E1;
+  --text-prediction: rgba(74, 3, 37, 0.5);
 
   /* Derived (opacity variants) */
-  --text-rgb: 36, 10, 47;
+  --text-rgb: 74, 3, 37;
   --ghost: rgba(var(--text-rgb), 0.5);
   --placeholder: rgba(var(--text-rgb), 0.5);
   --modal-overlay: rgba(0, 0, 0, 0.2);
+}
 
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #4A0325;
+    --accent: #E6B7E1;
+    --text: #F8F4F5;
+    --input-background: rgba(255, 255, 255, 0.06);
+    --text-btn: #0A0814;
+    --btn-background: #E6B7E1;
+    --text-prediction: rgba(248, 244, 245, 0.5);
+
+    --text-rgb: 248, 244, 245;
+    --ghost: rgba(var(--text-rgb), 0.5);
+    --placeholder: rgba(var(--text-rgb), 0.5);
+  }
+}
+
+:root {
   /* Typography - Light weight (300) per Figma (px not pt!) */
   --font-h1-size: 24px;
   --font-h1-weight: 300;
@@ -46,23 +65,40 @@
   --modal-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
 }
 
-/* Dark theme */
-[data-theme="dark"] {
-  --background: #240A2F;
-  --accent: #F7A3C7;
-  --text: #F8F4F5;
-  --input-background: #31173C;
+/* Light theme (manual toggle - overrides system dark mode) */
+[data-theme="light"] {
+  --background: #F8F4F5;
+  --accent: #E6B7E1;
+  --text: #4A0325;
+  --input-background: #FFFFFF;
   --text-btn: #0A0814;
-  --btn-background: #F7A3C7;
+  --btn-background: #E6B7E1;
+  --text-prediction: rgba(74, 3, 37, 0.5);
+
+  --text-rgb: 74, 3, 37;
+  --ghost: rgba(var(--text-rgb), 0.5);
+  --placeholder: rgba(var(--text-rgb), 0.5);
+  --modal-overlay: rgba(0, 0, 0, 0.2);
+
+  --menu-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  --modal-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Dark theme (manual toggle) */
+[data-theme="dark"] {
+  --background: #4A0325;
+  --accent: #E6B7E1;
+  --text: #F8F4F5;
+  --input-background: rgba(255, 255, 255, 0.06);
+  --text-btn: #0A0814;
+  --btn-background: #E6B7E1;
   --text-prediction: rgba(248, 244, 245, 0.5);
 
-  /* Derived (opacity variants) */
   --text-rgb: 248, 244, 245;
   --ghost: rgba(var(--text-rgb), 0.5);
   --placeholder: rgba(var(--text-rgb), 0.5);
-  --modal-overlay: rgba(36, 10, 47, 0.8);
+  --modal-overlay: rgba(74, 3, 37, 0.8);
 
-  /* Shadows - darker for dark mode */
   --menu-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   --modal-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }

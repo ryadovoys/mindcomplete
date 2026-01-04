@@ -1,8 +1,16 @@
 const CONFIG = {
   PROMPT_MODEL: 'xiaomi/mimo-v2-flash:free',
-  IMAGE_MODEL: 'bytedance-seed/seedream-4.5',
+  // OpenRouter image model
+  OPENROUTER_IMAGE_MODEL: 'bytedance-seed/seedream-4.5',
+  // Replicate model (from env or default)
+  REPLICATE_MODEL: process.env.REPLICATE_MODEL || 'prunaai/z-image-turbo',
   STYLE_SUFFIX: ', in the style of Hayao Miyazaki Studio Ghibli anime',
 };
+
+// Get which provider to use: "openrouter" or "replicate"
+function getImageProvider() {
+  return process.env.IMAGE_PROVIDER || 'openrouter';
+}
 
 // Generate image prompt from text using LLM
 async function generateImagePrompt(text, apiKey, host, guidance = '') {
@@ -45,7 +53,7 @@ Output ONLY the image prompt, nothing else. No quotes, no explanations.`;
 }
 
 // Generate image using OpenRouter (via chat completions endpoint)
-async function generateImage(prompt, apiKey, host) {
+async function generateImageOpenRouter(prompt, apiKey, host) {
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -55,7 +63,7 @@ async function generateImage(prompt, apiKey, host) {
       'X-Title': 'purple valley'
     },
     body: JSON.stringify({
-      model: CONFIG.IMAGE_MODEL,
+      model: CONFIG.OPENROUTER_IMAGE_MODEL,
       messages: [
         {
           role: 'user',
@@ -67,7 +75,7 @@ async function generateImage(prompt, apiKey, host) {
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('Image generation error:', errorText);
+    console.error('OpenRouter image generation error:', errorText);
     throw new Error('Failed to generate image');
   }
 
@@ -109,7 +117,99 @@ async function generateImage(prompt, apiKey, host) {
     }
   }
 
-  return { data: [{ url: imageUrl }] };
+  return { url: imageUrl };
+}
+
+// Generate image using Replicate
+async function generateImageReplicate(prompt, apiKey) {
+  const model = CONFIG.REPLICATE_MODEL;
+  console.log('Using Replicate model:', model);
+
+  // Create prediction
+  const response = await fetch('https://api.replicate.com/v1/predictions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: model,
+      input: {
+        prompt: prompt
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Replicate create prediction error:', errorText);
+    throw new Error('Failed to create Replicate prediction');
+  }
+
+  let prediction = await response.json();
+  console.log('Replicate prediction created:', prediction.id, 'status:', prediction.status);
+
+  // Poll for completion (max 60 seconds)
+  const maxAttempts = 60;
+  let attempts = 0;
+
+  while (prediction.status !== 'succeeded' && prediction.status !== 'failed' && attempts < maxAttempts) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const pollResponse = await fetch(prediction.urls.get, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      }
+    });
+
+    if (!pollResponse.ok) {
+      throw new Error('Failed to poll Replicate prediction');
+    }
+
+    prediction = await pollResponse.json();
+    attempts++;
+
+    if (attempts % 5 === 0) {
+      console.log('Replicate polling attempt', attempts, 'status:', prediction.status);
+    }
+  }
+
+  if (prediction.status === 'failed') {
+    console.error('Replicate prediction failed:', prediction.error);
+    throw new Error(prediction.error || 'Replicate prediction failed');
+  }
+
+  if (prediction.status !== 'succeeded') {
+    throw new Error('Replicate prediction timed out');
+  }
+
+  // Get the output URL - usually an array with the image URL
+  const output = prediction.output;
+  let imageUrl = null;
+
+  if (Array.isArray(output) && output.length > 0) {
+    imageUrl = output[0];
+  } else if (typeof output === 'string') {
+    imageUrl = output;
+  }
+
+  console.log('Replicate image generated:', imageUrl?.substring(0, 100));
+  return { url: imageUrl };
+}
+
+// Generate image using configured provider
+async function generateImage(prompt, apiKey, host) {
+  const provider = getImageProvider();
+
+  if (provider === 'replicate') {
+    const replicateKey = process.env.REPLICATE_API_KEY;
+    if (!replicateKey) {
+      throw new Error('REPLICATE_API_KEY not configured');
+    }
+    return generateImageReplicate(prompt, replicateKey);
+  } else {
+    return generateImageOpenRouter(prompt, apiKey, host);
+  }
 }
 
 export default async function handler(req, res) {
