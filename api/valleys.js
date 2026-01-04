@@ -96,6 +96,24 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Text is required' });
       }
 
+      // Fetch file content if contextSessionId provided
+      let filesData = null;
+      if (contextSessionId) {
+        const { data: contextData } = await supabase
+          .from('contexts')
+          .select('text, files, estimated_tokens')
+          .eq('session_id', contextSessionId)
+          .single();
+
+        if (contextData) {
+          filesData = {
+            content: contextData.text,
+            files: contextData.files,
+            estimatedTokens: contextData.estimated_tokens
+          };
+        }
+      }
+
       const id = uuidv4();
       const now = new Date().toISOString();
 
@@ -107,7 +125,7 @@ export default async function handler(req, res) {
           title: title || 'Untitled',
           text,
           rules: rules || null,
-          context_session_id: contextSessionId || null,
+          files: filesData,
           created_at: now,
           updated_at: now
         })

@@ -1158,6 +1158,10 @@ body.selection-ready .select-confirm-btn {
   }
 }
 
+.editor-image-container.show-remove .editor-image-remove {
+  opacity: 1;
+}
+
 .editor-image {
   display: block;
   max-width: 100%;

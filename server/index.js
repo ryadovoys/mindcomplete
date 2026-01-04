@@ -114,6 +114,31 @@ app.delete('/api/context/:sessionId', async (req, res) => {
   res.json({ success: true });
 });
 
+// Restore context from saved valley
+app.post('/api/context/restore', async (req, res) => {
+  try {
+    const { content, files, estimatedTokens } = req.body;
+
+    if (!content) {
+      return res.status(400).json({ error: 'Content required' });
+    }
+
+    const sessionId = uuidv4();
+
+    await setContext(sessionId, {
+      text: content,
+      charCount: content.length,
+      estimatedTokens: estimatedTokens || Math.ceil(content.length / 4),
+      files: files || []
+    });
+
+    res.json({ sessionId });
+  } catch (error) {
+    console.error('Restore context error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Valleys API routes
 app.get('/api/valleys', async (req, res) => {
   try {

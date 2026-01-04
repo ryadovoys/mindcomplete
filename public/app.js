@@ -1532,12 +1532,18 @@ class ValleysManager {
     }
   }
 
-  newValley() {
+  async newValley() {
     const editor = document.querySelector('.editor');
     if (editor) {
       editor.textContent = '';
       editor.focus();
     }
+
+    // Clear context (rules + files)
+    if (window.contextManager) {
+      await window.contextManager.clearContext();
+    }
+
     this.closeModal();
   }
 
@@ -1625,12 +1631,25 @@ class ValleysManager {
       const editor = document.querySelector('.editor');
       editor.textContent = valley.text;
 
-      // Restore rules
-      if (valley.rules && window.contextManager) {
-        window.contextManager.rulesText = valley.rules;
+      // Restore context (rules + files)
+      if (window.contextManager) {
+        // Restore rules
+        window.contextManager.rulesText = valley.rules || '';
         const textarea = document.getElementById('context-textarea');
-        if (textarea) textarea.value = valley.rules;
-        localStorage.setItem('mindcomplete_rules', valley.rules);
+        if (textarea) textarea.value = valley.rules || '';
+        if (valley.rules) {
+          localStorage.setItem('mindcomplete_rules', valley.rules);
+        } else {
+          localStorage.removeItem('mindcomplete_rules');
+        }
+
+        // Restore files
+        if (valley.files && valley.files.content) {
+          await this.restoreFilesFromValley(valley.files);
+        } else {
+          await window.contextManager.clearFiles();
+        }
+
         window.contextManager.updateUI();
       }
 
@@ -1638,6 +1657,46 @@ class ValleysManager {
       editor.focus();
     } catch (error) {
       console.error('Load valley error:', error);
+    }
+  }
+
+  async restoreFilesFromValley(filesData) {
+    if (!filesData || !filesData.content) {
+      await window.contextManager.clearFiles();
+      return;
+    }
+
+    try {
+      const token = await window.authManager?.getAccessToken();
+      const response = await fetch('/api/context/restore', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          content: filesData.content,
+          files: filesData.files,
+          estimatedTokens: filesData.estimatedTokens
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to restore files');
+
+      const data = await response.json();
+
+      // Update context manager with new session
+      window.contextManager.sessionId = data.sessionId;
+      window.contextManager.files = filesData.files || [];
+      window.contextManager.estimatedTokens = filesData.estimatedTokens || 0;
+
+      // Save to localStorage
+      localStorage.setItem('mindcomplete_session_id', data.sessionId);
+      localStorage.setItem('mindcomplete_files', JSON.stringify(filesData.files || []));
+      localStorage.setItem('mindcomplete_tokens', (filesData.estimatedTokens || 0).toString());
+    } catch (error) {
+      console.error('Failed to restore files:', error);
+      await window.contextManager.clearFiles();
     }
   }
 
@@ -2192,10 +2251,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const shareLabel = shareMenuBtn.querySelector('.menu-label');
     const originalText = shareLabel ? shareLabel.textContent : 'Share';
 
+    // Get image from editor if present
+    const editorImg = editor.querySelector('.editor-image');
+    let imageFile = null;
+
+    if (editorImg && editorImg.src) {
+      try {
+        // Convert image to blob/file
+        const response = await fetch(editorImg.src);
+        const blob = await response.blob();
+        imageFile = new File([blob], 'image.png', { type: blob.type || 'image/png' });
+      } catch (e) {
+        console.log('Could not convert image for sharing');
+      }
+    }
+
     try {
       // Try Web Share API first (works on mobile and some desktop browsers)
       if (navigator.share) {
-        await navigator.share({ text });
+        const shareData = { text };
+
+        // Add image if available and sharing files is supported
+        if (imageFile && navigator.canShare && navigator.canShare({ files: [imageFile] })) {
+          shareData.files = [imageFile];
+        }
+
+        await navigator.share(shareData);
         closeMenu();
       } else {
         // Fallback to clipboard
@@ -2363,6 +2444,12 @@ document.addEventListener('DOMContentLoaded', () => {
           e.preventDefault();
           e.stopPropagation();
           container.remove();
+        });
+
+        // On mobile: tap image to show/hide remove button
+        container.addEventListener('click', (e) => {
+          if (e.target === removeBtn || removeBtn.contains(e.target)) return;
+          container.classList.toggle('show-remove');
         });
 
         container.appendChild(img);

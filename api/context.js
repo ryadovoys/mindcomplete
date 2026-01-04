@@ -149,7 +149,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
-  // POST - upload context
+  // POST - upload context or restore from valley
   if (req.method !== 'POST') {
     console.log('[context] Method not allowed:', req.method);
     return res.status(405).json({ error: 'Method not allowed' });
@@ -160,6 +160,49 @@ export default async function handler(req, res) {
     console.log('[context] SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
     console.log('[context] SUPABASE_SERVICE_KEY exists:', !!process.env.SUPABASE_SERVICE_KEY);
     return res.status(500).json({ error: 'Supabase not configured' });
+  }
+
+  // Handle restore endpoint (JSON body)
+  const contentType = req.headers['content-type'] || '';
+  if (req.url.includes('/restore') || contentType.includes('application/json')) {
+    try {
+      // Parse JSON body manually since bodyParser is disabled
+      const chunks = [];
+      for await (const chunk of req) {
+        chunks.push(chunk);
+      }
+      const body = JSON.parse(Buffer.concat(chunks).toString());
+      const { content, files, estimatedTokens } = body;
+
+      if (!content) {
+        return res.status(400).json({ error: 'Content required' });
+      }
+
+      const sessionId = uuidv4();
+      const expiresAt = new Date(Date.now() + CONTEXT_TTL_MS).toISOString();
+
+      const { error } = await supabase
+        .from('contexts')
+        .insert({
+          session_id: sessionId,
+          text: content,
+          char_count: content.length,
+          estimated_tokens: estimatedTokens || Math.ceil(content.length / 4),
+          files: files || [],
+          expires_at: expiresAt,
+          user_id: null
+        });
+
+      if (error) {
+        console.error('[context/restore] Supabase error:', error);
+        return res.status(500).json({ error: 'Failed to restore context' });
+      }
+
+      return res.status(200).json({ sessionId });
+    } catch (error) {
+      console.error('[context/restore] Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
   }
 
   try {

@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient.js';
 import { v4 as uuidv4 } from 'uuid';
+import { getContext } from './contextStore.js';
 
 // Fallback in-memory storage (for local dev without Supabase or when table doesn't exist)
 const memoryStore = new Map();
@@ -11,6 +12,19 @@ export async function createValley(valleyData, userId) {
   const id = uuidv4();
   const now = new Date().toISOString();
 
+  // Fetch file content if contextSessionId provided
+  let filesData = null;
+  if (valleyData.contextSessionId) {
+    const context = await getContext(valleyData.contextSessionId);
+    if (context) {
+      filesData = {
+        content: context.text,
+        files: context.files,
+        estimatedTokens: context.estimatedTokens
+      };
+    }
+  }
+
   if (supabase && !useMemoryFallback) {
     const { data, error } = await supabase
       .from('valleys')
@@ -20,7 +34,7 @@ export async function createValley(valleyData, userId) {
         title: valleyData.title,
         text: valleyData.text,
         rules: valleyData.rules || null,
-        context_session_id: valleyData.contextSessionId || null,
+        files: filesData,
         created_at: now,
         updated_at: now
       })
@@ -32,25 +46,25 @@ export async function createValley(valleyData, userId) {
       if (error.code === 'PGRST205' || error.message?.includes('valleys')) {
         console.warn('Valleys table not found in Supabase, using memory fallback');
         useMemoryFallback = true;
-        return createValleyInMemory(id, valleyData, now, userId);
+        return createValleyInMemory(id, valleyData, filesData, now, userId);
       }
       console.error('Supabase createValley error:', error);
       throw new Error('Failed to create valley');
     }
     return data;
   } else {
-    return createValleyInMemory(id, valleyData, now, userId);
+    return createValleyInMemory(id, valleyData, filesData, now, userId);
   }
 }
 
-function createValleyInMemory(id, valleyData, now, userId) {
+function createValleyInMemory(id, valleyData, filesData, now, userId) {
   const valley = {
     id,
     user_id: userId,
     title: valleyData.title,
     text: valleyData.text,
     rules: valleyData.rules || null,
-    context_session_id: valleyData.contextSessionId || null,
+    files: filesData,
     created_at: now,
     updated_at: now
   };
