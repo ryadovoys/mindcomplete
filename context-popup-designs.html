@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Context Popup Design Options</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #F8F4F5;
+      --text: #4A0325;
+      --accent: #FF6533;
+      --input-bg: #FFFFFF;
+      --border: rgba(74, 3, 37, 0.1);
+      --ghost: rgba(74, 3, 37, 0.5);
+      --radius-sm: 8px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #2a2a2a;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* Navigation */
+    .nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 24px;
+      position: sticky;
+      top: 0;
+      background: #2a2a2a;
+      padding: 12px 0;
+      z-index: 100;
+    }
+
+    .nav-btn {
+      padding: 10px 20px;
+      border: none;
+      background: #444;
+      color: #fff;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      background: #555;
+    }
+
+    .nav-btn.active {
+      background: var(--accent);
+    }
+
+    /* Page container */
+    .page {
+      display: none;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .page-title {
+      color: #fff;
+      text-align: center;
+      margin-bottom: 8px;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .page-desc {
+      color: #aaa;
+      text-align: center;
+      margin-bottom: 24px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* Device frames */
+    .devices {
+      display: grid;
+      grid-template-columns: 1fr 375px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .devices {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .device {
+      background: #1a1a1a;
+      border-radius: 20px;
+      padding: 12px;
+    }
+
+    .device-label {
+      color: #666;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .device-frame {
+      background: var(--bg);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .device.mobile .device-frame {
+      aspect-ratio: 375/700;
+    }
+
+    /* ============================================
+       OPTION 1: Classic List View
+       ============================================ */
+    .opt1-modal {
+      background: var(--input-bg);
+      border-radius: var(--radius-lg);
+      margin: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+
+    .opt1-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .opt1-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .opt1-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      color: var(--ghost);
+    }
+
+    .opt1-close:hover {
+      background: var(--border);
+    }
+
+    .opt1-body {
+      padding: 24px;
+    }
+
+    .opt1-section {
+      margin-bottom: 24px;
+    }
+
+    .opt1-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .opt1-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ghost);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .opt1-textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+      color: var(--text);
+    }
+
+    .opt1-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .opt1-upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .opt1-upload-zone:hover {
+      border-color: var(--accent);
+      background: rgba(255, 101, 51, 0.05);
+    }
+
+    .opt1-upload-icon {
+      font-size: 32px;
+      color: var(--ghost);
+      margin-bottom: 8px;
+    }
+
+    .opt1-upload-text {
+      font-size: 14px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .opt1-upload-hint {
+      font-size: 12px;
+      color: var(--ghost);
+    }
+
+    .opt1-files {
+      margin-top: 16px;
+    }
+
+    .opt1-file {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+    }
+
+    .opt1-file-icon {
+      color: var(--accent);
+    }
+
+    .opt1-file-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .opt1-file-name {
+      font-size: 14px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .opt1-file-size {
+      font-size: 12px;
+      color: var(--ghost);
+    }
+
+    .opt1-file-remove {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: var(--ghost);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .opt1-file-remove:hover {
+      background: rgba(255, 0, 0, 0.1);
+      color: #e53935;
+    }
+
+    .opt1-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .opt1-btn {
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+    }
+
+    .opt1-btn-secondary {
+      background: transparent;
+      color: var(--text);
+    }
+
+    .opt1-btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    /* ============================================
+       OPTION 2: Card-Based Grid
+       ============================================ */
+    .opt2-modal {
+      background: var(--input-bg);
+      border-radius: var(--radius-lg);
+      margin: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+
+    .opt2-header {
+      padding: 24px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .opt2-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .opt2-subtitle {
+      font-size: 14px;
+      color: var(--ghost);
+    }
+
+    .opt2-body {
+      padding: 24px;
+    }
+
+    .opt2-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .opt2-card {
+      aspect-ratio: 1;
+      background: var(--bg);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .opt2-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .opt2-card-add {
+      border: 2px dashed var(--border);
+      background: transparent;
+    }
+
+    .opt2-card-add:hover {
+      border-color: var(--accent);
+    }
+
+    .opt2-card-icon {
+      font-size: 32px;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .opt2-card-add .opt2-card-icon {
+      color: var(--ghost);
+    }
+
+    .opt2-card-name {
+      font-size: 12px;
+      color: var(--text);
+      text-align: center;
+      word-break: break-all;
+    }
+
+    .opt2-card-remove {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.5);
+      border: none;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .opt2-card:hover .opt2-card-remove {
+      opacity: 1;
+    }
+
+    .opt2-rules {
+      background: var(--bg);
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+
+    .opt2-rules-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .opt2-rules-icon {
+      color: var(--accent);
+    }
+
+    .opt2-rules-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .opt2-rules-textarea {
+      width: 100%;
+      min-height: 60px;
+      padding: 12px;
+      border: none;
+      background: var(--input-bg);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+      color: var(--text);
+    }
+
+    .opt2-done {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+
+    /* ============================================
+       OPTION 3: Drag & Drop Focus
+       ============================================ */
+    .opt3-modal {
+      background: var(--input-bg);
+      border-radius: var(--radius-lg);
+      margin: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+
+    .opt3-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: var(--bg);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      color: var(--text);
+      z-index: 1;
+    }
+
+    .opt3-dropzone {
+      min-height: 250px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      background: linear-gradient(135deg, rgba(255,101,51,0.05) 0%, transparent 100%);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .opt3-dropzone-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .opt3-dropzone-icon .material-symbols-outlined {
+      font-size: 40px;
+      color: white;
+    }
+
+    .opt3-dropzone-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .opt3-dropzone-text {
+      font-size: 14px;
+      color: var(--ghost);
+      margin-bottom: 16px;
+    }
+
+    .opt3-browse-btn {
+      padding: 10px 24px;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .opt3-body {
+      padding: 24px;
+    }
+
+    .opt3-files-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .opt3-files-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .opt3-files-count {
+      font-size: 12px;
+      color: var(--ghost);
+      background: var(--bg);
+      padding: 4px 10px;
+      border-radius: 10px;
+    }
+
+    .opt3-file-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .opt3-file-row:last-child {
+      border-bottom: none;
+    }
+
+    .opt3-file-thumb {
+      width: 40px;
+      height: 40px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+    }
+
+    .opt3-file-details {
+      flex: 1;
+    }
+
+    .opt3-file-name {
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .opt3-file-meta {
+      font-size: 12px;
+      color: var(--ghost);
+    }
+
+    .opt3-file-delete {
+      padding: 8px;
+      border: none;
+      background: transparent;
+      color: var(--ghost);
+      cursor: pointer;
+      border-radius: 50%;
+    }
+
+    .opt3-file-delete:hover {
+      background: rgba(255,0,0,0.1);
+      color: #e53935;
+    }
+
+    /* ============================================
+       OPTION 4: Tabbed Interface
+       ============================================ */
+    .opt4-modal {
+      background: var(--input-bg);
+      border-radius: var(--radius-lg);
+      margin: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+
+    .opt4-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .opt4-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .opt4-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: var(--ghost);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .opt4-tabs {
+      display: flex;
+      background: var(--bg);
+      padding: 4px;
+      margin: 16px 20px;
+      border-radius: var(--radius-md);
+    }
+
+    .opt4-tab {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ghost);
+      cursor: pointer;
+      border-radius: calc(var(--radius-md) - 4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .opt4-tab.active {
+      background: var(--input-bg);
+      color: var(--text);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .opt4-tab-badge {
+      background: var(--accent);
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+
+    .opt4-content {
+      padding: 0 20px 20px;
+    }
+
+    .opt4-rules-content textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+      color: var(--text);
+    }
+
+    .opt4-rules-content textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .opt4-rules-hint {
+      font-size: 12px;
+      color: var(--ghost);
+      margin-top: 8px;
+    }
+
+    .opt4-files-content {
+      display: none;
+    }
+
+    .opt4-files-content.active {
+      display: block;
+    }
+
+    .opt4-rules-content {
+      display: none;
+    }
+
+    .opt4-rules-content.active {
+      display: block;
+    }
+
+    .opt4-add-file {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+
+    .opt4-add-file:hover {
+      border-color: var(--accent);
+      background: rgba(255,101,51,0.03);
+    }
+
+    .opt4-add-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+    }
+
+    .opt4-add-text {
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .opt4-add-hint {
+      font-size: 12px;
+      color: var(--ghost);
+    }
+
+    .opt4-file-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+    }
+
+    .opt4-file-icon {
+      color: var(--accent);
+    }
+
+    .opt4-file-info {
+      flex: 1;
+    }
+
+    .opt4-file-name {
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .opt4-file-size {
+      font-size: 12px;
+      color: var(--ghost);
+    }
+
+    /* ============================================
+       OPTION 5: Bottom Sheet / Minimalist
+       ============================================ */
+    .opt5-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+    }
+
+    .opt5-sheet {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--input-bg);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      max-height: 85%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .opt5-handle {
+      padding: 12px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .opt5-handle-bar {
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .opt5-header {
+      padding: 0 20px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .opt5-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .opt5-clear {
+      font-size: 14px;
+      color: var(--accent);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .opt5-body {
+      flex: 1;
+      overflow: auto;
+      padding: 0 20px;
+    }
+
+    .opt5-section {
+      margin-bottom: 24px;
+    }
+
+    .opt5-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .opt5-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ghost);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .opt5-expand {
+      color: var(--ghost);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .opt5-rules-preview {
+      padding: 12px 16px;
+      background: var(--bg);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .opt5-rules-preview-text {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .opt5-file-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .opt5-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: var(--bg);
+      border-radius: 20px;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .opt5-chip-icon {
+      font-size: 16px;
+      color: var(--accent);
+    }
+
+    .opt5-chip-remove {
+      width: 18px;
+      height: 18px;
+      background: rgba(0,0,0,0.1);
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ghost);
+      font-size: 14px;
+    }
+
+    .opt5-add-chip {
+      border: 1px dashed var(--border);
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .opt5-add-chip:hover {
+      border-color: var(--accent);
+    }
+
+    .opt5-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+    }
+
+    .opt5-btn {
+      flex: 1;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+    }
+
+    .opt5-btn-secondary {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .opt5-btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    /* Mobile adjustments */
+    .mobile .opt1-modal,
+    .mobile .opt2-modal,
+    .mobile .opt3-modal,
+    .mobile .opt4-modal {
+      margin: 12px;
+    }
+
+    .mobile .opt1-header,
+    .mobile .opt1-body,
+    .mobile .opt1-footer {
+      padding: 16px;
+    }
+
+    .mobile .opt2-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <button class="nav-btn active" data-page="1">1. Classic List</button>
+    <button class="nav-btn" data-page="2">2. Card Grid</button>
+    <button class="nav-btn" data-page="3">3. Drop Zone</button>
+    <button class="nav-btn" data-page="4">4. Tabbed</button>
+    <button class="nav-btn" data-page="5">5. Bottom Sheet</button>
+  </nav>
+
+  <!-- OPTION 1: Classic List View -->
+  <div class="page active" data-page="1">
+    <h2 class="page-title">Classic List View</h2>
+    <p class="page-desc">Traditional approach with clear sections. Rules at top, file upload below.<br>Best for: Users who prefer familiar patterns and clear hierarchy.</p>
+
+    <div class="devices">
+      <div class="device desktop">
+        <div class="device-label">Desktop</div>
+        <div class="device-frame">
+          <div class="opt1-modal">
+            <div class="opt1-header">
+              <h3 class="opt1-title">Manage Context</h3>
+              <button class="opt1-close"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="opt1-body">
+              <div class="opt1-section">
+                <div class="opt1-label">Rules & Instructions</div>
+                <textarea class="opt1-textarea" placeholder="Add rules or instructions for the AI...">Write in a casual, friendly tone. Focus on clarity over formality.</textarea>
+              </div>
+              <div class="opt1-section">
+                <div class="opt1-label">Reference Files</div>
+                <div class="opt1-upload-zone">
+                  <div class="opt1-upload-icon"><span class="material-symbols-outlined">cloud_upload</span></div>
+                  <div class="opt1-upload-text">Drop files here or click to browse</div>
+                  <div class="opt1-upload-hint">PDF, TXT, MD up to 10MB each</div>
+                </div>
+                <div class="opt1-files">
+                  <div class="opt1-file">
+                    <span class="material-symbols-outlined opt1-file-icon">description</span>
+                    <div class="opt1-file-info">
+                      <div class="opt1-file-name">project-brief.pdf</div>
+                      <div class="opt1-file-size">2.4 MB</div>
+                    </div>
+                    <button class="opt1-file-remove"><span class="material-symbols-outlined">close</span></button>
+                  </div>
+                  <div class="opt1-file">
+                    <span class="material-symbols-outlined opt1-file-icon">description</span>
+                    <div class="opt1-file-info">
+                      <div class="opt1-file-name">style-guide.md</div>
+                      <div class="opt1-file-size">156 KB</div>
+                    </div>
+                    <button class="opt1-file-remove"><span class="material-symbols-outlined">close</span></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="opt1-footer">
+              <button class="opt1-btn opt1-btn-secondary">Cancel</button>
+              <button class="opt1-btn opt1-btn-primary">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="device mobile">
+        <div class="device-label">Mobile</div>
+        <div class="device-frame">
+          <div class="opt1-modal" style="margin: 12px;">
+            <div class="opt1-header" style="padding: 16px;">
+              <h3 class="opt1-title">Manage Context</h3>
+              <button class="opt1-close"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="opt1-body" style="padding: 16px;">
+              <div class="opt1-section">
+                <div class="opt1-label">Rules</div>
+                <textarea class="opt1-textarea" placeholder="Add rules..." style="min-height: 60px;">Write casually.</textarea>
+              </div>
+              <div class="opt1-section">
+                <div class="opt1-label">Files</div>
+                <div class="opt1-upload-zone" style="padding: 16px;">
+                  <div class="opt1-upload-icon"><span class="material-symbols-outlined">add</span></div>
+                  <div class="opt1-upload-text">Add files</div>
+                </div>
+                <div class="opt1-files">
+                  <div class="opt1-file">
+                    <span class="material-symbols-outlined opt1-file-icon">description</span>
+                    <div class="opt1-file-info">
+                      <div class="opt1-file-name">brief.pdf</div>
+                      <div class="opt1-file-size">2.4 MB</div>
+                    </div>
+                    <button class="opt1-file-remove"><span class="material-symbols-outlined">close</span></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="opt1-footer" style="padding: 16px;">
+              <button class="opt1-btn opt1-btn-primary" style="flex: 1;">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION 2: Card-Based Grid -->
+  <div class="page" data-page="2">
+    <h2 class="page-title">Card-Based Grid</h2>
+    <p class="page-desc">Visual file cards with thumbnails. Rules collapsed at bottom.<br>Best for: Visual thinkers who work with many files.</p>
+
+    <div class="devices">
+      <div class="device desktop">
+        <div class="device-label">Desktop</div>
+        <div class="device-frame">
+          <div class="opt2-modal">
+            <div class="opt2-header">
+              <h3 class="opt2-title">Context Files</h3>
+              <p class="opt2-subtitle">Add files to help guide AI responses</p>
+            </div>
+            <div class="opt2-body">
+              <div class="opt2-grid">
+                <div class="opt2-card">
+                  <button class="opt2-card-remove"><span class="material-symbols-outlined" style="font-size: 14px;">close</span></button>
+                  <span class="material-symbols-outlined opt2-card-icon">picture_as_pdf</span>
+                  <span class="opt2-card-name">project-brief.pdf</span>
+                </div>
+                <div class="opt2-card">
+                  <button class="opt2-card-remove"><span class="material-symbols-outlined" style="font-size: 14px;">close</span></button>
+                  <span class="material-symbols-outlined opt2-card-icon">description</span>
+                  <span class="opt2-card-name">style-guide.md</span>
+                </div>
+                <div class="opt2-card">
+                  <button class="opt2-card-remove"><span class="material-symbols-outlined" style="font-size: 14px;">close</span></button>
+                  <span class="material-symbols-outlined opt2-card-icon">article</span>
+                  <span class="opt2-card-name">notes.txt</span>
+                </div>
+                <div class="opt2-card opt2-card-add">
+                  <span class="material-symbols-outlined opt2-card-icon">add</span>
+                  <span class="opt2-card-name">Add file</span>
+                </div>
+              </div>
+              <div class="opt2-rules">
+                <div class="opt2-rules-header">
+                  <span class="material-symbols-outlined opt2-rules-icon">edit_note</span>
+                  <span class="opt2-rules-label">Custom Rules</span>
+                </div>
+                <textarea class="opt2-rules-textarea" placeholder="Add rules or instructions...">Write in a casual tone.</textarea>
+              </div>
+              <button class="opt2-done">Done</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="device mobile">
+        <div class="device-label">Mobile</div>
+        <div class="device-frame">
+          <div class="opt2-modal" style="margin: 12px;">
+            <div class="opt2-header" style="padding: 16px;">
+              <h3 class="opt2-title">Context Files</h3>
+              <p class="opt2-subtitle">Add reference files</p>
+            </div>
+            <div class="opt2-body" style="padding: 16px;">
+              <div class="opt2-grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div class="opt2-card">
+                  <span class="material-symbols-outlined opt2-card-icon">picture_as_pdf</span>
+                  <span class="opt2-card-name">brief.pdf</span>
+                </div>
+                <div class="opt2-card opt2-card-add">
+                  <span class="material-symbols-outlined opt2-card-icon">add</span>
+                  <span class="opt2-card-name">Add</span>
+                </div>
+              </div>
+              <div class="opt2-rules">
+                <div class="opt2-rules-header">
+                  <span class="material-symbols-outlined opt2-rules-icon">edit_note</span>
+                  <span class="opt2-rules-label">Rules</span>
+                </div>
+                <textarea class="opt2-rules-textarea" placeholder="Add rules..."></textarea>
+              </div>
+              <button class="opt2-done">Done</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION 3: Drag & Drop Focus -->
+  <div class="page" data-page="3">
+    <h2 class="page-title">Drag & Drop Focus</h2>
+    <p class="page-desc">Large prominent drop zone. Files listed below. Rules separate.<br>Best for: Power users who frequently upload files.</p>
+
+    <div class="devices">
+      <div class="device desktop">
+        <div class="device-label">Desktop</div>
+        <div class="device-frame">
+          <div class="opt3-modal">
+            <button class="opt3-close"><span class="material-symbols-outlined">close</span></button>
+            <div class="opt3-dropzone">
+              <div class="opt3-dropzone-icon">
+                <span class="material-symbols-outlined">upload_file</span>
+              </div>
+              <div class="opt3-dropzone-title">Drop files here</div>
+              <div class="opt3-dropzone-text">PDF, TXT, or Markdown files</div>
+              <button class="opt3-browse-btn">Browse files</button>
+            </div>
+            <div class="opt3-body">
+              <div class="opt3-files-header">
+                <span class="opt3-files-title">Uploaded files</span>
+                <span class="opt3-files-count">2 files</span>
+              </div>
+              <div class="opt3-file-row">
+                <div class="opt3-file-thumb"><span class="material-symbols-outlined">picture_as_pdf</span></div>
+                <div class="opt3-file-details">
+                  <div class="opt3-file-name">project-brief.pdf</div>
+                  <div class="opt3-file-meta">2.4 MB · Added 2 hours ago</div>
+                </div>
+                <button class="opt3-file-delete"><span class="material-symbols-outlined">delete</span></button>
+              </div>
+              <div class="opt3-file-row">
+                <div class="opt3-file-thumb"><span class="material-symbols-outlined">description</span></div>
+                <div class="opt3-file-details">
+                  <div class="opt3-file-name">style-guide.md</div>
+                  <div class="opt3-file-meta">156 KB · Added yesterday</div>
+                </div>
+                <button class="opt3-file-delete"><span class="material-symbols-outlined">delete</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="device mobile">
+        <div class="device-label">Mobile</div>
+        <div class="device-frame">
+          <div class="opt3-modal" style="margin: 12px;">
+            <button class="opt3-close" style="top: 8px; right: 8px; width: 32px; height: 32px;"><span class="material-symbols-outlined">close</span></button>
+            <div class="opt3-dropzone" style="min-height: 150px; padding: 24px;">
+              <div class="opt3-dropzone-icon" style="width: 56px; height: 56px;">
+                <span class="material-symbols-outlined" style="font-size: 28px;">upload_file</span>
+              </div>
+              <div class="opt3-dropzone-title" style="font-size: 16px;">Add files</div>
+              <button class="opt3-browse-btn">Browse</button>
+            </div>
+            <div class="opt3-body" style="padding: 16px;">
+              <div class="opt3-files-header">
+                <span class="opt3-files-title">Files</span>
+                <span class="opt3-files-count">2</span>
+              </div>
+              <div class="opt3-file-row">
+                <div class="opt3-file-thumb"><span class="material-symbols-outlined">picture_as_pdf</span></div>
+                <div class="opt3-file-details">
+                  <div class="opt3-file-name">brief.pdf</div>
+                  <div class="opt3-file-meta">2.4 MB</div>
+                </div>
+                <button class="opt3-file-delete"><span class="material-symbols-outlined">delete</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION 4: Tabbed Interface -->
+  <div class="page" data-page="4">
+    <h2 class="page-title">Tabbed Interface</h2>
+    <p class="page-desc">Separate tabs for Rules and Files. Clean separation of concerns.<br>Best for: Users who want focused, single-purpose views.</p>
+
+    <div class="devices">
+      <div class="device desktop">
+        <div class="device-label">Desktop</div>
+        <div class="device-frame">
+          <div class="opt4-modal">
+            <div class="opt4-header">
+              <h3 class="opt4-title">Context Settings</h3>
+              <button class="opt4-close"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="opt4-tabs">
+              <button class="opt4-tab">
+                <span class="material-symbols-outlined">edit_note</span>
+                Rules
+              </button>
+              <button class="opt4-tab active">
+                <span class="material-symbols-outlined">folder</span>
+                Files
+                <span class="opt4-tab-badge">2</span>
+              </button>
+            </div>
+            <div class="opt4-content">
+              <div class="opt4-files-content active">
+                <div class="opt4-add-file">
+                  <div class="opt4-add-icon"><span class="material-symbols-outlined">add</span></div>
+                  <div>
+                    <div class="opt4-add-text">Add reference file</div>
+                    <div class="opt4-add-hint">PDF, TXT, MD up to 10MB</div>
+                  </div>
+                </div>
+                <div class="opt4-file-item">
+                  <span class="material-symbols-outlined opt4-file-icon">picture_as_pdf</span>
+                  <div class="opt4-file-info">
+                    <div class="opt4-file-name">project-brief.pdf</div>
+                    <div class="opt4-file-size">2.4 MB</div>
+                  </div>
+                  <button class="opt3-file-delete"><span class="material-symbols-outlined">close</span></button>
+                </div>
+                <div class="opt4-file-item">
+                  <span class="material-symbols-outlined opt4-file-icon">description</span>
+                  <div class="opt4-file-info">
+                    <div class="opt4-file-name">style-guide.md</div>
+                    <div class="opt4-file-size">156 KB</div>
+                  </div>
+                  <button class="opt3-file-delete"><span class="material-symbols-outlined">close</span></button>
+                </div>
+              </div>
+              <div class="opt4-rules-content">
+                <textarea placeholder="Add custom rules or instructions for the AI..."></textarea>
+                <div class="opt4-rules-hint">These rules will guide how the AI responds to your writing.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="device mobile">
+        <div class="device-label">Mobile</div>
+        <div class="device-frame">
+          <div class="opt4-modal" style="margin: 12px;">
+            <div class="opt4-header">
+              <h3 class="opt4-title">Context</h3>
+              <button class="opt4-close"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="opt4-tabs" style="margin: 12px;">
+              <button class="opt4-tab active">
+                <span class="material-symbols-outlined">edit_note</span>
+                Rules
+              </button>
+              <button class="opt4-tab">
+                <span class="material-symbols-outlined">folder</span>
+                Files
+                <span class="opt4-tab-badge">1</span>
+              </button>
+            </div>
+            <div class="opt4-content" style="padding: 0 12px 12px;">
+              <div class="opt4-rules-content active">
+                <textarea placeholder="Add rules..." style="min-height: 120px;">Write casually.</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION 5: Bottom Sheet / Minimalist -->
+  <div class="page" data-page="5">
+    <h2 class="page-title">Bottom Sheet / Minimalist</h2>
+    <p class="page-desc">Compact chip-based design. Slides up from bottom on mobile.<br>Best for: Quick access without interrupting flow.</p>
+
+    <div class="devices">
+      <div class="device desktop">
+        <div class="device-label">Desktop (Modal)</div>
+        <div class="device-frame">
+          <div class="opt5-overlay"></div>
+          <div class="opt5-sheet" style="position: absolute; bottom: auto; top: 50%; left: 50%; right: auto; transform: translate(-50%, -50%); width: 400px; border-radius: var(--radius-lg); max-height: none;">
+            <div class="opt5-header" style="padding: 20px 20px 12px;">
+              <h3 class="opt5-title">Context</h3>
+              <button class="opt5-clear">Clear all</button>
+            </div>
+            <div class="opt5-body" style="max-height: 300px; overflow: auto;">
+              <div class="opt5-section">
+                <div class="opt5-section-header">
+                  <span class="opt5-section-title">Rules</span>
+                  <button class="opt5-expand"><span class="material-symbols-outlined">edit</span></button>
+                </div>
+                <div class="opt5-rules-preview">
+                  <div class="opt5-rules-preview-text">Write in a casual, friendly tone. Focus on clarity over formality. Keep paragraphs short.</div>
+                </div>
+              </div>
+              <div class="opt5-section">
+                <div class="opt5-section-header">
+                  <span class="opt5-section-title">Reference Files</span>
+                </div>
+                <div class="opt5-file-chips">
+                  <div class="opt5-chip">
+                    <span class="material-symbols-outlined opt5-chip-icon">picture_as_pdf</span>
+                    project-brief.pdf
+                    <button class="opt5-chip-remove">×</button>
+                  </div>
+                  <div class="opt5-chip">
+                    <span class="material-symbols-outlined opt5-chip-icon">description</span>
+                    style-guide.md
+                    <button class="opt5-chip-remove">×</button>
+                  </div>
+                  <div class="opt5-chip opt5-add-chip">
+                    <span class="material-symbols-outlined opt5-chip-icon" style="color: var(--ghost);">add</span>
+                    Add file
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="opt5-footer">
+              <button class="opt5-btn opt5-btn-secondary">Cancel</button>
+              <button class="opt5-btn opt5-btn-primary">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="device mobile">
+        <div class="device-label">Mobile (Bottom Sheet)</div>
+        <div class="device-frame">
+          <div class="opt5-overlay"></div>
+          <div class="opt5-sheet">
+            <div class="opt5-handle">
+              <div class="opt5-handle-bar"></div>
+            </div>
+            <div class="opt5-header">
+              <h3 class="opt5-title">Context</h3>
+              <button class="opt5-clear">Clear</button>
+            </div>
+            <div class="opt5-body">
+              <div class="opt5-section">
+                <div class="opt5-section-header">
+                  <span class="opt5-section-title">Rules</span>
+                  <button class="opt5-expand"><span class="material-symbols-outlined">chevron_right</span></button>
+                </div>
+                <div class="opt5-rules-preview">
+                  <div class="opt5-rules-preview-text">Write casually...</div>
+                </div>
+              </div>
+              <div class="opt5-section">
+                <div class="opt5-section-header">
+                  <span class="opt5-section-title">Files</span>
+                </div>
+                <div class="opt5-file-chips">
+                  <div class="opt5-chip">
+                    <span class="material-symbols-outlined opt5-chip-icon">picture_as_pdf</span>
+                    brief.pdf
+                    <button class="opt5-chip-remove">×</button>
+                  </div>
+                  <div class="opt5-chip opt5-add-chip">
+                    <span class="material-symbols-outlined opt5-chip-icon" style="color: var(--ghost);">add</span>
+                    Add
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="opt5-footer">
+              <button class="opt5-btn opt5-btn-primary" style="flex: 1;">Done</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Page navigation
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+        btn.classList.add('active');
+        document.querySelector(`.page[data-page="${btn.dataset.page}"]`).classList.add('active');
+      });
+    });
+
+    // Tab switching for Option 4
+    document.querySelectorAll('.opt4-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const modal = tab.closest('.opt4-modal');
+        modal.querySelectorAll('.opt4-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        const isRules = tab.textContent.includes('Rules');
+        modal.querySelector('.opt4-rules-content').classList.toggle('active', isRules);
+        modal.querySelector('.opt4-files-content').classList.toggle('active', !isRules);
+      });
+    });
+  </script>
+</body>
+</html>

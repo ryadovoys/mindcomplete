@@ -1208,25 +1208,46 @@ class ContextManager {
     this.files = [];
     this.rulesText = '';
     this.estimatedTokens = 0;
+    this.isMobile = window.matchMedia('(max-width: 768px)').matches;
 
-    this.modal = document.getElementById('context-modal');
-    this.uploadBtn = document.getElementById('upload-btn');
-    this.fileInput = document.getElementById('file-input');
-    this.filesContainer = document.getElementById('context-files');
-    this.removeFilesBtn = document.getElementById('remove-files-btn');
-    this.statusEl = document.getElementById('context-status');
-    this.rulesStatusEl = document.getElementById('rules-status');
-    this.contextMenuBtn = document.querySelector('.context-menu-btn');
-    this.textarea = document.getElementById('context-textarea');
+    // Files modal elements (desktop)
+    this.filesModal = document.getElementById('files-modal');
+    this.filesDropzone = document.getElementById('files-dropzone');
+    this.browseFilesBtn = document.getElementById('browse-files-btn');
+    this.filesList = document.getElementById('files-list');
+    this.filesCount = document.getElementById('files-count');
+
+    // Files bottom sheet elements (mobile)
+    this.filesBottomSheet = document.getElementById('files-bottom-sheet');
+    this.filesDropzoneMobile = document.getElementById('files-dropzone-mobile');
+    this.browseFilesBtnMobile = document.getElementById('browse-files-btn-mobile');
+    this.filesListMobile = document.getElementById('files-list-mobile');
+    this.filesCountMobile = document.getElementById('files-count-mobile');
+
+    // Rules modal elements (desktop)
+    this.rulesModal = document.getElementById('rules-modal');
+    this.rulesTextarea = document.getElementById('rules-textarea');
     this.saveRulesBtn = document.getElementById('save-rules-btn');
     this.clearRulesBtn = document.getElementById('clear-rules-btn');
+    this.rulesStatusEl = document.getElementById('rules-status');
+
+    // Rules bottom sheet elements (mobile)
+    this.rulesBottomSheet = document.getElementById('rules-bottom-sheet');
+    this.rulesTextareaMobile = document.getElementById('rules-textarea-mobile');
+    this.saveRulesBtnMobile = document.getElementById('save-rules-btn-mobile');
+    this.clearRulesBtnMobile = document.getElementById('clear-rules-btn-mobile');
+
+    // Shared file input
+    this.fileInput = document.getElementById('file-input');
+
+    // Menu buttons
+    this.filesMenuBtn = document.querySelector('.files-menu-btn');
+    this.rulesMenuBtn = document.querySelector('.rules-menu-btn');
 
     this.init();
   }
 
   init() {
-    if (!this.uploadBtn || !this.fileInput) return;
-
     // Restore session from localStorage if available
     const savedSessionId = localStorage.getItem('mindcomplete_session_id');
     const savedFiles = localStorage.getItem('mindcomplete_files');
@@ -1242,50 +1263,127 @@ class ContextManager {
     // Restore rules text
     if (savedRules) {
       this.rulesText = savedRules;
-      if (this.textarea) {
-        this.textarea.value = savedRules;
-      }
+      if (this.rulesTextarea) this.rulesTextarea.value = savedRules;
+      if (this.rulesTextareaMobile) this.rulesTextareaMobile.value = savedRules;
     }
 
     this.updateUI();
 
-    // Click to upload (button only)
-    this.uploadBtn.addEventListener('click', () => this.fileInput.click());
+    // Listen for resize to update isMobile
+    window.addEventListener('resize', () => {
+      this.isMobile = window.matchMedia('(max-width: 768px)').matches;
+    });
+
+    // Browse buttons
+    this.browseFilesBtn?.addEventListener('click', () => this.fileInput?.click());
+    this.browseFilesBtnMobile?.addEventListener('click', () => this.fileInput?.click());
 
     // File input change
-    this.fileInput.addEventListener('change', (e) => this.handleFiles(e.target.files));
+    this.fileInput?.addEventListener('change', (e) => this.handleFiles(e.target.files));
 
-    // Remove files button
-    if (this.removeFilesBtn) {
-      this.removeFilesBtn.addEventListener('click', () => this.clearFiles());
-    }
+    // Setup drag and drop
+    this.setupDragDrop(this.filesDropzone);
+    this.setupDragDrop(this.filesDropzoneMobile);
 
-    // Modal close
-    if (this.modal) {
-      const closeBtn = document.getElementById('context-modal-close');
-      if (closeBtn) {
-        closeBtn.addEventListener('click', () => this.closeModal());
-      }
-      this.modal.addEventListener('click', (e) => {
-        if (e.target === this.modal) this.closeModal();
+    // Files modal close buttons
+    document.getElementById('files-modal-close')?.addEventListener('click', () => this.closeFilesModal());
+    document.getElementById('files-sheet-close')?.addEventListener('click', () => this.closeFilesModal());
+
+    // Rules modal close buttons
+    document.getElementById('rules-modal-close')?.addEventListener('click', () => this.closeRulesModal());
+    document.getElementById('rules-sheet-close')?.addEventListener('click', () => this.closeRulesModal());
+
+    // Backdrop click to close
+    this.filesModal?.addEventListener('click', (e) => { if (e.target === this.filesModal) this.closeFilesModal(); });
+    this.rulesModal?.addEventListener('click', (e) => { if (e.target === this.rulesModal) this.closeRulesModal(); });
+    this.filesBottomSheet?.addEventListener('click', (e) => { if (e.target === this.filesBottomSheet) this.closeFilesModal(); });
+    this.rulesBottomSheet?.addEventListener('click', (e) => { if (e.target === this.rulesBottomSheet) this.closeRulesModal(); });
+
+    // Save rules buttons
+    this.saveRulesBtn?.addEventListener('click', () => this.handleSaveRules());
+    this.saveRulesBtnMobile?.addEventListener('click', () => this.handleSaveRules());
+
+    // Clear rules buttons
+    this.clearRulesBtn?.addEventListener('click', () => this.handleClearRules());
+    this.clearRulesBtnMobile?.addEventListener('click', () => this.handleClearRules());
+
+    // Sync textarea values between desktop and mobile
+    this.rulesTextarea?.addEventListener('input', () => {
+      if (this.rulesTextareaMobile) this.rulesTextareaMobile.value = this.rulesTextarea.value;
+    });
+    this.rulesTextareaMobile?.addEventListener('input', () => {
+      if (this.rulesTextarea) this.rulesTextarea.value = this.rulesTextareaMobile.value;
+    });
+  }
+
+  setupDragDrop(dropzone) {
+    if (!dropzone) return;
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
       });
-    }
+    });
 
-    // Save rules button
-    if (this.saveRulesBtn) {
-      this.saveRulesBtn.addEventListener('click', () => this.handleSaveRules());
-    }
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, () => {
+        dropzone.classList.add('drag-active');
+      });
+    });
 
-    // Clear rules button
-    if (this.clearRulesBtn) {
-      this.clearRulesBtn.addEventListener('click', () => this.handleClearRules());
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, () => {
+        dropzone.classList.remove('drag-active');
+      });
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      const files = e.dataTransfer.files;
+      if (files.length) this.handleFiles(files);
+    });
+  }
+
+  openFilesModal() {
+    if (this.isMobile) {
+      this.filesBottomSheet?.classList.add('visible');
+    } else {
+      this.filesModal?.classList.add('visible');
+    }
+    this.updateUI();
+  }
+
+  closeFilesModal() {
+    this.filesModal?.classList.remove('visible');
+    this.filesBottomSheet?.classList.remove('visible');
+  }
+
+  openRulesModal() {
+    if (this.isMobile) {
+      this.rulesBottomSheet?.classList.add('visible');
+    } else {
+      this.rulesModal?.classList.add('visible');
     }
   }
 
-  handleSaveRules() {
-    if (!this.textarea) return;
+  closeRulesModal() {
+    this.rulesModal?.classList.remove('visible');
+    this.rulesBottomSheet?.classList.remove('visible');
+  }
 
-    const text = this.textarea.value.trim();
+  // Legacy methods for backwards compatibility
+  openModal() {
+    this.openFilesModal();
+  }
+
+  closeModal() {
+    this.closeFilesModal();
+    this.closeRulesModal();
+  }
+
+  handleSaveRules() {
+    // Get text from whichever textarea is available
+    const text = (this.rulesTextarea?.value || this.rulesTextareaMobile?.value || '').trim();
     this.rulesText = text;
 
     // Save to localStorage
@@ -1309,9 +1407,8 @@ class ContextManager {
 
   handleClearRules() {
     this.rulesText = '';
-    if (this.textarea) {
-      this.textarea.value = '';
-    }
+    if (this.rulesTextarea) this.rulesTextarea.value = '';
+    if (this.rulesTextareaMobile) this.rulesTextareaMobile.value = '';
     localStorage.removeItem('mindcomplete_rules');
 
     if (this.rulesStatusEl) {
@@ -1427,69 +1524,70 @@ class ContextManager {
   }
 
   updateUI() {
-    // Update files list with remove buttons
-    if (this.filesContainer) {
-      if (this.files.length > 0) {
-        this.filesContainer.innerHTML = this.files
-          .map(
-            (file, index) => `
-          <div class="context-file" data-index="${index}">
-            <span class="context-file-name">
-              <span class="material-symbols-outlined">description</span>
-              ${file.name || file}
-            </span>
-            <button class="context-file-remove" data-index="${index}">
-              <span class="material-symbols-outlined">close</span>
-            </button>
-          </div>
-        `
-          )
-          .join('');
+    // Render file lists (both desktop and mobile)
+    this.renderFilesList(this.filesList);
+    this.renderFilesList(this.filesListMobile);
 
-        // Add click handlers for individual file removal
-        this.filesContainer.querySelectorAll('.context-file-remove').forEach((btn) => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const idx = parseInt(btn.dataset.index);
-            this.removeFile(idx);
-          });
-        });
-      } else {
-        this.filesContainer.innerHTML = '';
-      }
+    // Update file counts
+    const count = this.files.length;
+    if (this.filesCount) {
+      this.filesCount.textContent = `${count} file${count !== 1 ? 's' : ''}`;
+    }
+    if (this.filesCountMobile) {
+      this.filesCountMobile.textContent = count.toString();
     }
 
-    // Update remove files button state
-    if (this.removeFilesBtn) {
-      this.removeFilesBtn.disabled = this.files.length === 0;
+    // Update menu button indicators (separate for files and rules)
+    if (this.filesMenuBtn) {
+      this.filesMenuBtn.classList.toggle('has-context', this.files.length > 0);
     }
-
-    // Update status
-    if (this.files.length > 0 && this.statusEl) {
-      if (!this.statusEl.textContent.startsWith('Error') && !this.statusEl.textContent.startsWith('Uploading')) {
-        this.statusEl.textContent = `~${this.estimatedTokens.toLocaleString()} tokens`;
-      }
-    } else if (this.statusEl && !this.statusEl.textContent.startsWith('Error')) {
-      this.statusEl.textContent = '';
-    }
-
-    // Update menu button indicator (has context if files OR rules exist)
-    if (this.contextMenuBtn) {
-      const hasContext = this.files.length > 0 || this.rulesText.length > 0;
-      this.contextMenuBtn.classList.toggle('has-context', hasContext);
+    if (this.rulesMenuBtn) {
+      this.rulesMenuBtn.classList.toggle('has-context', this.rulesText.length > 0);
     }
   }
 
-  openModal() {
-    if (this.modal) {
-      this.modal.classList.add('visible');
+  renderFilesList(container) {
+    if (!container) return;
+
+    if (this.files.length === 0) {
+      container.innerHTML = '<div class="files-list-empty">No files uploaded</div>';
+      return;
     }
+
+    container.innerHTML = this.files.map((file, index) => `
+      <div class="file-row" data-index="${index}">
+        <div class="file-thumb">
+          <span class="material-symbols-outlined">${this.getFileIcon(file.name || file)}</span>
+        </div>
+        <div class="file-details">
+          <div class="file-name">${file.name || file}</div>
+          <div class="file-meta">${file.size ? this.formatFileSize(file.size) : 'Uploaded'}</div>
+        </div>
+        <button class="file-delete" data-index="${index}">
+          <span class="material-symbols-outlined">delete</span>
+        </button>
+      </div>
+    `).join('');
+
+    // Add delete handlers
+    container.querySelectorAll('.file-delete').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.removeFile(parseInt(btn.dataset.index));
+      });
+    });
   }
 
-  closeModal() {
-    if (this.modal) {
-      this.modal.classList.remove('visible');
-    }
+  getFileIcon(filename) {
+    if (filename.endsWith('.pdf')) return 'picture_as_pdf';
+    if (filename.endsWith('.md')) return 'description';
+    return 'article';
+  }
+
+  formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   }
 
   getSessionId() {
@@ -2324,11 +2422,20 @@ document.addEventListener('DOMContentLoaded', () => {
     closeMenu();
   });
 
-  // Context menu button
-  const contextMenuBtn = document.querySelector('.context-menu-btn');
-  if (contextMenuBtn) {
-    contextMenuBtn.addEventListener('click', () => {
-      window.contextManager.openModal();
+  // Files menu button
+  const filesMenuBtn = document.querySelector('.files-menu-btn');
+  if (filesMenuBtn) {
+    filesMenuBtn.addEventListener('click', () => {
+      window.contextManager.openFilesModal();
+      closeMenu();
+    });
+  }
+
+  // Rules menu button
+  const rulesMenuBtn = document.querySelector('.rules-menu-btn');
+  if (rulesMenuBtn) {
+    rulesMenuBtn.addEventListener('click', () => {
+      window.contextManager.openRulesModal();
       closeMenu();
     });
   }
@@ -2383,7 +2490,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const imageGuidanceCloseBtn = document.getElementById('image-guidance-close');
 
   // Function to generate image with optional guidance
-  async function generateImageWithGuidance(text, guidance = '') {
+  async function generateImageWithGuidance(text, guidance = '', style = 'anime') {
     // Remove any existing predictions and cancel pending requests
     predictionManager.cancelPending();
     predictionManager.removeInlinePrediction();
@@ -2403,7 +2510,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/api/generate-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, guidance })
+        body: JSON.stringify({ text, guidance, style })
       });
 
       if (!response.ok) {
@@ -2494,16 +2601,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (applyGuidanceBtn) {
       applyGuidanceBtn.addEventListener('click', () => {
         const guidance = imageGuidanceTextarea.value.trim();
+        const styleSelect = document.getElementById('image-style-select');
+        const style = styleSelect ? styleSelect.value : 'anime';
+        console.log(`[Frontend] Sending image request - Style: ${style}, Guidance: ${guidance}`);
         imageGuidanceModal.classList.remove('visible');
-        generateImageWithGuidance(pendingImageText, guidance);
+        generateImageWithGuidance(pendingImageText, guidance, style);
       });
     }
 
-    // Skip guidance button
+    // Skip guidance button (now Cancel)
     if (skipGuidanceBtn) {
       skipGuidanceBtn.addEventListener('click', () => {
         imageGuidanceModal.classList.remove('visible');
-        generateImageWithGuidance(pendingImageText, '');
       });
     }
 

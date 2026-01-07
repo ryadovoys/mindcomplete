@@ -336,12 +336,18 @@ ${rules}
   }
 });
 
-// Image generation config
 const IMAGE_CONFIG = {
   PROMPT_MODEL: 'xiaomi/mimo-v2-flash:free',
   OPENROUTER_IMAGE_MODEL: 'bytedance-seed/seedream-4.5',
   REPLICATE_MODEL: process.env.REPLICATE_MODEL || 'prunaai/z-image-turbo',
-  STYLE_SUFFIX: ', in the style of Hayao Miyazaki Studio Ghibli anime, soft watercolor palette, detailed hand-painted backgrounds, whimsical atmosphere, warm lighting',
+};
+
+const STYLE_MAPPING = {
+  'anime': ', in the style of Hayao Miyazaki Studio Ghibli anime',
+  'realistic': ', highly realistic, cinematic lighting, 8k resolution, detailed texture',
+  'handdrawing': ', hand-drawn sketch, artistic pencil drawing, rough texture, expressive lines',
+  'custom1': ', erotic illustration in the style of Hayao Miyazaki Studio Ghibli anime. We keep the pose and composition from the original description, and enhance the erotic tone by shifting the emphasis: focus on faces, hands, emotions, intimacy, highlights, and the lines of the body. The characters may be fully nude, but without close-ups and without emphasis on genitals — intimate areas are moved away from the center of the frame and, if necessary, partially covered (by a hand/thigh/hair/fabric/shadow/glare), with no detailed depiction.',
+  'custom2': ', Lorem ipsum dolor sit amet',
 };
 
 // Get which provider to use: "openrouter" or "replicate"
@@ -350,10 +356,21 @@ function getImageProvider() {
 }
 
 // Generate image prompt from text using LLM
-async function generateImagePrompt(text, apiKey, guidance = '') {
-  let systemPrompt = `You are an image prompt generator. Analyze the given text and create a short, vivid image prompt (max 80 words) that illustrates the scene, mood, or concept from the text. Focus especially on the last few sentences as they represent the current moment.
+async function generateImagePrompt(text, apiKey, guidance = '', style = 'anime') {
+  let styleHint = '';
+  if (style === 'realistic') {
+    styleHint = ' The image MUST be a realistic photo. Focus on photographic qualities, natural lighting, and real-world textures.';
+  } else if (style === 'handdrawing') {
+    styleHint = ' The image MUST look like a hand-drawn pencil sketch or artistic drawing.';
+  } else if (style === 'anime') {
+    styleHint = ' The image should be in the signature style of Studio Ghibli and Hayao Miyazaki.';
+  } else if (style === 'custom1') {
+    styleHint = ' Lorem ipsum dolor sit amet.';
+  }
 
-Describe visual elements: characters, setting, lighting, colors, atmosphere. Be specific and painterly.
+  let systemPrompt = `You are an image prompt generator. Analyze the given text and create a short, vivid image prompt (max 80 words) that illustrates the scene.${styleHint}
+
+Describe visual elements: characters, setting, lighting, colors, atmosphere. Be specific.
 
 Output ONLY the image prompt, nothing else. No quotes, no explanations.`;
 
@@ -586,7 +603,7 @@ async function generateImage(prompt, apiKey) {
 }
 
 app.post('/api/generate-image', async (req, res) => {
-  const { text, guidance } = req.body;
+  const { text, guidance, style } = req.body;
 
   if (!text || text.trim().length === 0) {
     return res.status(400).json({ error: 'Text is required' });
@@ -604,17 +621,17 @@ app.post('/api/generate-image', async (req, res) => {
   const apiKey = process.env.OPENROUTER_API_KEY;
 
   try {
-    // Step 1: Generate image prompt from text (with optional guidance)
-    console.log('Generating image prompt from text...');
-    if (guidance) console.log('With guidance:', guidance);
-    const basePrompt = await generateImagePrompt(text, apiKey, guidance);
+    // Step 1: Generate image prompt from text
+    console.log('Generating image prompt, style:', style);
+    const basePrompt = await generateImagePrompt(text, apiKey, guidance, style);
 
     if (!basePrompt) {
       return res.status(500).json({ error: 'Failed to generate image prompt' });
     }
 
-    // Step 2: Add Miyazaki style suffix
-    const finalPrompt = basePrompt + IMAGE_CONFIG.STYLE_SUFFIX;
+    // Step 2: Add style suffix
+    const styleSuffix = STYLE_MAPPING[style] || STYLE_MAPPING['anime'];
+    const finalPrompt = basePrompt + styleSuffix;
     console.log('Final prompt:', finalPrompt);
 
     // Step 3: Generate image
