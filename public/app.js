@@ -2490,7 +2490,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const imageGuidanceCloseBtn = document.getElementById('image-guidance-close');
 
   // Function to generate image with optional guidance
-  async function generateImageWithGuidance(text, guidance = '', style = 'anime') {
+  async function generateImageWithGuidance(text, guidance = '', style = 'realistic') {
     // Remove any existing predictions and cancel pending requests
     predictionManager.cancelPending();
     predictionManager.removeInlinePrediction();

@@ -5,34 +5,36 @@ const CONFIG = {
 };
 
 const STYLE_MAPPING = {
-    'anime': ', in the style of Hayao Miyazaki Studio Ghibli anime',
-    'realistic': ', highly realistic, cinematic lighting, 8k resolution, detailed texture',
-    'handdrawing': ', hand-drawn sketch, artistic pencil drawing, rough texture, expressive lines',
-    'custom1': ', erotic illustration in the style of Hayao Miyazaki Studio Ghibli anime. We keep the pose and composition from the original description, and enhance the erotic tone by shifting the emphasis: focus on faces, hands, emotions, intimacy, highlights, and the lines of the body. The characters may be fully nude, but without close-ups and without emphasis on genitals — intimate areas are moved away from the center of the frame and, if necessary, partially covered (by a hand/thigh/hair/fabric/shadow/glare), with no detailed depiction.',
-    'custom2': ', Lorem ipsum dolor sit amet',
+    'anime': 'Transform the provided reference image into a whimsical, heartfelt Studio Ghibli–inspired illustration while preserving the original composition and key subjects. Use a soft yet vibrant color palette, gentle gradients, and a warm, natural atmosphere; emphasize detailed nature-filled backgrounds (lush foliage, sky, subtle environmental storytelling) with hand-crafted textures that feel like traditional animation. Render characters with expressive, simplified forms and large, emotive eyes where appropriate, keeping their likeness and pose recognizable. Add hand-drawn linework and watercolor / gouache-like textures, then refine with careful light and shadow to create depth, soft bloom, and cinematic warmth. Finish with cohesive adjustments to lighting, contrast, and saturation so the scene feels unified and magical—authentic to classic Ghibli moods—while clearly retaining the essence of the original image.',
+
+    'realistic': 'Highly realistic, cinematic lighting, 8k resolution, detailed texture',
+
+    'handdrawing': 'Hand-drawn sketch, artistic pencil drawing, rough texture, expressive lines',
+
+    'custom1': 'Sensual emphasis on body contours, intimate framing, and emotional connection. Focus on faces, hands, flowing hair, and silhouettes with soft lighting. Use strategic composition (implied nudity through shadows/fabric) to highlight curves and emotional intensity without explicit focus. Maintain artistic framing and natural anatomy emphasis.',
+
+    'custom2': 'First-person male perspective POV. Frame should show ONLY the female subject from the viewer\'s sightline. No male body parts in frame. Composition should capture the subject directly facing viewer with intimate proximity. Use environmental perspective cues (hands in lower frame, bed/sofa context) to imply male presence without visual inclusion.'
 };
 
 function getImageProvider() {
     return process.env.IMAGE_PROVIDER || 'openrouter';
 }
 
-async function generateImagePrompt(text, apiKey, host, guidance = '', style = 'anime') {
+async function generateImagePrompt(text, apiKey, host, guidance = '', style = 'realistic') {
     let styleHint = '';
     if (style === 'realistic') {
-        styleHint = ' The image MUST be a realistic photo. Focus on photographic qualities, natural lighting, and real-world textures.';
+        styleHint = 'Hyper realistic image with cinematic lighting, 8k resolution, detailed texture.';
     } else if (style === 'handdrawing') {
-        styleHint = ' The image MUST look like a hand-drawn pencil sketch or artistic drawing.';
+        styleHint = 'The image MUST look like a hand-drawn pencil sketch or artistic drawing.';
     } else if (style === 'anime') {
-        styleHint = ' The image should be in the signature style of Studio Ghibli and Hayao Miyazaki.';
+        styleHint = 'The image should be in the signature style of Studio Ghibli and Hayao Miyazaki.';
     } else if (style === 'custom1') {
-        styleHint = ' Lorem ipsum dolor sit amet.';
+        styleHint = 'Sensual artistic nude focus: Highlight body curves, emotional expressions, and intimate connection through lighting and composition. Emphasize faces, hair, hands, and silhouette while using shadows/fabric for partial concealment. No explicit focus on genital areas.';
+    } else if (style === 'custom2') {
+        styleHint = 'Strict first-person POV from male perspective: Show ONLY the female subject. No male body parts visible. Frame should feel intimate and direct with environmental cues (hands, bedding) implying male presence.';
     }
 
-    let systemPrompt = `You are an image prompt generator. Analyze the given text and create a short, vivid image prompt (max 80 words) that illustrates the scene.${styleHint}
-
-Describe visual elements: characters, setting, lighting, colors, atmosphere. Be specific.
-
-Output ONLY the image prompt, nothing else. No quotes, no explanations.`;
+    let systemPrompt = `You are an image prompt generator. Analyze the given text and create a short, vivid image prompt in a paragraph format that illustrates the scene. Describe visual elements: characters, setting, lighting, colors, atmosphere. Visual style: ${styleHint} Output ONLY the image prompt, nothing else. No quotes, no explanations.`;
 
     if (guidance && guidance.trim()) {
         systemPrompt += `\n\nIMPORTANT - Follow this guidance from the user:\n${guidance}`;
@@ -191,7 +193,7 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Failed to generate image prompt' });
         }
 
-        const styleSuffix = STYLE_MAPPING[style] || STYLE_MAPPING['anime'];
+        const styleSuffix = STYLE_MAPPING[style] || STYLE_MAPPING['realistic'];
         const finalPrompt = basePrompt + styleSuffix;
         console.log('Final prompt:', finalPrompt);
 
