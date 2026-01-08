@@ -2550,7 +2550,28 @@ document.addEventListener('DOMContentLoaded', () => {
         removeBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
+
+          // Snapshot scroll position before removing the node so mobile browsers don't jump to top
+          const scrollElement = document.scrollingElement || document.documentElement || document.body;
+          const scrollLeft = scrollElement ? scrollElement.scrollLeft : 0;
+          const scrollTop = scrollElement ? scrollElement.scrollTop : 0;
+
           container.remove();
+
+          // Restore scroll position on the next frame to keep the viewport stable
+          requestAnimationFrame(() => {
+            if (scrollElement?.scrollTo) {
+              scrollElement.scrollTo({ left: scrollLeft, top: scrollTop });
+            } else {
+              scrollElement.scrollLeft = scrollLeft;
+              scrollElement.scrollTop = scrollTop;
+            }
+
+            // Some browsers only honor window-level scroll restoration
+            if (window.scrollX !== scrollLeft || window.scrollY !== scrollTop) {
+              window.scrollTo(scrollLeft, scrollTop);
+            }
+          });
         });
 
         // On mobile: tap image to show/hide remove button
@@ -2689,4 +2710,3 @@ if ('serviceWorker' in navigator) {
       .catch((err) => console.error('Service worker registration failed:', err));
   });
 }
-
