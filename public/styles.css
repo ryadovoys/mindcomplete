@@ -209,11 +209,20 @@ h2 {
 
 /* Logo */
 .logo {
-  font-family: "Google Sans Flex", "Inter", sans-serif;
-  font-size: 28px;
-  font-weight: 200;
-  color: var(--text);
-  line-height: 1;
+  display: block;
+  width: 118px;
+  height: 27px;
+  min-width: 118px;
+  background-color: var(--text);
+  mask-image: url('purple-valley-logo.svg');
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: url('purple-valley-logo.svg');
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  transition: background-color 0.2s ease;
 }
 
 /* Icon Button (Ghost style) */
