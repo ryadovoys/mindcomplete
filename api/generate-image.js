@@ -11,9 +11,9 @@ const STYLE_MAPPING = {
 
     'handdrawing': 'Hand-drawn sketch, artistic pencil drawing, rough texture, expressive lines',
 
-    'custom1': 'Sensual emphasis on body contours, intimate framing, and emotional connection. Focus on faces, hands, flowing hair, and silhouettes with soft lighting. Use strategic composition (implied nudity through shadows/fabric) to highlight curves and emotional intensity without explicit focus. Maintain artistic framing and natural anatomy emphasis.',
+    'custom1': 'Build the prompt focusing on body contours and faces. If there is a nudity or sex scenes, dont show genitalias, but show woman breasts with nipples if they are exist in the frames. You can show how characters are squizing bodies, or show curves of the body, or show how characters are touching each other, or show faces with expressions if there is a need. Your task is to make the image sensual and erotic.',
 
-    'custom2': 'First-person male perspective POV. Frame should show ONLY the female subject from the viewer\'s sightline. No male body parts in frame. Composition should capture the subject directly facing viewer with intimate proximity. Use environmental perspective cues (hands in lower frame, bed/sofa context) to imply male presence without visual inclusion.'
+    'custom2': 'Build the prompt from the storyteller POV. Storyteller is not visible in the frame. The only thing in the frame is the subject or subjects. Write the prompt explaining the scene in the details, what is happening, what is in the surrounding, what subjects are doing. Make it logical so it is easy to depict what is happening in the scene.'
 };
 
 function getImageProvider() {
@@ -23,18 +23,18 @@ function getImageProvider() {
 async function generateImagePrompt(text, apiKey, host, guidance = '', style = 'realistic') {
     let styleHint = '';
     if (style === 'realistic') {
-        styleHint = 'Hyper realistic image with cinematic lighting, 8k resolution, detailed texture.';
+        styleHint = 'Hyper realistic image with cinematic lighting, 8k resolution, detailed texture. Describe visual elements: characters, setting, lighting, colors, atmosphere.';
     } else if (style === 'handdrawing') {
-        styleHint = 'The image MUST look like a hand-drawn pencil sketch or artistic drawing.';
+        styleHint = 'The image MUST look like a hand-drawn pencil sketch or artistic drawing. Describe visual elements: characters, setting, lighting, colors, atmosphere.';
     } else if (style === 'anime') {
-        styleHint = 'The image should be in the signature style of Studio Ghibli and Hayao Miyazaki.';
+        styleHint = 'The image should be in the signature style of Studio Ghibli and Hayao Miyazaki. Describe visual elements: characters, setting, lighting, colors, atmosphere.';
     } else if (style === 'custom1') {
-        styleHint = 'Sensual artistic nude focus: Highlight body curves, emotional expressions, and intimate connection through lighting and composition. Emphasize faces, hair, hands, and silhouette while using shadows/fabric for partial concealment. No explicit focus on genital areas.';
+        styleHint = 'no genitalias, but show woman breasts with nipples if they are exist in the frames';
     } else if (style === 'custom2') {
-        styleHint = 'Strict first-person POV from male perspective: Show ONLY the female subject. No male body parts visible. Frame should feel intimate and direct with environmental cues (hands, bedding) implying male presence.';
+        styleHint = 'POV from storyteller perspective. Storyteller is not visible in the frame. The only thing in the frame is the subject or subjects. Describe visual elements: characters, setting, lighting, colors, atmosphere.';
     }
 
-    let systemPrompt = `You are an image prompt generator. Analyze the given text and create a short, vivid image prompt in a paragraph format that illustrates the scene. Describe visual elements: characters, setting, lighting, colors, atmosphere. Visual style: ${styleHint} Output ONLY the image prompt, nothing else. No quotes, no explanations.`;
+    let systemPrompt = `You are an image prompt generator. Analyze the given text and create a detailed image prompt in a paragraph format that illustrates latest sentences.  ${styleHint} Output ONLY the image prompt, nothing else. No quotes, no explanations.`;
 
     if (guidance && guidance.trim()) {
         systemPrompt += `\n\nIMPORTANT - Follow this guidance from the user:\n${guidance}`;
