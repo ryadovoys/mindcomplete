@@ -2659,6 +2659,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Theme dissolve overlay helper
+  const ensureThemeDissolveOverlay = (() => {
+    let overlayEl = null;
+    return () => {
+      if (!overlayEl) {
+        overlayEl = document.createElement('div');
+        overlayEl.className = 'theme-dissolve-overlay';
+        overlayEl.addEventListener('animationend', () => {
+          overlayEl.classList.remove('active');
+        });
+        document.body.appendChild(overlayEl);
+      }
+      return overlayEl;
+    };
+  })();
+
+  const playThemeDissolve = () => {
+    const overlay = ensureThemeDissolveOverlay();
+    const currentBg = getComputedStyle(document.body).backgroundColor || 'rgba(0,0,0,1)';
+    overlay.style.background = currentBg;
+    overlay.classList.remove('active');
+    // Force reflow so animation can retrigger
+    void overlay.offsetWidth;
+    overlay.classList.add('active');
+  };
+
   // Theme toggle button (in header or menu)
   const themeToggleBtn = document.querySelector('.theme-toggle-btn');
   if (themeToggleBtn) {
@@ -2680,6 +2706,7 @@ document.addEventListener('DOMContentLoaded', () => {
     themeToggleBtn.addEventListener('click', () => {
       const html = document.documentElement;
       const isCurrentlyDark = html.getAttribute('data-theme') === 'dark';
+      playThemeDissolve();
       html.setAttribute('data-theme', isCurrentlyDark ? 'light' : 'dark');
       updateThemeButton();
       closeMenu(); // Close menu after toggling
