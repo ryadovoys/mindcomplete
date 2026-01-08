@@ -8,18 +8,18 @@
 /* Color Tokens - Figma Variables */
 :root {
   /* Core Figma Colors - Light Mode (default) */
-  --background: #F8F4F5;
-  --accent: #FF6533;
-  --text: #4A0325;
+  --background: #E5E6FA;
+  --accent: #9246FF;
+  --text: #301935;
   --input-background: #FFFFFF;
-  --text-btn: #0A0814;
-  --btn-background: #FF6533;
-  --text-prediction: rgba(74, 3, 37, 0.5);
-  --btn-dark: #4A0325;
-  --btn-dark-text: #F8F4F5;
+  --text-btn: #E5E6FA;
+  --btn-background: #7852A9;
+  --text-prediction: rgba(48, 25, 53, 0.5);
+  --btn-dark: #301935;
+  --btn-dark-text: #E5E6FA;
 
   /* Derived (opacity variants) */
-  --text-rgb: 74, 3, 37;
+  --text-rgb: 48, 25, 53;
   --ghost: rgba(var(--text-rgb), 0.5);
   --placeholder: rgba(var(--text-rgb), 0.5);
   --modal-overlay: rgba(0, 0, 0, 0.2);
@@ -28,17 +28,17 @@
 /* Dark Mode */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #4A0325;
-    --accent: #FF6533;
-    --text: #F8F4F5;
+    --background: #301935;
+    --accent: #9246FF;
+    --text: #E5E6FA;
     --input-background: rgba(255, 255, 255, 0.06);
-    --text-btn: #0A0814;
-    --btn-background: #FF6533;
-    --text-prediction: rgba(248, 244, 245, 0.5);
-    --btn-dark: #F8F4F5;
-    --btn-dark-text: #4A0325;
+    --text-btn: #E5E6FA;
+    --btn-background: #7852A9;
+    --text-prediction: rgba(229, 230, 250, 0.5);
+    --btn-dark: #E5E6FA;
+    --btn-dark-text: #301935;
 
-    --text-rgb: 248, 244, 245;
+    --text-rgb: 229, 230, 250;
     --ghost: rgba(var(--text-rgb), 0.5);
     --placeholder: rgba(var(--text-rgb), 0.5);
   }
@@ -71,17 +71,17 @@
 
 /* Light theme (manual toggle - overrides system dark mode) */
 [data-theme="light"] {
-  --background: #F8F4F5;
-  --accent: #FF6533;
-  --text: #4A0325;
+  --background: #E5E6FA;
+  --accent: #9246FF;
+  --text: #301935;
   --input-background: #FFFFFF;
-  --text-btn: #0A0814;
-  --btn-background: #FF6533;
-  --text-prediction: rgba(74, 3, 37, 0.5);
-  --btn-dark: #4A0325;
-  --btn-dark-text: #F8F4F5;
+  --text-btn: #E5E6FA;
+  --btn-background: #7852A9;
+  --text-prediction: rgba(48, 25, 53, 0.5);
+  --btn-dark: #301935;
+  --btn-dark-text: #E5E6FA;
 
-  --text-rgb: 74, 3, 37;
+  --text-rgb: 48, 25, 53;
   --ghost: rgba(var(--text-rgb), 0.5);
   --placeholder: rgba(var(--text-rgb), 0.5);
   --modal-overlay: rgba(0, 0, 0, 0.2);
@@ -92,20 +92,20 @@
 
 /* Dark theme (manual toggle) */
 [data-theme="dark"] {
-  --background: #4A0325;
-  --accent: #FF6533;
-  --text: #F8F4F5;
+  --background: #301935;
+  --accent: #9246FF;
+  --text: #E5E6FA;
   --input-background: rgba(255, 255, 255, 0.06);
-  --text-btn: #0A0814;
-  --btn-background: #FF6533;
-  --text-prediction: rgba(248, 244, 245, 0.5);
-  --btn-dark: #F8F4F5;
-  --btn-dark-text: #4A0325;
+  --text-btn: #E5E6FA;
+  --btn-background: #7852A9;
+  --text-prediction: rgba(229, 230, 250, 0.5);
+  --btn-dark: #E5E6FA;
+  --btn-dark-text: #301935;
 
-  --text-rgb: 248, 244, 245;
+  --text-rgb: 229, 230, 250;
   --ghost: rgba(var(--text-rgb), 0.5);
   --placeholder: rgba(var(--text-rgb), 0.5);
-  --modal-overlay: rgba(74, 3, 37, 0.8);
+  --modal-overlay: rgba(48, 25, 53, 0.8);
 
   --menu-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   --modal-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
