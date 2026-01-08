@@ -2232,6 +2232,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const rightMenuOverlay = document.querySelector('.right-menu-overlay');
   const leftMenuOverlay = document.querySelector('.left-menu-overlay');
+  const leftMenuCloseBtn = document.querySelector('.left-menu-close-btn');
 
   const shareMenuBtn = document.querySelector('.share-menu-btn');
   const clearMenuBtn = document.querySelector('.clear-menu-btn');
@@ -2314,6 +2315,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.target === leftMenuOverlay) {
         closeMenu();
       }
+    });
+  }
+
+  if (leftMenuCloseBtn) {
+    leftMenuCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeMenu();
     });
   }
 

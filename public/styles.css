@@ -21,6 +21,9 @@
   --btn-dark-text: #E5E6FA;
   --modal-surface: rgba(255, 255, 255, 0.95);
   --modal-border: rgba(48, 25, 53, 0.08);
+  --left-menu-overlay-bg: rgba(227, 223, 245, 0.94);
+  --left-menu-panel-bg: #ffffff;
+  --left-menu-divider: rgba(48, 25, 53, 0.08);
 
   /* Derived (opacity variants) */
   --text-rgb: 48, 25, 53;
@@ -45,6 +48,9 @@
     --btn-dark-text: #301935;
     --modal-surface: rgba(65, 34, 69, 0.82);
     --modal-border: rgba(229, 230, 250, 0.2);
+    --left-menu-overlay-bg: rgba(16, 5, 20, 0.75);
+    --left-menu-panel-bg: #2c1631;
+    --left-menu-divider: rgba(229, 230, 250, 0.12);
 
     --text-rgb: 229, 230, 250;
     --ghost: rgba(var(--text-rgb), 0.5);
@@ -92,6 +98,9 @@
   --btn-dark-text: #E5E6FA;
   --modal-surface: rgba(255, 255, 255, 0.95);
   --modal-border: rgba(48, 25, 53, 0.08);
+  --left-menu-overlay-bg: rgba(227, 223, 245, 0.94);
+  --left-menu-panel-bg: #ffffff;
+  --left-menu-divider: rgba(48, 25, 53, 0.08);
 
   --text-rgb: 48, 25, 53;
   --ghost: rgba(var(--text-rgb), 0.5);
@@ -117,6 +126,9 @@
   --btn-dark-text: #301935;
   --modal-surface: rgba(65, 34, 69, 0.82);
   --modal-border: rgba(229, 230, 250, 0.2);
+  --left-menu-overlay-bg: rgba(16, 5, 20, 0.75);
+  --left-menu-panel-bg: #2c1631;
+  --left-menu-divider: rgba(229, 230, 250, 0.12);
 
   --text-rgb: 229, 230, 250;
   --ghost: rgba(var(--text-rgb), 0.5);
@@ -331,6 +343,78 @@ h2 {
   right: auto;
   left: 20px;
   transform-origin: top left;
+}
+
+.left-menu-overlay {
+  background: var(--left-menu-overlay-bg);
+}
+
+.left-menu-overlay .menu-content {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: auto;
+  width: min(320px, 80vw);
+  min-width: 0;
+  border-radius: 0;
+  padding: 48px 32px 40px 32px;
+  background: var(--left-menu-panel-bg);
+  box-shadow: 24px 0 45px rgba(16, 0, 24, 0.08);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  gap: 24px;
+  transform: translateX(-110%);
+  opacity: 0;
+  transition: transform 0.28s ease-out, opacity 0.2s ease;
+}
+
+.left-menu-overlay.menu-ready .menu-content {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.left-menu-overlay .menu-item {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 0;
+  font-size: var(--font-body-size);
+  letter-spacing: normal;
+}
+
+.left-menu-overlay .menu-item .material-symbols-outlined {
+  display: none;
+}
+
+.left-menu-overlay .menu-label {
+  font-size: var(--font-body-size);
+}
+
+.menu-close-btn {
+  position: absolute;
+  top: 6px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text);
+  padding: 0;
+  border-radius: 16px;
+}
+
+.menu-close-btn .material-symbols-outlined {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .menu-close-btn:hover {
+    opacity: 0.7;
+  }
 }
 
 .menu-item {
@@ -608,6 +692,10 @@ body.selection-ready .select-confirm-btn {
   .menu-content {
     top: 54px;
     right: 20px;
+  }
+
+  .menu-close-btn {
+    right: 10px;
   }
 
   .menu-item {
