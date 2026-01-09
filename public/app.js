@@ -2219,8 +2219,8 @@ class AuthManager {
     if (this.user) {
       if (profileLabel) profileLabel.textContent = 'Account';
       if (profileIcon) profileIcon.textContent = 'account_circle';
-      if (this.sidebarAccountName) this.sidebarAccountName.textContent = this.user.email?.split('@')[0] || 'Account';
-      if (this.sidebarAccountPlan) this.sidebarAccountPlan.textContent = 'Signed in';
+      if (this.sidebarAccountName) this.sidebarAccountName.textContent = this.user.user_metadata?.full_name || this.user.email?.split('@')[0] || 'Account';
+      if (this.sidebarAccountPlan) this.sidebarAccountPlan.textContent = this.user.email;
       if (this.sidebarAvatar) this.sidebarAvatar.textContent = (this.user.email?.[0] || 'P').toUpperCase();
       
       // Update User Menu
@@ -2347,7 +2347,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize menu icon for desktop
   if (window.innerWidth >= 1025 && menuIcon) {
-    menuIcon.textContent = 'close';
+    menuIcon.textContent = document.body.classList.contains('sidebar-collapsed') ? 'dehaze' : 'close';
   }
 
   const rightMenuOverlay = document.querySelector('.right-menu-overlay');

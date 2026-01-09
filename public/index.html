@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 
-<body>
+<body class="sidebar-collapsed">
   <div class="app-shell">
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-scroll">
@@ -106,33 +106,6 @@
           <button class="menu-item save-valley-btn">
             <span class="material-symbols-outlined">save</span>
             <span class="menu-label">Save valley</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- User Menu (Left Sidebar) -->
-      <div class="menu-overlay user-menu-overlay">
-        <div class="menu-content user-menu-content">
-          <!-- User Profile Header (Click to edit) -->
-          <div class="user-menu-header" id="user-menu-header">
-             <div class="sidebar-avatar large" id="user-menu-avatar">PV</div>
-             <div class="user-menu-info">
-               <span class="user-menu-name" id="user-menu-name">Guest</span>
-               <span class="user-menu-email" id="user-menu-email">Tap to edit name</span>
-             </div>
-          </div>
-          <div class="menu-divider"></div>
-          <button class="menu-item" id="user-settings-btn">
-            <span class="material-symbols-outlined">settings</span>
-            <span class="menu-label">Settings</span>
-          </button>
-          <button class="menu-item about-menu-btn">
-            <span class="material-symbols-outlined">info</span>
-            <span class="menu-label">About</span>
-          </button>
-          <button class="menu-item" id="user-logout-btn">
-            <span class="material-symbols-outlined">logout</span>
-            <span class="menu-label">Log out</span>
           </button>
         </div>
       </div>
@@ -492,6 +465,29 @@
           </section>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- User Menu (Left Sidebar) -->
+  <div class="menu-overlay user-menu-overlay">
+    <div class="menu-content user-menu-content">
+      <!-- User Profile Header (Click to edit) -->
+      <button class="menu-item" id="user-menu-header">
+        <span class="material-symbols-outlined">account_circle</span>
+        <span class="menu-label">Account</span>
+      </button>
+      <button class="menu-item" id="user-settings-btn">
+        <span class="material-symbols-outlined">settings</span>
+        <span class="menu-label">Settings</span>
+      </button>
+      <button class="menu-item about-menu-btn">
+        <span class="material-symbols-outlined">info</span>
+        <span class="menu-label">About</span>
+      </button>
+      <button class="menu-item" id="user-logout-btn">
+        <span class="material-symbols-outlined">logout</span>
+        <span class="menu-label">Log out</span>
+      </button>
     </div>
   </div>
 

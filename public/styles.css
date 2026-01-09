@@ -369,13 +369,18 @@ body {
 }
 
 .sidebar-account-plan {
-  font-size: 12px;
+  font-size: var(--font-caption-size);
   color: var(--sidebar-muted);
 }
 
+.sidebar-account-name {
+  font-size: var(--font-body-size);
+  font-weight: 500;
+}
+
 .sidebar-avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 12px;
   background: var(--accent);
   color: #fff;
@@ -383,12 +388,6 @@ body {
   align-items: center;
   justify-content: center;
   font-weight: 600;
-}
-
-.sidebar-account-links {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
 }
 
 .sidebar-backdrop {
@@ -586,6 +585,7 @@ h2 {
   opacity: 0;
   transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   min-width: 194px;
+  max-width: 280px;
 }
 
 .menu-overlay.menu-ready .menu-content {
@@ -2497,51 +2497,24 @@ body.selection-ready .select-confirm-btn {
   position: absolute;
   top: auto;
   right: auto;
-  bottom: 80px;
-  left: 20px;
+  bottom: 92px;
+  left: 24px;
   transform-origin: bottom left;
-  min-width: 260px;
-  padding: 16px;
-  gap: 8px;
+  width: calc(var(--sidebar-width) - 48px);
+  min-width: auto;
+  max-width: none;
+  transform: scale(0.9) translateY(8px);
 }
 
-.user-menu-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: background 0.2s;
+@media (max-width: 1024px) {
+  .user-menu-content {
+    width: calc(min(320px, 80vw) - 48px);
+    left: 24px;
+    bottom: 92px;
+  }
 }
 
-.user-menu-header:hover {
-  background: var(--sidebar-hover);
+.menu-overlay.menu-ready .user-menu-content {
+  transform: scale(1) translateY(0);
 }
 
-.sidebar-avatar.large {
-  width: 48px;
-  height: 48px;
-  font-size: 20px;
-}
-
-.user-menu-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.user-menu-name {
-  font-weight: 500;
-  color: var(--text);
-}
-
-.user-menu-email {
-  font-size: 12px;
-  color: var(--ghost);
-}
-
-.menu-divider {
-  height: 1px;
-  background: var(--sidebar-border);
-  margin: 4px 0;
-}
