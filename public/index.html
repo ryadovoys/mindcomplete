@@ -21,27 +21,37 @@
 <body class="sidebar-collapsed">
   <div class="app-shell">
     <aside class="sidebar" id="sidebar">
-      <div class="sidebar-scroll">
-        <div class="sidebar-section">
-          <button class="add-new-valley-btn" id="sidebar-new-valley">
-            <span>Create new Valley</span>
+      <!-- Top Group: Header + Button + Valleys (gap-24) -->
+      <div class="sidebar-top">
+        <!-- Header: Logo + Close Button -->
+        <div class="sidebar-header">
+          <button class="sidebar-logo-btn" id="sidebar-logo-btn" aria-label="Collapse sidebar">
+            <span class="logo sidebar-logo"></span>
           </button>
-          <div class="sidebar-valleys" id="sidebar-valleys-list"></div>
-          <div class="sidebar-valleys-empty" id="sidebar-valleys-empty">
-            <p class="section-description">No valleys saved yet</p>
-          </div>
+          <button class="btn-icon" id="sidebar-close-btn" aria-label="Close sidebar">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <!-- Primary CTA Button -->
+        <button class="sidebar-primary-btn" id="sidebar-new-valley">
+          <span>Create new Valley</span>
+        </button>
+
+        <!-- Valleys List (gap-12) -->
+        <div class="sidebar-valleys" id="sidebar-valleys-list"></div>
+        <div class="sidebar-valleys-empty" id="sidebar-valleys-empty">
+          <p class="section-description">No valleys saved yet</p>
         </div>
       </div>
 
-      <div class="sidebar-bottom">
-        <div class="sidebar-account">
-          <button class="sidebar-account-trigger" id="sidebar-account-trigger">
-            <div class="sidebar-avatar" id="sidebar-avatar">R</div>
-            <div class="sidebar-account-text">
-              <span class="sidebar-account-name" id="sidebar-account-name">Guest</span>
-            </div>
-          </button>
-        </div>
+      <!-- Account Section (px-12, pt-12, pb-36, gap-10) -->
+      <div class="sidebar-account">
+        <button class="sidebar-account-trigger" id="sidebar-account-trigger">
+          <div class="sidebar-avatar" id="sidebar-avatar">R</div>
+          <span class="sidebar-account-name" id="sidebar-account-name">Guest</span>
+          <span class="material-symbols-outlined sidebar-account-icon">more_horiz</span>
+        </button>
       </div>
     </aside>
     <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
@@ -49,13 +59,12 @@
     <div class="app-main">
       <header class="header">
         <div class="header-left">
-          <button class="icon-btn" id="menu-btn" aria-label="Menu">
+          <button class="btn-icon" id="menu-btn" aria-label="Menu">
             <span class="material-symbols-outlined">dehaze</span>
           </button>
-          <span class="logo" role="img" aria-label="Purple Valley"></span>
         </div>
         <div class="header-right">
-          <button class="icon-btn" id="settings-btn" aria-label="Settings">
+          <button class="btn-icon" id="settings-btn" aria-label="Settings">
             <span class="material-symbols-outlined">more_horiz</span>
           </button>
         </div>
@@ -69,7 +78,6 @@
       <!-- Gradient overlay to fade text under header -->
       <div class="header-gradient-overlay"></div>
 
-      <!-- Quick Actions Menu (header button) -->
       <div class="menu-overlay right-menu-overlay">
         <div class="menu-content">
           <button class="menu-item files-menu-btn">
@@ -80,25 +88,9 @@
             <span class="material-symbols-outlined">edit_note</span>
             <span class="menu-label">Add rules</span>
           </button>
-          <button class="menu-item create-image-btn">
-            <span class="material-symbols-outlined">image</span>
-            <span class="menu-label">Create image</span>
-          </button>
-          <button class="menu-item select-menu-btn">
-            <span class="material-symbols-outlined">text_select_end</span>
-            <span class="menu-label">Select part</span>
-          </button>
           <button class="menu-item share-menu-btn">
             <span class="material-symbols-outlined">ios_share</span>
             <span class="menu-label">Share</span>
-          </button>
-          <button class="menu-item clear-menu-btn">
-            <span class="material-symbols-outlined">ink_eraser</span>
-            <span class="menu-label">Clear</span>
-          </button>
-          <button class="menu-item toggle-prediction-btn">
-            <span class="material-symbols-outlined">auto_fix_high</span>
-            <span class="menu-label">Auto-prediction</span>
           </button>
         </div>
       </div>
@@ -108,6 +100,22 @@
           <!-- Editable layer with inline predictions -->
           <div class="editor" contenteditable="true" data-placeholder="What's on your mind" spellcheck="false"></div>
         </div>
+      </div>
+
+      <!-- Floating Editor Toolbar -->
+      <div class="editor-toolbar">
+        <button class="toolbar-btn create-image-btn" aria-label="Create image">
+          <span class="material-symbols-outlined">add_photo_alternate</span>
+        </button>
+        <button class="toolbar-btn toggle-prediction-btn" aria-label="Auto-prediction">
+          <span class="material-symbols-outlined">auto_fix_high</span>
+        </button>
+        <button class="toolbar-btn select-menu-btn" aria-label="Select part">
+          <span class="material-symbols-outlined">text_select_end</span>
+        </button>
+        <button class="toolbar-btn clear-menu-btn" aria-label="Clear">
+          <span class="material-symbols-outlined">ink_eraser</span>
+        </button>
       </div>
     </div>
   </div>

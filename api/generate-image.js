@@ -46,7 +46,7 @@ async function generateImagePrompt(text, apiKey, host, guidance = '', style = 'r
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
             'HTTP-Referer': `https://${host}`,
-            'X-Title': 'purple valley'
+            'X-Title': 'Purple Valley'
         },
         body: JSON.stringify({
             model: CONFIG.PROMPT_MODEL,
@@ -74,7 +74,7 @@ async function generateImageOpenRouter(prompt, apiKey, host) {
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
             'HTTP-Referer': `https://${host}`,
-            'X-Title': 'purple valley'
+            'X-Title': 'Purple Valley'
         },
         body: JSON.stringify({
             model: CONFIG.OPENROUTER_IMAGE_MODEL,
@@ -89,28 +89,40 @@ async function generateImageOpenRouter(prompt, apiKey, host) {
     }
 
     const data = await response.json();
+    console.log('[IMAGE] OpenRouter response data received');
     let imageUrl = null;
 
+    // 1. Check for standard images array
     const messageImages = data.choices?.[0]?.message?.images;
     if (messageImages && messageImages.length > 0) {
         const firstImage = messageImages[0];
-        imageUrl = firstImage.image_url?.url || firstImage.url || firstImage;
+        imageUrl = firstImage.image_url?.url || firstImage.url || (typeof firstImage === 'string' ? firstImage : null);
     }
 
+    // 2. Check for markdown in content
     if (!imageUrl) {
         const content = data.choices?.[0]?.message?.content;
         if (content && content.trim()) {
             const mdMatch = content.match(/!\[.*?\]\((.*?)\)/);
             if (mdMatch) imageUrl = mdMatch[1];
-            const urlMatch = content.match(/(https?:\/\/[^\s\)"']+)/i);
-            if (urlMatch && !imageUrl) imageUrl = urlMatch[1];
+            
+            if (!imageUrl) {
+                const urlMatch = content.match(/(https?:\/\/[^\s\)"']+)/i);
+                if (urlMatch) imageUrl = urlMatch[1];
+            }
+            
             if (!imageUrl && content.startsWith('data:image')) imageUrl = content;
         }
     }
 
+    // 3. Fallback to image_url property
     if (!imageUrl) {
         const messageImageUrl = data.choices?.[0]?.message?.image_url;
         if (messageImageUrl) imageUrl = messageImageUrl.url || messageImageUrl;
+    }
+
+    if (!imageUrl) {
+        console.error('[IMAGE] Error: No image URL found in response', JSON.stringify(data).substring(0, 500));
     }
 
     return { url: imageUrl };
@@ -168,6 +180,15 @@ async function generateImage(prompt, apiKey, host) {
 }
 
 export default async function handler(req, res) {
+    // Handle CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -175,29 +196,33 @@ export default async function handler(req, res) {
     const { text, guidance, style } = req.body;
 
     if (!text || text.trim().length === 0) {
+        console.error('[IMAGE] Error: No text provided');
         return res.status(400).json({ error: 'Text is required' });
     }
 
     if (!process.env.OPENROUTER_API_KEY) {
+        console.error('[IMAGE] Error: OPENROUTER_API_KEY missing');
         return res.status(500).json({ error: 'OPENROUTER_API_KEY not configured' });
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
-    const host = req.headers.host || 'localhost';
+    const host = req.headers.host || 'purple-valley.vercel.app';
 
     try {
-        console.log('Generating image prompt, style:', style);
+        console.log(`[IMAGE] Request: text_len=${text?.length}, style=${style}`);
         const basePrompt = await generateImagePrompt(text, apiKey, host, guidance, style);
 
         if (!basePrompt) {
+            console.error('[IMAGE] Error: Failed to generate base prompt');
             return res.status(500).json({ error: 'Failed to generate image prompt' });
         }
 
         const styleSuffix = STYLE_MAPPING[style] || STYLE_MAPPING['realistic'];
         const finalPrompt = basePrompt + styleSuffix;
-        console.log('Final prompt:', finalPrompt);
+        console.log(`[IMAGE] Final prompt: ${finalPrompt.substring(0, 100)}...`);
 
         const imageResult = await generateImage(finalPrompt, apiKey, host);
+        console.log('[IMAGE] Generation result:', JSON.stringify(imageResult).substring(0, 200));
 
         res.status(200).json({
             success: true,
@@ -206,7 +231,7 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        console.error('Image generation error:', error);
+        console.error('[IMAGE] Server error:', error);
         res.status(500).json({ error: error.message || 'Failed to generate image' });
     }
 }

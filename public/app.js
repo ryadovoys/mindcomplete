@@ -1617,6 +1617,7 @@ class ContextManager {
 class ValleysManager {
   constructor() {
     this.valleys = [];
+    this.tempValley = null;
     this.modal = document.getElementById('valleys-modal');
     this.listContainer = document.getElementById('valleys-list');
     this.emptyState = document.getElementById('valleys-empty');
@@ -1657,6 +1658,14 @@ class ValleysManager {
   }
 
   async newValley() {
+    // If we already have a temp valley, just focus editor
+    if (this.tempValley) {
+      const editor = document.querySelector('.editor');
+      editor.focus();
+      this.closeModal();
+      return;
+    }
+
     const editor = document.querySelector('.editor');
     if (editor) {
       editor.textContent = '';
@@ -1668,8 +1677,15 @@ class ValleysManager {
       await window.contextManager.clearContext();
     }
 
-    this.activeValleyId = null;
-    this.highlightSidebarValleys();
+    // Create temporary valley
+    this.tempValley = {
+      id: 'temp-' + Date.now(),
+      title: 'New valley',
+      created_at: new Date().toISOString()
+    };
+
+    this.activeValleyId = this.tempValley.id;
+    this.renderSidebarList();
     this.closeModal();
   }
 
@@ -1742,7 +1758,12 @@ class ValleysManager {
       const data = await response.json();
       
       // Update local state
-      if (!this.activeValleyId) {
+      if (this.tempValley && this.activeValleyId === this.tempValley.id) {
+        // Promote temp valley to real one
+        this.tempValley = null;
+        this.activeValleyId = data.id;
+        this.valleys.unshift(data);
+      } else if (!this.activeValleyId) {
         this.activeValleyId = data.id;
         this.valleys.unshift(data);
       } else {
@@ -1780,6 +1801,11 @@ class ValleysManager {
   }
 
   async loadValley(id) {
+    if (this.tempValley && id !== this.tempValley.id) {
+      this.tempValley = null;
+      this.renderSidebarList();
+    }
+
     try {
       const token = await window.authManager?.getAccessToken();
       const response = await fetch(`${CONFIG.API_VALLEYS}?id=${id}`, {
@@ -1943,7 +1969,9 @@ class ValleysManager {
   renderSidebarList() {
     if (!this.sidebarList) return;
 
-    if (!this.valleys.length) {
+    const displayValleys = this.tempValley ? [this.tempValley, ...this.valleys] : this.valleys;
+
+    if (!displayValleys.length) {
       this.sidebarList.innerHTML = '';
       if (this.sidebarEmpty) this.sidebarEmpty.classList.add('visible');
       return;
@@ -1951,15 +1979,12 @@ class ValleysManager {
 
     if (this.sidebarEmpty) this.sidebarEmpty.classList.remove('visible');
 
-    this.sidebarList.innerHTML = this.valleys
+    this.sidebarList.innerHTML = displayValleys
       .map(
         (valley) => `
         <div class="sidebar-valley-row" data-id="${valley.id}">
-          <div class="sidebar-valley-content">
-            <span class="valley-title">${this.escapeHtml(valley.title)}</span>
-            <span class="valley-meta">${this.formatDate(valley.created_at)}</span>
-          </div>
-          <button class="sidebar-valley-delete" title="Delete">
+          <span class="valley-title">${this.escapeHtml(valley.title)}</span>
+          <button class="btn-icon sidebar-valley-menu" title="Remove">
             <span class="material-symbols-outlined">delete_forever</span>
           </button>
         </div>
@@ -1969,13 +1994,24 @@ class ValleysManager {
 
     this.sidebarList.querySelectorAll('.sidebar-valley-row').forEach((item) => {
       item.addEventListener('click', (e) => {
-        if (e.target.closest('.sidebar-valley-delete')) {
+        // Handle menu button click (for now, shows delete option)
+        if (e.target.closest('.sidebar-valley-menu')) {
           e.stopPropagation();
+          if (item.dataset.id.startsWith('temp-')) {
+            this.tempValley = null;
+            this.activeValleyId = null;
+            this.renderSidebarList();
+            const editor = document.querySelector('.editor');
+            if (editor) editor.textContent = '';
+            return;
+          }
           if (confirm('Delete this valley?')) {
             this.deleteValley(item.dataset.id);
           }
           return;
         }
+
+        if (item.dataset.id.startsWith('temp-')) return;
 
         this.loadValley(item.dataset.id);
         if (window.innerWidth < CONFIG.DESKTOP_BREAKPOINT_PX) {
@@ -2562,6 +2598,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Sidebar close button and logo click handlers
+  const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+  const sidebarLogoBtn = document.getElementById('sidebar-logo-btn');
+
+  const collapseSidebar = () => {
+    if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX) {
+      document.body.classList.add('sidebar-collapsed');
+      if (menuIcon) menuIcon.textContent = 'dehaze';
+    } else {
+      closeSidebarDrawer();
+    }
+  };
+
+  if (sidebarCloseBtn) {
+    sidebarCloseBtn.addEventListener('click', collapseSidebar);
+  }
+
+  if (sidebarLogoBtn) {
+    sidebarLogoBtn.addEventListener('click', collapseSidebar);
+  }
+
   if (rightMenuOverlay) {
     rightMenuOverlay.addEventListener('click', (e) => {
       if (e.target === rightMenuOverlay) {
@@ -2874,6 +2931,7 @@ document.addEventListener('DOMContentLoaded', () => {
     editor.appendChild(placeholder);
 
     try {
+      console.log('Image generation started for text:', text.substring(0, 50) + '...');
       const response = await fetch(CONFIG.API_GENERATE_IMAGE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2881,16 +2939,20 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (!response.ok) {
-        throw new Error('Image generation failed');
+        const errorText = await response.text();
+        console.error('Image generation request failed:', response.status, errorText);
+        throw new Error(`Image generation failed: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('Image generation response data:', data);
 
       // Remove placeholder
       placeholder.remove();
 
       // Get the image URL from the response
-      const imageUrl = data.image?.url || data.image?.b64_json;
+      const imageUrl = data.image?.url || data.image?.b64_json || data.image;
+      console.log('Detected imageUrl:', imageUrl ? (typeof imageUrl === 'string' ? imageUrl.substring(0, 50) + '...' : 'object') : 'null');
 
       if (imageUrl) {
         // Create container for image with remove button
