@@ -7,18 +7,32 @@ const CONFIG = {
 };
 
 export default async function handler(req, res) {
+  // Handle CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const { text, sessionId, rules } = req.body;
+  const host = req.headers.host || 'purple-valley.vercel.app';
+
+  console.log(`[PREDICT] Request received. Text length: ${text?.length}, Session: ${sessionId}`);
 
   if (!text) {
+    console.error('[PREDICT] Error: No text provided');
     return res.status(400).json({ error: 'Text is required' });
   }
 
   if (!process.env.OPENROUTER_API_KEY) {
+    console.error('[PREDICT] Error: OPENROUTER_API_KEY missing');
     return res.status(500).json({ error: 'OPENROUTER_API_KEY not configured' });
   }
 
@@ -57,14 +71,16 @@ ${rules}
   }
 
   try {
+    console.log(`[PREDICT] Calling OpenRouter with model: ${CONFIG.MODEL}`);
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                    'Content-Type': 'application/json',
-                    'HTTP-Referer': `https://${host}`,
-                    'X-Title': 'Purple Valley'
-                },      body: JSON.stringify({
+        'Content-Type': 'application/json',
+        'HTTP-Referer': `https://${host}`,
+        'X-Title': 'Purple Valley'
+      },
+      body: JSON.stringify({
         model: CONFIG.MODEL,
         stream: true,
         messages: [
@@ -83,10 +99,13 @@ ${rules}
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('OpenRouter API error:', error);
-      return res.status(response.status).json({ error: 'API request failed' });
+      const errorStatus = response.status;
+      const errorText = await response.text();
+      console.error(`[PREDICT] OpenRouter API error (${errorStatus}):`, errorText);
+      return res.status(errorStatus).json({ error: `API request failed: ${errorText}` });
     }
+
+    console.log('[PREDICT] OpenRouter stream started');
 
     // Set SSE headers
     res.setHeader('Content-Type', 'text/event-stream');
@@ -106,12 +125,12 @@ ${rules}
         res.write(chunk);
       }
     } catch (streamError) {
-      console.log('Stream ended');
+      console.log('[PREDICT] Stream ended or interrupted');
     }
 
     res.end();
   } catch (error) {
-    console.error('Server error:', error);
-    res.status(500).json({ error: 'Failed to get prediction' });
+    console.error('[PREDICT] Server error:', error);
+    res.status(500).json({ error: `Failed to get prediction: ${error.message}` });
   }
 }

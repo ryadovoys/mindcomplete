@@ -4,7 +4,7 @@
   "description": "AI-powered writing assistant that completes your thoughts in real-time",
   "type": "module",
   "scripts": {
-    "dev": "vercel dev"
+    "start": "node -e 'console.log(\"Production start\")'"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",

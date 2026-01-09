@@ -2,8 +2,8 @@ const ENABLE_WORD_FADE = true; // Enabled for Word Fade appearance as seen in mo
 
 const CONFIG = {
   // Core settings
-  DEBOUNCE_MS: 1000,
-  MIN_TEXT_LENGTH: 10,
+  DEBOUNCE_MS: 300,
+  MIN_TEXT_LENGTH: 3,
   MOBILE_BREAKPOINT_PX: 768,
   DESKTOP_BREAKPOINT_PX: 1025,
   TOUCH_MOVE_THRESHOLD_PX: 5,
@@ -44,6 +44,7 @@ const CONFIG = {
 
 class PredictionManager {
   constructor(options = {}) {
+    console.log('PredictionManager: Initializing...');
     this.debounceMs = options.debounceMs || CONFIG.DEBOUNCE_MS;
     this.minTextLength = options.minTextLength || CONFIG.MIN_TEXT_LENGTH;
     this.debounceTimer = null;
@@ -70,6 +71,11 @@ class PredictionManager {
     this.updateMobileBodyClass();
 
     this.editor = document.querySelector('.editor');
+    if (!this.editor) {
+      console.error('PredictionManager Error: .editor element not found in DOM!');
+    } else {
+      console.log('PredictionManager: Editor found.');
+    }
     this.enableWordFade = ENABLE_WORD_FADE;
     this.lastStreamedText = ''; // Track already animated text to prevent flickers
 
@@ -265,7 +271,9 @@ class PredictionManager {
     // Debounce prediction request - get FRESH text when timer fires
     this.debounceTimer = setTimeout(() => {
       const text = this.getEditorText();
+      console.log(`Debounce finished. Text length: ${text.trim().length}, Min required: ${this.minTextLength}`);
       if (text.trim().length >= this.minTextLength) {
+        console.log('Requesting prediction...');
         this.requestPrediction(text);
       }
     }, this.debounceMs);
@@ -310,6 +318,10 @@ class PredictionManager {
 
   // Insert inline prediction at the end of editor
   insertInlinePrediction() {
+    if (!this.editor) {
+      console.error('Cannot insert prediction: editor element not found');
+      return;
+    }
     const prediction = this.createInlinePrediction();
     if (!this.editor.contains(prediction)) {
       const anchor = this.predictionAnchorRange
@@ -827,18 +839,20 @@ class PredictionManager {
       });
 
       if (!response.ok) {
+        console.error(`Prediction request failed with status: ${response.status}`);
         throw new Error('Prediction request failed');
       }
 
       await this.handleStreamingResponse(response);
     } catch (error) {
       if (error.name !== 'AbortError') {
-        console.error('Prediction error:', error);
+        console.error('Prediction error details:', error);
       }
     }
   }
 
   async handleStreamingResponse(response) {
+    console.log('Starting to handle streaming response...');
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let prediction = '';
@@ -846,9 +860,13 @@ class PredictionManager {
     try {
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          console.log('Stream done.');
+          break;
+        }
 
         const chunk = decoder.decode(value, { stream: true });
+        console.log('Received chunk:', chunk);
         const lines = chunk.split('\n');
 
         for (const line of lines) {
@@ -2393,8 +2411,8 @@ class AuthManager {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  const predictionManager = new PredictionManager();
   window.contextManager = new ContextManager();
+  window.predictionManager = new PredictionManager();
   window.valleysManager = new ValleysManager();
   window.authManager = new AuthManager();
 
@@ -2509,8 +2527,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   settingsBtn.addEventListener('click', () => {
-    if (predictionManager.selectModeActive) {
-      predictionManager.disableSelectMode();
+    if (window.predictionManager.selectModeActive) {
+      window.predictionManager.disableSelectMode();
       if (settingsIcon) settingsIcon.textContent = 'edit';
       return;
     }
@@ -2704,7 +2722,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   bindMenuButtons('.share-menu-btn', async (_event, btn) => {
-    const text = predictionManager.getEditorText();
+    const text = window.predictionManager.getEditorText();
     if (!text) {
       closeAllMenus();
       return;
@@ -2761,7 +2779,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   bindMenuButtons('.clear-menu-btn', () => {
-    predictionManager.removeInlinePrediction();
+    window.predictionManager.removeInlinePrediction();
     editor.textContent = '';
     editor.focus();
     editor.dispatchEvent(new Event('input'));
@@ -2770,16 +2788,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const updateSelectButtons = () => {
     selectMenuButtons.forEach((btn) => {
-      btn.classList.toggle('active', predictionManager.selectModeActive);
+      btn.classList.toggle('active', window.predictionManager.selectModeActive);
     });
   };
 
   selectMenuButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
-      if (predictionManager.selectModeActive) {
-        predictionManager.disableSelectMode();
+      if (window.predictionManager.selectModeActive) {
+        window.predictionManager.disableSelectMode();
       } else {
-        predictionManager.enableSelectMode();
+        window.predictionManager.enableSelectMode();
       }
       updateSelectButtons();
       closeAllMenus();
@@ -2797,7 +2815,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   bindMenuButtons('.toggle-prediction-btn', (_event, btn) => {
-    const isEnabled = predictionManager.toggleEnabled();
+    const isEnabled = window.predictionManager.toggleEnabled();
     const label = btn.querySelector('.menu-label');
     const icon = btn.querySelector('.material-symbols-outlined');
     
@@ -2841,8 +2859,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Function to generate image with optional guidance
   async function generateImageWithGuidance(text, guidance = '', style = 'realistic') {
     // Remove any existing predictions and cancel pending requests
-    predictionManager.cancelPending();
-    predictionManager.removeInlinePrediction();
+    window.predictionManager.cancelPending();
+    window.predictionManager.removeInlinePrediction();
 
     // Add loading state
     primaryCreateImageBtn.classList.add('loading');
@@ -2915,7 +2933,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (createImageButtons.length && imageGuidanceModal) {
     createImageButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
-        const text = predictionManager.getEditorText();
+        const text = window.predictionManager.getEditorText();
         if (!text || text.trim().length < 10) {
           closeAllMenus();
           return;
