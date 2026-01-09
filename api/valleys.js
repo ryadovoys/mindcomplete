@@ -42,46 +42,42 @@ export default async function handler(req, res) {
   // Get authenticated user (optional for GET list, required for mutations)
   const user = await getUserFromToken(req.headers.authorization);
 
-  // Extract ID from URL path for single valley operations
-  // URL format: /api/valleys or /api/valleys/[id]
+  // Extract ID from query param or URL path
+  // URL format: /api/valleys?id=[id] or /api/valleys/[id]
   const urlParts = req.url.split('?')[0].split('/').filter(Boolean);
-  const valleyId = urlParts.length > 2 ? urlParts[urlParts.length - 1] : null;
+  const valleyId = req.query.id || (urlParts.length > 2 ? urlParts[urlParts.length - 1] : null);
 
   try {
-    // GET /api/valleys - list user's valleys
-    if (req.method === 'GET' && !valleyId) {
-      // If not authenticated, return empty list
+    // GET /api/valleys - list user's valleys or get single valley
+    if (req.method === 'GET') {
       if (!user) {
-        return res.status(200).json({ valleys: [] });
+        return res.status(200).json(valleyId ? { error: 'Authentication required' } : { valleys: [] });
       }
 
-      const { data, error } = await supabase
-        .from('valleys')
-        .select('id, title, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      if (valleyId) {
+        // GET single valley
+        const { data, error } = await supabase
+          .from('valleys')
+          .select('*')
+          .eq('id', valleyId)
+          .eq('user_id', user.id)
+          .single();
 
-      if (error) throw error;
-      return res.status(200).json({ valleys: data || [] });
-    }
+        if (error || !data) {
+          return res.status(404).json({ error: 'Valley not found' });
+        }
+        return res.status(200).json(data);
+      } else {
+        // GET list
+        const { data, error } = await supabase
+          .from('valleys')
+          .select('id, title, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
 
-    // GET /api/valleys/:id - get single valley (must belong to user)
-    if (req.method === 'GET' && valleyId) {
-      if (!user) {
-        return res.status(401).json({ error: 'Authentication required' });
+        if (error) throw error;
+        return res.status(200).json({ valleys: data || [] });
       }
-
-      const { data, error } = await supabase
-        .from('valleys')
-        .select('*')
-        .eq('id', valleyId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (error || !data) {
-        return res.status(404).json({ error: 'Valley not found' });
-      }
-      return res.status(200).json(data);
     }
 
     // POST /api/valleys - create new valley (requires auth)
@@ -136,8 +132,11 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
     }
 
-    // PUT /api/valleys/:id - update existing valley
-    if (req.method === 'PUT' && valleyId) {
+    // PUT /api/valleys - update existing valley
+    if (req.method === 'PUT') {
+      if (!valleyId) {
+        return res.status(400).json({ error: 'Valley ID is required' });
+      }
       if (!user) {
         return res.status(401).json({ error: 'Authentication required' });
       }
@@ -189,8 +188,11 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
     }
 
-    // DELETE /api/valleys/:id - delete valley (must belong to user)
-    if (req.method === 'DELETE' && valleyId) {
+    // DELETE /api/valleys - delete valley (must belong to user)
+    if (req.method === 'DELETE') {
+      if (!valleyId) {
+        return res.status(400).json({ error: 'Valley ID is required' });
+      }
       if (!user) {
         return res.status(401).json({ error: 'Authentication required' });
       }

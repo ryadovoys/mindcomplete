@@ -1612,7 +1612,6 @@ class ValleysManager {
     this.autoSaveTimer = null;
     this.autoSaveDebounceMs = 2000;
     this.init();
-    this.loadValleys();
     this.renderSidebarList();
   }
 
@@ -1703,7 +1702,7 @@ class ValleysManager {
     try {
       const token = await window.authManager.getAccessToken();
       const method = this.activeValleyId ? 'PUT' : 'POST';
-      const url = this.activeValleyId ? `/api/valleys/${this.activeValleyId}` : '/api/valleys';
+      const url = this.activeValleyId ? `/api/valleys?id=${this.activeValleyId}` : '/api/valleys';
 
       const response = await fetch(url, {
         method: method,
@@ -1762,7 +1761,7 @@ class ValleysManager {
   async loadValley(id) {
     try {
       const token = await window.authManager?.getAccessToken();
-      const response = await fetch(`/api/valleys/${id}`, {
+      const response = await fetch(`/api/valleys?id=${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to load valley');
@@ -1847,7 +1846,7 @@ class ValleysManager {
   async deleteValley(id) {
     try {
       const token = await window.authManager?.getAccessToken();
-      const response = await fetch(`/api/valleys/${id}`, {
+      const response = await fetch(`/api/valleys?id=${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -1931,20 +1930,35 @@ class ValleysManager {
     this.sidebarList.innerHTML = this.valleys
       .map(
         (valley) => `
-        <button class="sidebar-valley-row" data-id="${valley.id}">
-          <span class="valley-title">${this.escapeHtml(valley.title)}</span>
-          <span class="valley-meta">${this.formatDate(valley.created_at)}</span>
-        </button>
+        <div class="sidebar-valley-row" data-id="${valley.id}">
+          <div class="sidebar-valley-content">
+            <span class="valley-title">${this.escapeHtml(valley.title)}</span>
+            <span class="valley-meta">${this.formatDate(valley.created_at)}</span>
+          </div>
+          <button class="sidebar-valley-delete" title="Delete">
+            <span class="material-symbols-outlined">delete</span>
+          </button>
+        </div>
       `
       )
       .join('');
 
     this.sidebarList.querySelectorAll('.sidebar-valley-row').forEach((item) => {
-      item.addEventListener('click', () => {
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('.sidebar-valley-delete')) {
+          e.stopPropagation();
+          if (confirm('Delete this valley?')) {
+            this.deleteValley(item.dataset.id);
+          }
+          return;
+        }
+
         this.loadValley(item.dataset.id);
-        document.body.classList.remove('sidebar-open');
-        const menuIcon = document.querySelector('#menu-btn .material-symbols-outlined');
-        if (menuIcon) menuIcon.textContent = 'dehaze';
+        if (window.innerWidth < 1025) {
+          document.body.classList.remove('sidebar-open');
+          const menuIcon = document.querySelector('#menu-btn .material-symbols-outlined');
+          if (menuIcon) menuIcon.textContent = 'dehaze';
+        }
       });
     });
 
@@ -2024,6 +2038,11 @@ class AuthManager {
     if (session) {
       this.user = session.user;
       this.updateMenuState();
+      
+      // Load valleys on initial session restore
+      if (window.valleysManager) {
+        window.valleysManager.loadValleys();
+      }
     }
 
     // Listen for auth state changes

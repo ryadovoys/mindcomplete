@@ -285,21 +285,36 @@ body {
 
 .sidebar-valley-row {
   width: 100%;
-  border: none;
-  background: transparent;
-  text-align: left;
   padding: 10px 12px;
   border-radius: 16px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   cursor: pointer;
   color: var(--text);
+  transition: background 0.2s ease;
+}
+
+.sidebar-valley-row:hover,
+.sidebar-valley-row.active {
+  background: var(--sidebar-hover);
+}
+
+.sidebar-valley-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
 }
 
 .sidebar-valley-row .valley-title {
   font-weight: 500;
   font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sidebar-valley-row .valley-meta {
@@ -307,8 +322,33 @@ body {
   color: var(--sidebar-muted);
 }
 
-.sidebar-valley-row.active {
-  background: var(--sidebar-hover);
+.sidebar-valley-delete {
+  background: transparent;
+  border: none;
+  color: var(--sidebar-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.2s, background 0.2s, color 0.2s;
+}
+
+.sidebar-valley-delete:hover {
+  background: rgba(var(--text-rgb), 0.1);
+  color: #e74c3c;
+}
+
+.sidebar-valley-row:hover .sidebar-valley-delete {
+  opacity: 1;
+}
+
+@media (max-width: 1024px) {
+  .sidebar-valley-delete {
+    opacity: 1;
+  }
 }
 
 .sidebar-valleys-empty {
