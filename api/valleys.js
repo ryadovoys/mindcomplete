@@ -136,6 +136,59 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
     }
 
+    // PUT /api/valleys/:id - update existing valley
+    if (req.method === 'PUT' && valleyId) {
+      if (!user) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const { title, text, rules, contextSessionId } = req.body;
+
+      if (!text) {
+        return res.status(400).json({ error: 'Text is required' });
+      }
+
+      // Fetch file content if contextSessionId provided
+      let filesData = null;
+      if (contextSessionId) {
+        const { data: contextData } = await supabase
+          .from('contexts')
+          .select('text, files, estimated_tokens')
+          .eq('session_id', contextSessionId)
+          .single();
+
+        if (contextData) {
+          filesData = {
+            content: contextData.text,
+            files: contextData.files,
+            estimatedTokens: contextData.estimated_tokens
+          };
+        }
+      }
+
+      const updateData = {
+        title: title || 'Untitled',
+        text,
+        rules: rules || null,
+        updated_at: new Date().toISOString()
+      };
+
+      if (filesData) {
+        updateData.files = filesData;
+      }
+
+      const { data, error } = await supabase
+        .from('valleys')
+        .update(updateData)
+        .eq('id', valleyId)
+        .eq('user_id', user.id)
+        .select('id, title, created_at')
+        .single();
+
+      if (error) throw error;
+      return res.status(200).json(data);
+    }
+
     // DELETE /api/valleys/:id - delete valley (must belong to user)
     if (req.method === 'DELETE' && valleyId) {
       if (!user) {

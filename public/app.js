@@ -1609,12 +1609,20 @@ class ValleysManager {
     this.sidebarList = document.getElementById('sidebar-valleys-list');
     this.sidebarEmpty = document.getElementById('sidebar-valleys-empty');
     this.activeValleyId = null;
+    this.autoSaveTimer = null;
+    this.autoSaveDebounceMs = 2000;
     this.init();
     this.loadValleys();
     this.renderSidebarList();
   }
 
   init() {
+    // Editor auto-save listener
+    const editor = document.querySelector('.editor');
+    if (editor) {
+      editor.addEventListener('input', () => this.handleAutoSave());
+    }
+
     // Modal close button
     const closeBtn = document.getElementById('valleys-modal-close');
     if (closeBtn) {
@@ -1652,6 +1660,17 @@ class ValleysManager {
     this.closeModal();
   }
 
+  handleAutoSave() {
+    if (this.autoSaveTimer) clearTimeout(this.autoSaveTimer);
+    
+    this.autoSaveTimer = setTimeout(() => {
+      const editor = document.querySelector('.editor');
+      if (editor && editor.textContent.trim().length > 0) {
+        this.saveValley(true);
+      }
+    }, this.autoSaveDebounceMs);
+  }
+
   generateTitle(text) {
     // Take first 30 chars, cut at last space, add ellipsis if truncated
     const cleaned = text.replace(/\s+/g, ' ').trim();
@@ -1661,7 +1680,7 @@ class ValleysManager {
     return (lastSpace > 10 ? truncated.slice(0, lastSpace) : truncated) + '...';
   }
 
-  async saveValley() {
+  async saveValley(isAutoSave = false) {
     const editor = document.querySelector('.editor');
     const text = editor.textContent.trim();
 
@@ -1671,8 +1690,9 @@ class ValleysManager {
 
     // Check if user is authenticated
     if (!window.authManager?.isAuthenticated()) {
-      // Open auth modal instead of saving
-      window.authManager?.openModal();
+      if (!isAutoSave) {
+        window.authManager?.openModal();
+      }
       return { success: false, error: 'Sign in to save valleys' };
     }
 
@@ -1682,8 +1702,11 @@ class ValleysManager {
 
     try {
       const token = await window.authManager.getAccessToken();
-      const response = await fetch('/api/valleys', {
-        method: 'POST',
+      const method = this.activeValleyId ? 'PUT' : 'POST';
+      const url = this.activeValleyId ? `/api/valleys/${this.activeValleyId}` : '/api/valleys';
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -1697,6 +1720,20 @@ class ValleysManager {
       }
 
       const data = await response.json();
+      
+      // Update local state
+      if (!this.activeValleyId) {
+        this.activeValleyId = data.id;
+        this.valleys.unshift(data);
+      } else {
+        const index = this.valleys.findIndex(v => v.id === this.activeValleyId);
+        if (index !== -1) {
+          this.valleys[index] = { ...this.valleys[index], ...data };
+        }
+      }
+      
+      this.renderSidebarList();
+      
       return { success: true, valley: data };
     } catch (error) {
       console.error('Save valley error:', error);
