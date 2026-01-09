@@ -447,7 +447,7 @@ body {
   overflow: hidden;
 }
 
-.sidebar-valley-row:hover,
+/* Active state - always applies */
 .sidebar-valley-row.active {
   background: var(--background);
 }
@@ -482,18 +482,38 @@ body {
   pointer-events: none;
 }
 
-.sidebar-valley-row:hover .sidebar-valley-menu {
-  opacity: 0.5;
-  transform: translateX(0);
-  pointer-events: auto;
+/* Desktop: hover states for devices with hover capability */
+@media (hover: hover) {
+  .sidebar-valley-row:hover {
+    background: var(--background);
+  }
+
+  .sidebar-valley-row:hover .sidebar-valley-menu {
+    opacity: 0.5;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .sidebar-valley-row:hover .valley-title {
+    padding-right: 48px;
+  }
+
+  .sidebar-valley-menu:hover {
+    opacity: 1 !important;
+  }
 }
 
-.sidebar-valley-row:hover .valley-title {
-  padding-right: 48px;
-}
+/* Mobile: show menu button always (no hover available) */
+@media (hover: none) {
+  .sidebar-valley-menu {
+    opacity: 0.5;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
 
-.sidebar-valley-menu:hover {
-  opacity: 1 !important;
+  .sidebar-valley-row .valley-title {
+    padding-right: 48px;
+  }
 }
 
 .sidebar-valleys-empty {
@@ -753,6 +773,14 @@ h2 {
   padding: 0;
   flex-shrink: 0;
   overflow: hidden;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+}
+
+.btn-icon:focus,
+.btn-icon:focus-visible {
+  outline: none;
 }
 
 .btn-icon:hover {
@@ -781,6 +809,14 @@ h2 {
   padding: 0;
   flex-shrink: 0;
   overflow: hidden;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+}
+
+.icon-btn:focus,
+.icon-btn:focus-visible {
+  outline: none;
 }
 
 .icon-btn:hover {

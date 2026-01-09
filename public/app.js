@@ -2916,6 +2916,63 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Swipe to open/close sidebar on mobile
+  (function initSidebarSwipe() {
+    let touchStartX = null;
+    let touchStartY = null;
+    let isSwiping = false;
+
+    const EDGE_THRESHOLD = 30; // pixels from left edge to trigger
+    const SWIPE_THRESHOLD = 50; // minimum swipe distance
+
+    document.addEventListener('touchstart', (e) => {
+      // Only enable swipe on mobile
+      if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX) return;
+
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+
+      // Track swipes starting from left edge (to open) or anywhere when sidebar is open (to close)
+      const sidebarOpen = document.body.classList.contains('sidebar-open');
+      isSwiping = touchStartX <= EDGE_THRESHOLD || sidebarOpen;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+      if (!isSwiping || touchStartX === null) return;
+
+      // Only process on mobile
+      if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX) {
+        touchStartX = null;
+        touchStartY = null;
+        isSwiping = false;
+        return;
+      }
+
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - touchStartX;
+      const deltaY = Math.abs(touch.clientY - touchStartY);
+
+      // Must be primarily horizontal swipe
+      if (Math.abs(deltaX) > deltaY && Math.abs(deltaX) > SWIPE_THRESHOLD) {
+        const sidebarOpen = document.body.classList.contains('sidebar-open');
+
+        if (deltaX > 0 && !sidebarOpen && touchStartX <= EDGE_THRESHOLD) {
+          // Swipe right from edge - open sidebar
+          openSidebarDrawer();
+        } else if (deltaX < 0 && sidebarOpen) {
+          // Swipe left - close sidebar
+          closeSidebarDrawer();
+        }
+      }
+
+      // Reset
+      touchStartX = null;
+      touchStartY = null;
+      isSwiping = false;
+    }, { passive: true });
+  })();
+
   // Left menu specific items
   const aboutMenuBtn = document.querySelector('.about-menu-btn');
   if (aboutMenuBtn) {
