@@ -24,12 +24,9 @@
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-scroll">
         <div class="sidebar-section">
-          <div class="sidebar-section-title">
-            <span>Valleys</span>
-            <button class="sidebar-icon-btn" id="sidebar-new-valley" aria-label="New valley">
-              <span class="material-symbols-outlined">add</span>
-            </button>
-          </div>
+          <button class="add-new-valley-btn" id="sidebar-new-valley">
+            <span>Create new Valley</span>
+          </button>
           <div class="sidebar-valleys" id="sidebar-valleys-list"></div>
           <div class="sidebar-valleys-empty" id="sidebar-valleys-empty">
             <p class="section-description">No valleys saved yet</p>
@@ -38,10 +35,6 @@
       </div>
 
       <div class="sidebar-bottom">
-        <button class="sidebar-text-btn theme-toggle-btn">
-          <span class="material-symbols-outlined">dark_mode</span>
-          <span class="menu-label">Light mode</span>
-        </button>
         <div class="sidebar-account">
           <button class="sidebar-account-trigger" id="sidebar-account-trigger">
             <div class="sidebar-avatar" id="sidebar-avatar">PV</div>
@@ -106,9 +99,9 @@
             <span class="material-symbols-outlined">ink_eraser</span>
             <span class="menu-label">Clear</span>
           </button>
-          <button class="menu-item save-valley-btn">
-            <span class="material-symbols-outlined">save</span>
-            <span class="menu-label">Save valley</span>
+          <button class="menu-item toggle-prediction-btn">
+            <span class="material-symbols-outlined">auto_fix_high</span>
+            <span class="menu-label">Auto-prediction</span>
           </button>
         </div>
       </div>
@@ -486,6 +479,10 @@
       <button class="menu-item about-menu-btn">
         <span class="material-symbols-outlined">info</span>
         <span class="menu-label">About</span>
+      </button>
+      <button class="menu-item theme-toggle-btn">
+        <span class="material-symbols-outlined">dark_mode</span>
+        <span class="menu-label">Dark mode</span>
       </button>
       <button class="menu-item" id="user-logout-btn">
         <span class="material-symbols-outlined">logout</span>

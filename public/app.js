@@ -53,8 +53,18 @@ class PredictionManager {
 
     // SELECT mode DOM elements
     this.selectConfirmBtn = null;
+    this.enabled = true;
 
     this.init();
+  }
+
+  toggleEnabled() {
+    this.enabled = !this.enabled;
+    if (!this.enabled) {
+      this.cancelPending();
+      this.removeInlinePrediction();
+    }
+    return this.enabled;
   }
 
   detectMobile() {
@@ -215,6 +225,8 @@ class PredictionManager {
 
     // Cancel any pending prediction
     this.cancelPending();
+
+    if (!this.enabled) return;
 
     // Debounce prediction request - get FRESH text when timer fires
     this.debounceTimer = setTimeout(() => {
@@ -1681,9 +1693,16 @@ class ValleysManager {
 
   async saveValley(isAutoSave = false) {
     const editor = document.querySelector('.editor');
-    const text = editor.textContent.trim();
+    
+    // Use clone to strip temporary UI elements before saving
+    const clone = editor.cloneNode(true);
+    const predictionEl = clone.querySelector('.inline-prediction');
+    if (predictionEl) predictionEl.remove();
+    
+    const text = clone.innerHTML;
+    const plainText = editor.textContent.trim();
 
-    if (!text) {
+    if (!plainText && !text.includes('img')) {
       return { success: false, error: 'Nothing to save' };
     }
 
@@ -1695,7 +1714,7 @@ class ValleysManager {
       return { success: false, error: 'Sign in to save valleys' };
     }
 
-    const title = this.generateTitle(text);
+    const title = this.generateTitle(plainText);
     const rules = window.contextManager?.getRulesText() || '';
     const contextSessionId = window.contextManager?.getSessionId() || null;
 
@@ -1770,7 +1789,10 @@ class ValleysManager {
 
       // Restore editor content
       const editor = document.querySelector('.editor');
-      editor.textContent = valley.text;
+      editor.innerHTML = valley.text;
+      
+      // Re-hydrate images
+      editor.querySelectorAll('.editor-image-container').forEach(setupImageContainer);
 
       // Restore context (rules + files)
       if (window.contextManager) {
@@ -1999,6 +2021,46 @@ class ValleysManager {
   closeModal() {
     if (this.modal) this.modal.classList.remove('visible');
   }
+}
+
+function setupImageContainer(container) {
+  const removeBtn = container.querySelector('.editor-image-remove');
+  if (removeBtn) {
+    removeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const scrollElement = document.scrollingElement || document.documentElement || document.body;
+      const scrollLeft = scrollElement ? scrollElement.scrollLeft : 0;
+      const scrollTop = scrollElement ? scrollElement.scrollTop : 0;
+
+      // Find the trailing BR if it exists
+              const next = container.nextElementSibling;
+              container.remove();
+              if (next && next.tagName === 'BR') next.remove();
+      
+              // Trigger auto-save
+              if (window.valleysManager) {
+                window.valleysManager.handleAutoSave();
+              }
+      
+              requestAnimationFrame(() => {        if (scrollElement?.scrollTo) {
+          scrollElement.scrollTo({ left: scrollLeft, top: scrollTop });
+        } else {
+          scrollElement.scrollLeft = scrollLeft;
+          scrollElement.scrollTop = scrollTop;
+        }
+        if (window.scrollX !== scrollLeft || window.scrollY !== scrollTop) {
+          window.scrollTo(scrollLeft, scrollTop);
+        }
+      });
+    });
+  }
+
+  container.addEventListener('click', (e) => {
+    if (removeBtn && (e.target === removeBtn || removeBtn.contains(e.target))) return;
+    container.classList.toggle('show-remove');
+  });
 }
 
 // Auth Manager - handles user authentication
@@ -2754,23 +2816,21 @@ document.addEventListener('DOMContentLoaded', () => {
     closeAllMenus();
   });
 
-  bindMenuButtons('.save-valley-btn', async (_event, btn) => {
-    const saveLabel = btn.querySelector('.menu-label');
-    const originalText = saveLabel ? saveLabel.textContent : 'Save valley';
-    const result = await window.valleysManager.saveValley();
-
-    if (result.success) {
-      if (saveLabel) saveLabel.textContent = 'Saved!';
-      setTimeout(() => {
-        if (saveLabel) saveLabel.textContent = originalText;
-        closeAllMenus();
-      }, 800);
+  bindMenuButtons('.toggle-prediction-btn', (_event, btn) => {
+    const isEnabled = predictionManager.toggleEnabled();
+    const label = btn.querySelector('.menu-label');
+    const icon = btn.querySelector('.material-symbols-outlined');
+    
+    if (isEnabled) {
+      if (label) label.textContent = 'Auto-prediction';
+      if (icon) icon.textContent = 'auto_fix_high';
+      btn.classList.remove('disabled');
     } else {
-      if (saveLabel) saveLabel.textContent = result.error || 'Error';
-      setTimeout(() => {
-        if (saveLabel) saveLabel.textContent = originalText;
-      }, 1500);
+      if (label) label.textContent = 'Auto-prediction (Off)';
+      if (icon) icon.textContent = 'auto_fix_off';
+      btn.classList.add('disabled');
     }
+    closeAllMenus();
   });
 
   const sidebarNewValleyBtn = document.getElementById('sidebar-new-valley');
@@ -2840,65 +2900,23 @@ document.addEventListener('DOMContentLoaded', () => {
         container.className = 'editor-image-container';
         container.contentEditable = 'false';
 
-        let trailingBr = null;
+        const finalSrc = data.image?.b64_json ? `data:image/png;base64,${data.image.b64_json}` : imageUrl;
+        
+        container.innerHTML = `
+          <img class="editor-image" src="${finalSrc}" alt="Generated illustration">
+          <button class="editor-image-remove"><span class="material-symbols-outlined">close</span></button>
+        `;
 
-        // Create image element
-        const img = document.createElement('img');
-        img.className = 'editor-image';
-
-        if (data.image?.b64_json) {
-          img.src = `data:image/png;base64,${data.image.b64_json}`;
-        } else {
-          img.src = imageUrl;
-        }
-
-        img.alt = 'Generated illustration';
-
-        // Create remove button
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'editor-image-remove';
-        removeBtn.innerHTML = '<span class="material-symbols-outlined">close</span>';
-        removeBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-
-          // Snapshot scroll position before removing the node so mobile browsers don't jump to top
-          const scrollElement = document.scrollingElement || document.documentElement || document.body;
-          const scrollLeft = scrollElement ? scrollElement.scrollLeft : 0;
-          const scrollTop = scrollElement ? scrollElement.scrollTop : 0;
-
-          container.remove();
-          if (trailingBr) trailingBr.remove();
-
-          // Restore scroll position on the next frame to keep the viewport stable
-          requestAnimationFrame(() => {
-            if (scrollElement?.scrollTo) {
-              scrollElement.scrollTo({ left: scrollLeft, top: scrollTop });
-            } else {
-              scrollElement.scrollLeft = scrollLeft;
-              scrollElement.scrollTop = scrollTop;
-            }
-
-            // Some browsers only honor window-level scroll restoration
-            if (window.scrollX !== scrollLeft || window.scrollY !== scrollTop) {
-              window.scrollTo(scrollLeft, scrollTop);
-            }
-          });
-        });
-
-        // On mobile: tap image to show/hide remove button
-        container.addEventListener('click', (e) => {
-          if (e.target === removeBtn || removeBtn.contains(e.target)) return;
-          container.classList.toggle('show-remove');
-        });
-
-        container.appendChild(img);
-        container.appendChild(removeBtn);
+        setupImageContainer(container);
         editor.appendChild(container);
 
         // Add line break after image for continued writing
-        trailingBr = document.createElement('br');
-        editor.appendChild(trailingBr);
+        editor.appendChild(document.createElement('br'));
+
+        // Trigger auto-save since DOM was modified programmatically
+        if (window.valleysManager) {
+          window.valleysManager.handleAutoSave();
+        }
       }
     } catch (error) {
       console.error('Image generation error:', error);

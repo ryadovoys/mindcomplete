@@ -200,7 +200,7 @@ body {
 
 .sidebar-scroll {
   flex: 1;
-  padding: 20px 24px 16px;
+  padding: 10px 10px 16px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -217,7 +217,7 @@ body {
 .sidebar-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 
 .sidebar-section-title {
@@ -228,6 +228,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--sidebar-muted);
+  margin: 0 10px;
 }
 
 .sidebar-icon-btn {
@@ -244,7 +245,30 @@ body {
 }
 
 .sidebar-section-title .material-symbols-outlined {
-  font-size: 18px;
+  font-size: var(--icon-size-sm);
+}
+
+.add-new-valley-btn {
+  width: 100%;
+  height: 60px;
+  border: none;
+  background: rgba(var(--text-rgb), 0.06);
+  color: var(--text);
+  padding: 12px;
+  border-radius: 18px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: background 0.2s ease;
+}
+
+.add-new-valley-btn:hover {
+  background: rgba(var(--text-rgb), 0.1);
 }
 
 .sidebar-item {
@@ -285,6 +309,7 @@ body {
 
 .sidebar-valley-row {
   width: 100%;
+  height: 60px;
   padding: 10px 12px;
   border-radius: 16px;
   display: flex;
@@ -363,8 +388,7 @@ body {
 }
 
 .sidebar-bottom {
-  padding: 12px 24px 24px;
-  border-top: 1px solid var(--sidebar-border);
+  padding: 12px 10px 10px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -743,6 +767,10 @@ h2 {
   opacity: 0.7;
 }
 
+.menu-item.disabled {
+  opacity: 0.5;
+}
+
 .menu-item .material-symbols-outlined {
   font-size: var(--icon-size-sm);
   color: var(--text);
@@ -1022,7 +1050,7 @@ body.mobile-touch:not(.select-mode-active) .inline-prediction {
   min-height: 200px;
   font-family: "Literata", Georgia, serif;
   font-optical-sizing: auto;
-  font-size: 28px;
+  font-size: 26px;
   line-height: 1.4;
   color: var(--text);
   background: transparent;
@@ -1148,6 +1176,10 @@ body.selection-ready .select-confirm-btn {
 }
 
 @media (max-width: 768px) {
+  .sidebar {
+    box-shadow: none;
+  }
+
   .header {
     height: 60px;
     padding: 0 10px;
@@ -1873,8 +1905,10 @@ body.selection-ready .select-confirm-btn {
 .editor-image-container {
   position: relative;
   display: block;
+  width: fit-content;
   max-width: 100%;
   margin: 20px 0;
+  line-height: 0;
 }
 
 @media (hover: hover) {
@@ -1896,8 +1930,8 @@ body.selection-ready .select-confirm-btn {
 
 .editor-image-remove {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 12px;
+  right: 12px;
   width: 32px;
   height: 32px;
   background: #1A143B;
@@ -1909,6 +1943,7 @@ body.selection-ready .select-confirm-btn {
   justify-content: center;
   opacity: 0;
   transition: opacity 0.2s;
+  z-index: 10;
 }
 
 .editor-image-remove .material-symbols-outlined {
@@ -2537,10 +2572,10 @@ body.selection-ready .select-confirm-btn {
   position: absolute;
   top: auto;
   right: auto;
-  bottom: 92px;
-  left: 24px;
+  bottom: 82px;
+  left: 10px;
   transform-origin: bottom left;
-  width: calc(var(--sidebar-width) - 48px);
+  width: calc(var(--sidebar-width) - 20px);
   min-width: auto;
   max-width: none;
   transform: scale(0.9) translateY(8px);
@@ -2548,13 +2583,12 @@ body.selection-ready .select-confirm-btn {
 
 @media (max-width: 1024px) {
   .user-menu-content {
-    width: calc(min(320px, 80vw) - 48px);
-    left: 24px;
-    bottom: 92px;
+    width: calc(min(320px, 80vw) - 20px);
+    left: 10px;
+    bottom: 82px;
   }
 }
 
 .menu-overlay.menu-ready .user-menu-content {
   transform: scale(1) translateY(0);
 }
-
