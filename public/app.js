@@ -1150,7 +1150,7 @@ class PredictionManager {
     if (selectBtn) selectBtn.classList.remove('active');
 
     const settingsIcon = document.querySelector('#settings-btn .material-symbols-outlined');
-    if (settingsIcon) settingsIcon.textContent = 'edit';
+    if (settingsIcon) settingsIcon.textContent = 'more_horiz';
   }
 
   handleSelectModeSelection(offset) {
@@ -1894,7 +1894,7 @@ class ValleysManager {
             <span class="valley-item-date">${this.formatDate(valley.created_at)}</span>
           </div>
           <button class="valley-item-delete" data-id="${valley.id}">
-            <span class="material-symbols-outlined">delete</span>
+            <span class="material-symbols-outlined">delete_forever</span>
           </button>
         </div>
       `
@@ -1942,7 +1942,7 @@ class ValleysManager {
             <span class="valley-meta">${this.formatDate(valley.created_at)}</span>
           </div>
           <button class="sidebar-valley-delete" title="Delete">
-            <span class="material-symbols-outlined">delete</span>
+            <span class="material-symbols-outlined">delete_forever</span>
           </button>
         </div>
       `
@@ -2321,8 +2321,7 @@ class AuthManager {
     if (this.user) {
       if (profileLabel) profileLabel.textContent = 'Account';
       if (profileIcon) profileIcon.textContent = 'account_circle';
-      if (this.sidebarAccountName) this.sidebarAccountName.textContent = this.user.user_metadata?.full_name || this.user.email?.split('@')[0] || 'Account';
-      if (this.sidebarAccountPlan) this.sidebarAccountPlan.textContent = this.user.email;
+      if (this.sidebarAccountName) this.sidebarAccountName.textContent = this.user.email;
       if (this.sidebarAvatar) this.sidebarAvatar.textContent = (this.user.email?.[0] || 'P').toUpperCase();
       
       // Update User Menu
@@ -2336,7 +2335,6 @@ class AuthManager {
       if (profileLabel) profileLabel.textContent = 'Sign In';
       if (profileIcon) profileIcon.textContent = 'person';
       if (this.sidebarAccountName) this.sidebarAccountName.textContent = 'Guest';
-      if (this.sidebarAccountPlan) this.sidebarAccountPlan.textContent = 'Tap to sign in';
       if (this.sidebarAvatar) this.sidebarAvatar.textContent = 'PV';
       
       // Update User Menu (Guest)
@@ -2483,7 +2481,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       rightMenuOverlay.classList.remove('menu-ready');
       rightMenuOverlay.classList.remove('visible');
-      if (settingsIcon) settingsIcon.textContent = 'edit';
+      if (settingsIcon) settingsIcon.textContent = 'more_horiz';
     }
     if (userMenuOverlay && userMenuOverlay.classList.contains('visible')) {
       if (menuReadyTimeout) {
@@ -2492,8 +2490,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       userMenuOverlay.classList.remove('menu-ready');
       userMenuOverlay.classList.remove('visible');
-      const sidebarIcon = document.querySelector('#sidebar-account-trigger .material-symbols-outlined');
-      if (sidebarIcon) sidebarIcon.textContent = 'expand_more';
     }
   };
 
@@ -2571,7 +2567,7 @@ document.addEventListener('DOMContentLoaded', () => {
         closeMenu();
       } else {
         closeMenu(); // Close other menus
-        openMenu(userMenuOverlay, sidebarAccountTrigger.querySelector('.material-symbols-outlined'), 'expand_less');
+        openMenu(userMenuOverlay);
       }
     });
   }
