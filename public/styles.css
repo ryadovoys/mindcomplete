@@ -321,11 +321,11 @@ body {
   flex-shrink: 0;
 }
 
-/* Sidebar Top Group - Header + Button + Valleys (gap-24) */
+/* Sidebar Top Group - Header + Button + Valleys (gap-16) */
 .sidebar-top {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   flex: 1;
   overflow-y: auto;
 }
@@ -429,30 +429,27 @@ body {
 .sidebar-valleys {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0;
 }
 
 .sidebar-valley-row {
   width: 100%;
-  height: 60px;
-  padding: 0 12px;
+  height: 48px;
+  padding: 0;
   border-radius: 10px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 0;
   cursor: pointer;
   color: var(--text);
   transition: background 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.sidebar-valley-row:hover {
-  background: rgba(var(--text-rgb), 0.05);
-}
-
+.sidebar-valley-row:hover,
 .sidebar-valley-row.active {
   background: var(--background);
-  border-radius: 12px;
 }
 
 .sidebar-valley-row .valley-title {
@@ -463,7 +460,11 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: left;
-  line-height: 1.4;
+  line-height: 48px;
+  min-width: 0;
+  padding-left: 12px;
+  padding-right: 12px;
+  transition: padding-right 0.3s ease;
 }
 
 .sidebar-valley-menu {
@@ -471,63 +472,28 @@ body {
   height: 32px;
   flex-shrink: 0;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 12px;
+  transform: translateX(20px);
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
 }
 
 .sidebar-valley-row:hover .sidebar-valley-menu {
   opacity: 0.5;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.sidebar-valley-row:hover .valley-title {
+  padding-right: 48px;
 }
 
 .sidebar-valley-menu:hover {
   opacity: 1 !important;
-}
-
-.sidebar-valley-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-  align-items: flex-start;
-}
-
-.sidebar-valley-row .valley-title {
-  font-weight: 300;
-  font-size: 14px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  width: 100%;
-  text-align: left;
-}
-
-.sidebar-valley-row .valley-meta {
-  font-size: 12px;
-  color: var(--sidebar-muted);
-  width: 100%;
-  text-align: left;
-}
-
-.sidebar-valley-delete {
-  background: transparent;
-  border: none;
-  color: var(--text);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  border-radius: 8px;
-  opacity: 1;
-  transition: opacity 0.2s, background 0.2s, color 0.2s;
-}
-
-.sidebar-valley-delete .material-symbols-outlined {
-  font-size: 24px;
-}
-
-.sidebar-valley-delete:hover {
-  background: rgba(var(--text-rgb), 0.1);
 }
 
 .sidebar-valleys-empty {
@@ -756,6 +722,21 @@ h2 {
   transition: background-color 0.2s ease;
 }
 
+.icon-sidebar {
+  display: block;
+  width: 32px;
+  height: 32px;
+  background-color: currentColor;
+  mask-image: url('sidebar-toggle.svg');
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: url('sidebar-toggle.svg');
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+
 /* Icon Button (Circular Ghost style from Figma) */
 /* Button Icon - 32x32px icon-only button */
 .btn-icon {
@@ -867,6 +848,10 @@ h2 {
   background: var(--left-menu-overlay-bg);
 }
 
+.valley-menu-overlay {
+  background: transparent !important;
+}
+
 .left-menu-overlay .menu-content {
   top: 0;
   bottom: 0;
@@ -895,7 +880,8 @@ h2 {
   justify-content: flex-start;
   gap: 0;
   padding: 0;
-  font-size: var(--font-body-size);
+  font-size: var(--font-body-small-size);
+  font-weight: var(--font-body-small-weight);
   letter-spacing: normal;
 }
 
@@ -904,7 +890,8 @@ h2 {
 }
 
 .left-menu-overlay .menu-label {
-  font-size: var(--font-body-size);
+  font-size: var(--font-body-small-size);
+  font-weight: var(--font-body-small-weight);
 }
 
 .menu-close-btn {
@@ -947,8 +934,8 @@ h2 {
   border: none;
   padding: 0;
   color: var(--text);
-  font-size: var(--font-body-size);
-  font-weight: var(--font-body-weight);
+  font-size: var(--font-body-small-size);
+  font-weight: var(--font-body-small-weight);
   cursor: pointer;
   font-family: inherit;
   display: flex;
@@ -1284,40 +1271,33 @@ body.mobile-touch:not(.select-mode-active) .inline-prediction {
   pointer-events: none;
 }
 
-/* Select confirm button - floating action button */
 .select-confirm-btn {
-  position: fixed;
-  bottom: 40px;
-  right: 40px;
-  background: var(--select-confirm-btn-bg);
-  border: none;
-  border-radius: 999px;
-  height: 72px;
-  width: 72px;
-  color: var(--select-confirm-btn-text);
-  cursor: pointer;
-  display: none;
-  align-items: center;
-  justify-content: center;
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+  transition: width 0.3s ease, opacity 0.3s ease, margin 0.3s ease, background 0.2s;
   padding: 0;
-  transition: opacity 0.2s, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: var(--z-fab);
+  background: var(--accent);
+  color: #fff;
+  margin: 0;
 }
 
 .select-confirm-btn .material-symbols-outlined {
-  font-size: var(--icon-size-lg);
-  font-variation-settings: 'FILL' 0, 'wght' var(--icon-weight), 'GRAD' 0, 'opsz' 40;
-  color: var(--select-confirm-btn-text);
+  color: #fff;
 }
 
-@media (hover: hover) {
-  .select-confirm-btn:hover {
-    opacity: 1;
-  }
+body.select-mode-active .select-confirm-btn {
+  width: 48px;
+  opacity: 1; 
+  pointer-events: auto;
+  margin-left: 3px;
+  background: var(--accent);
+  color: #fff;
 }
 
 body.selection-ready .select-confirm-btn {
-  display: flex;
+  opacity: 1;
 }
 
 /* Responsive adjustments */
@@ -1331,11 +1311,6 @@ body.selection-ready .select-confirm-btn {
     max-width: 100%;
     width: 100%;
     min-width: 0;
-  }
-
-  .select-confirm-btn {
-    bottom: 20px;
-    right: 20px;
   }
 
   .menu-content {
@@ -1367,11 +1342,6 @@ body.selection-ready .select-confirm-btn {
     transform: translateX(min(260px, 80vw));
   }
 
-  body.sidebar-open #menu-btn {
-    opacity: 0;
-    pointer-events: none;
-  }
-
   .header,
   .header-gradient-overlay {
     left: 0;
@@ -1397,14 +1367,6 @@ body.selection-ready .select-confirm-btn {
 
   .header-left {
     gap: 10px;
-  }
-
-
-  .select-confirm-btn {
-    bottom: 20px;
-    right: 20px;
-    height: 60px;
-    width: 60px;
   }
 
   /* Menu overlay adjustments for mobile */
@@ -1515,7 +1477,8 @@ body.selection-ready .select-confirm-btn {
   }
 
   .sidebar {
-    position: relative;
+    position: sticky;
+    top: 0;
     height: 100vh;
     flex-shrink: 0;
     transition: margin-left 0.3s ease, opacity 0.3s ease;
@@ -1546,10 +1509,10 @@ body.selection-ready .select-confirm-btn {
     transform: none;
   }
 
-  /* Hide menu button when sidebar is visible (expanded) */
+  /* Show menu button when sidebar is visible (expanded) */
   #menu-btn {
-    opacity: 0;
-    pointer-events: none;
+    opacity: 1;
+    pointer-events: auto;
     transition: opacity 0.2s ease;
   }
 
@@ -1937,7 +1900,7 @@ body.selection-ready .select-confirm-btn {
 .valleys-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
   width: 100%;
 }
 
@@ -1958,19 +1921,21 @@ body.selection-ready .select-confirm-btn {
 .valley-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0;
   min-height: 48px;
   padding: 12px;
   background: var(--input-background);
   border-radius: 16px;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: background 0.2s;
   width: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
 @media (hover: hover) {
   .valley-item:hover {
-    opacity: 0.8;
+    background: var(--background);
   }
 }
 
@@ -1979,6 +1944,7 @@ body.selection-ready .select-confirm-btn {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  transition: padding-right 0.3s ease;
 }
 
 .valley-item-title {
@@ -1998,6 +1964,8 @@ body.selection-ready .select-confirm-btn {
 }
 
 .valley-item-delete {
+  width: 32px;
+  height: 32px;
   background: none;
   border: none;
   color: var(--text);
@@ -2006,12 +1974,24 @@ body.selection-ready .select-confirm-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.2s;
   flex-shrink: 0;
-  opacity: 0.5;
+  opacity: 0;
+  position: absolute;
+  right: 12px;
+  transform: translateX(20px);
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
 }
 
 @media (hover: hover) {
+  .valley-item:hover .valley-item-delete {
+    opacity: 0.5;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+  .valley-item:hover .valley-item-content {
+    padding-right: 32px;
+  }
   .valley-item-delete:hover {
     opacity: 1;
   }
@@ -2153,14 +2133,13 @@ body.selection-ready .select-confirm-btn {
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 6px;
   padding: 6px;
   background: var(--input-background);
   border-radius: 12px;
   z-index: var(--z-fab);
   box-shadow: var(--menu-shadow);
-  height: 60px;
   align-items: center;
+  width: fit-content;
 }
 
 .toolbar-btn {
@@ -2173,9 +2152,19 @@ body.selection-ready .select-confirm-btn {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: opacity 0.2s, background 0.2s;
+  transition: opacity 0.2s, background 0.2s, width 0.3s ease, margin 0.3s ease;
   color: var(--text);
   padding: 0;
+  flex-shrink: 0;
+  margin: 0 3px;
+}
+
+.toolbar-btn:first-child {
+  margin-left: 0;
+}
+
+.toolbar-btn:last-child {
+  margin-right: 0;
 }
 
 .toolbar-btn:hover {
@@ -2213,7 +2202,7 @@ body.selection-ready .select-confirm-btn {
 
 @media (max-width: 768px) {
   .editor-toolbar {
-    bottom: 20px;
+    bottom: 40px;
   }
 }
 
@@ -2250,7 +2239,7 @@ body.selection-ready .select-confirm-btn {
   right: 12px;
   width: 32px;
   height: 32px;
-  background: var(--select-confirm-btn-text);
+  background: var(--background);
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -2264,7 +2253,7 @@ body.selection-ready .select-confirm-btn {
 
 .editor-image-remove .material-symbols-outlined {
   font-size: 18px;
-  color: var(--select-confirm-btn-bg);
+  color: var(--text);
   width: auto;
   height: auto;
   line-height: 1;

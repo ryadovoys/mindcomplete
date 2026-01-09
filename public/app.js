@@ -251,7 +251,9 @@ class PredictionManager {
     this.saveCurrentSelection();
 
     if (this.selectConfirmBtn) {
-      this.selectConfirmBtn.addEventListener('click', () => {
+      this.selectConfirmBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         this.confirmSelectSelection();
       });
       this.selectConfirmBtn.disabled = true;
@@ -1165,7 +1167,11 @@ class PredictionManager {
     this.updatePredictionDisplay();
 
     const selectBtn = document.querySelector('.select-menu-btn');
-    if (selectBtn) selectBtn.classList.remove('active');
+    if (selectBtn) {
+      selectBtn.classList.remove('active');
+      const icon = selectBtn.querySelector('.material-symbols-outlined');
+      if (icon) icon.textContent = 'text_select_end';
+    }
 
     const settingsIcon = document.querySelector('#settings-btn .material-symbols-outlined');
     if (settingsIcon) settingsIcon.textContent = 'more_horiz';
@@ -1188,12 +1194,15 @@ class PredictionManager {
 
   confirmSelectSelection() {
     if (!this.selectModeActive) return;
-    if (this.selectStartOffset === null || this.selectPreviewOffset === null) return;
-    if (this.selectPreviewOffset === this.selectStartOffset) return;
-
-    const start = Math.min(this.selectStartOffset, this.selectPreviewOffset);
-    const end = Math.max(this.selectStartOffset, this.selectPreviewOffset);
-    this.acceptSelectModeRange(start, end);
+    
+    // If we have a valid range, accept it
+    if (this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset) {
+      const start = Math.min(this.selectStartOffset, this.selectPreviewOffset);
+      const end = Math.max(this.selectStartOffset, this.selectPreviewOffset);
+      this.acceptSelectModeRange(start, end);
+    }
+    
+    // Always disable mode after "confirming"
     this.disableSelectMode();
   }
 
@@ -1205,6 +1214,12 @@ class PredictionManager {
     } else {
       document.body.classList.remove('selection-ready');
     }
+    
+    // Trigger UI update if function exists (it's defined later in app.js)
+    if (typeof window.updateSelectButtons === 'function') {
+      window.updateSelectButtons();
+    }
+
     if (this.selectConfirmBtn) {
       this.selectConfirmBtn.disabled = !ready;
     }
@@ -1655,6 +1670,182 @@ class ValleysManager {
     if (newValleyBtn) {
       newValleyBtn.addEventListener('click', () => this.newValley());
     }
+
+    // Context Menu Handlers
+    this.contextMenu = document.getElementById('valley-context-menu');
+    if (this.contextMenu) {
+      this.contextMenu.addEventListener('click', (e) => {
+        if (e.target === this.contextMenu) this.closeContextMenu();
+      });
+
+      const deleteBtn = this.contextMenu.querySelector('.delete-valley-btn');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+          if (this.contextValleyId && confirm('Delete this valley?')) {
+            this.deleteValley(this.contextValleyId);
+            this.closeContextMenu();
+          }
+        });
+      }
+
+      const renameBtn = this.contextMenu.querySelector('.rename-valley-btn');
+      if (renameBtn) {
+        renameBtn.addEventListener('click', () => {
+          if (this.contextValleyId) {
+            this.startRenaming(this.contextValleyId);
+            this.closeContextMenu();
+          }
+        });
+      }
+
+      const shareBtn = this.contextMenu.querySelector('.share-valley-btn');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', () => {
+          if (this.contextValleyId) {
+            this.shareValley(this.contextValleyId);
+            this.closeContextMenu();
+          }
+        });
+      }
+    }
+  }
+
+  closeContextMenu() {
+    if (this.contextMenu) {
+      this.contextMenu.classList.remove('visible');
+      this.contextMenu.classList.remove('menu-ready');
+      this.contextValleyId = null;
+    }
+  }
+
+  openContextMenu(valleyId, x, y) {
+    if (this.contextMenu) {
+      this.contextValleyId = valleyId;
+      const content = this.contextMenu.querySelector('.menu-content');
+      
+      // Position the menu
+      content.style.top = `${y}px`;
+      content.style.left = `${x}px`;
+      content.style.right = 'auto';
+      content.style.transformOrigin = 'top left';
+
+      this.contextMenu.classList.add('visible');
+      setTimeout(() => this.contextMenu.classList.add('menu-ready'), 10);
+    }
+  }
+
+  async shareValley(id) {
+    const valley = this.valleys.find(v => v.id === id) || (this.tempValley?.id === id ? this.tempValley : null);
+    if (!valley) return;
+
+    // If it's the active one, we might have fresher text in the editor
+    let textToShare = valley.text;
+    if (id === this.activeValleyId) {
+      const editor = document.querySelector('.editor');
+      if (editor) textToShare = editor.textContent;
+    }
+
+    const shareData = {
+      title: valley.title,
+      text: textToShare,
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(`${shareData.title}\n\n${shareData.text}`);
+        alert('Valley content copied to clipboard!');
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  }
+
+  startRenaming(id) {
+    const row = document.querySelector(`.sidebar-valley-row[data-id="${id}"]`) || 
+                document.querySelector(`.valley-item[data-id="${id}"]`);
+    if (!row) return;
+
+    const titleSpan = row.querySelector('.valley-title') || row.querySelector('.valley-item-title');
+    if (!titleSpan) return;
+
+    titleSpan.contentEditable = true;
+    titleSpan.focus();
+    
+    // Select all text
+    const range = document.createRange();
+    range.selectNodeContents(titleSpan);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    const finishRenaming = async () => {
+      titleSpan.contentEditable = false;
+      const newTitle = titleSpan.textContent.trim();
+      if (newTitle && newTitle !== valley.title) {
+        await this.updateValleyTitle(id, newTitle);
+      } else {
+        titleSpan.textContent = valley.title; // Revert
+      }
+      titleSpan.removeEventListener('blur', finishRenaming);
+      titleSpan.removeEventListener('keydown', keyHandler);
+    };
+
+    const keyHandler = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        titleSpan.blur();
+      }
+      if (e.key === 'Escape') {
+        titleSpan.textContent = valley.title;
+        titleSpan.blur();
+      }
+    };
+
+    const valley = this.valleys.find(v => v.id === id) || (this.tempValley?.id === id ? this.tempValley : null);
+    if (!valley) return;
+
+    titleSpan.addEventListener('blur', finishRenaming);
+    titleSpan.addEventListener('keydown', keyHandler);
+  }
+
+  async updateValleyTitle(id, newTitle) {
+    // If it's a temp valley, just update locally
+    if (id.startsWith('temp-')) {
+      if (this.tempValley) {
+        this.tempValley.title = newTitle;
+        this.renderSidebarList();
+      }
+      return;
+    }
+
+    try {
+      const token = await window.authManager.getAccessToken();
+      const response = await fetch(`${CONFIG.API_VALLEYS}?id=${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ title: newTitle })
+      });
+
+      if (!response.ok) throw new Error('Failed to update title');
+      
+      const data = await response.json();
+      const index = this.valleys.findIndex(v => v.id === id);
+      if (index !== -1) {
+        this.valleys[index].title = newTitle;
+        this.renderSidebarList();
+        this.renderList();
+      }
+    } catch (err) {
+      console.error('Rename error:', err);
+      this.renderSidebarList();
+      this.renderList();
+    }
   }
 
   async newValley() {
@@ -1701,12 +1892,8 @@ class ValleysManager {
   }
 
   generateTitle(text) {
-    // Take first 30 chars, cut at last space, add ellipsis if truncated
-    const cleaned = text.replace(/\s+/g, ' ').trim();
-    if (cleaned.length <= 30) return cleaned || 'Untitled';
-    const truncated = cleaned.slice(0, 30);
-    const lastSpace = truncated.lastIndexOf(' ');
-    return (lastSpace > 10 ? truncated.slice(0, lastSpace) : truncated) + '...';
+    // Take first 200 chars and normalize whitespace. CSS handles truncation.
+    return text.replace(/\s+/g, ' ').trim().slice(0, 200) || 'Untitled';
   }
 
   async saveValley(isAutoSave = false) {
@@ -1938,7 +2125,7 @@ class ValleysManager {
             <span class="valley-item-date">${this.formatDate(valley.created_at)}</span>
           </div>
           <button class="valley-item-delete" data-id="${valley.id}">
-            <span class="material-symbols-outlined">delete_forever</span>
+            <span class="material-symbols-outlined">more_vert</span>
           </button>
         </div>
       `
@@ -1948,16 +2135,14 @@ class ValleysManager {
       // Add click handlers
       this.listContainer.querySelectorAll('.valley-item').forEach((item) => {
         item.addEventListener('click', (e) => {
-          if (!e.target.closest('.valley-item-delete')) {
-            this.loadValley(item.dataset.id);
+          const menuBtn = e.target.closest('.valley-item-delete');
+          if (menuBtn) {
+            e.stopPropagation();
+            const rect = menuBtn.getBoundingClientRect();
+            this.openContextMenu(item.dataset.id, rect.left - 130, rect.top + 30);
+            return;
           }
-        });
-      });
-
-      this.listContainer.querySelectorAll('.valley-item-delete').forEach((btn) => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.deleteValley(btn.dataset.id);
+          this.loadValley(item.dataset.id);
         });
       });
     }
@@ -1984,8 +2169,8 @@ class ValleysManager {
         (valley) => `
         <div class="sidebar-valley-row" data-id="${valley.id}">
           <span class="valley-title">${this.escapeHtml(valley.title)}</span>
-          <button class="btn-icon sidebar-valley-menu" title="Remove">
-            <span class="material-symbols-outlined">delete_forever</span>
+          <button class="btn-icon sidebar-valley-menu" title="Menu">
+            <span class="material-symbols-outlined">more_horiz</span>
           </button>
         </div>
       `
@@ -1994,20 +2179,11 @@ class ValleysManager {
 
     this.sidebarList.querySelectorAll('.sidebar-valley-row').forEach((item) => {
       item.addEventListener('click', (e) => {
-        // Handle menu button click (for now, shows delete option)
-        if (e.target.closest('.sidebar-valley-menu')) {
+        const menuBtn = e.target.closest('.sidebar-valley-menu');
+        if (menuBtn) {
           e.stopPropagation();
-          if (item.dataset.id.startsWith('temp-')) {
-            this.tempValley = null;
-            this.activeValleyId = null;
-            this.renderSidebarList();
-            const editor = document.querySelector('.editor');
-            if (editor) editor.textContent = '';
-            return;
-          }
-          if (confirm('Delete this valley?')) {
-            this.deleteValley(item.dataset.id);
-          }
+          const rect = menuBtn.getBoundingClientRect();
+          this.openContextMenu(item.dataset.id, rect.left - 130, rect.top + 30);
           return;
         }
 
@@ -2016,8 +2192,6 @@ class ValleysManager {
         this.loadValley(item.dataset.id);
         if (window.innerWidth < CONFIG.DESKTOP_BREAKPOINT_PX) {
           document.body.classList.remove('sidebar-open');
-          const menuIcon = document.querySelector('#menu-btn .material-symbols-outlined');
-          if (menuIcon) menuIcon.textContent = 'dehaze';
         }
       });
     });
@@ -2501,7 +2675,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize menu icon for desktop
   if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX && menuIcon) {
-    menuIcon.textContent = document.body.classList.contains('sidebar-collapsed') ? 'dehaze' : 'close';
+    // Icon is handled by CSS class now
   }
 
   const rightMenuOverlay = document.querySelector('.right-menu-overlay');
@@ -2509,8 +2683,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const sidebar = document.getElementById('sidebar');
   const sidebarBackdrop = document.getElementById('sidebar-backdrop');
 
-  const shareMenuButtons = Array.from(document.querySelectorAll('.share-menu-btn'));
-  const clearMenuButtons = Array.from(document.querySelectorAll('.clear-menu-btn'));
   const selectMenuButtons = Array.from(document.querySelectorAll('.select-menu-btn'));
   const editor = document.querySelector('.editor');
   let menuReadyTimeout = null;
@@ -2549,12 +2721,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const openSidebarDrawer = () => {
     document.body.classList.add('sidebar-open');
-    if (menuIcon) menuIcon.textContent = 'close';
   };
 
   const closeSidebarDrawer = () => {
     document.body.classList.remove('sidebar-open');
-    if (menuIcon) menuIcon.textContent = 'dehaze';
   };
 
   const closeAllMenus = () => {
@@ -2582,9 +2752,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // Desktop toggle
       if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX) {
         document.body.classList.toggle('sidebar-collapsed');
-        if (menuIcon) {
-          menuIcon.textContent = document.body.classList.contains('sidebar-collapsed') ? 'dehaze' : 'close';
-        }
         return;
       }
 
@@ -2599,20 +2766,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Sidebar close button and logo click handlers
-  const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+  const sidebarHeaderNewValleyBtn = document.getElementById('sidebar-header-new-valley');
   const sidebarLogoBtn = document.getElementById('sidebar-logo-btn');
 
   const collapseSidebar = () => {
     if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX) {
       document.body.classList.add('sidebar-collapsed');
-      if (menuIcon) menuIcon.textContent = 'dehaze';
     } else {
       closeSidebarDrawer();
     }
   };
 
-  if (sidebarCloseBtn) {
-    sidebarCloseBtn.addEventListener('click', collapseSidebar);
+  if (sidebarHeaderNewValleyBtn) {
+    sidebarHeaderNewValleyBtn.addEventListener('click', async () => {
+      await window.valleysManager.newValley();
+      closeAllMenus();
+    });
   }
 
   if (sidebarLogoBtn) {
@@ -2744,9 +2913,6 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('resize', () => {
     if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX) {
       closeSidebarDrawer();
-      if (!document.body.classList.contains('sidebar-collapsed') && menuIcon) {
-        menuIcon.textContent = 'close';
-      }
     }
   });
 
@@ -2843,22 +3009,62 @@ document.addEventListener('DOMContentLoaded', () => {
     closeAllMenus();
   });
 
-  const updateSelectButtons = () => {
+  const updateSelectButtons = window.updateSelectButtons = () => {
     selectMenuButtons.forEach((btn) => {
       btn.classList.toggle('active', window.predictionManager.selectModeActive);
+      const icon = btn.querySelector('.material-symbols-outlined');
+      if (icon) {
+        if (window.predictionManager.selectModeActive) {
+          icon.textContent = 'check';
+        } else {
+          icon.textContent = 'text_select_end';
+        }
+      }
     });
   };
 
   selectMenuButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
       if (window.predictionManager.selectModeActive) {
-        window.predictionManager.disableSelectMode();
+        // Confirm selection (even if empty/no selection made)
+        window.predictionManager.confirmSelectSelection();
       } else {
         window.predictionManager.enableSelectMode();
       }
       updateSelectButtons();
       closeAllMenus();
     });
+  });
+
+  bindMenuButtons('.copy-all-btn', async (_event, btn) => {
+    const editor = document.querySelector('.editor');
+    if (!editor) return;
+
+    // Clone to strip predictions before copying
+    const clone = editor.cloneNode(true);
+    const predictions = clone.querySelectorAll('.inline-prediction, .prediction-ghost');
+    predictions.forEach(p => p.remove());
+    
+    const text = clone.textContent || '';
+    
+    try {
+      await navigator.clipboard.writeText(text);
+      
+      // Visual feedback
+      const icon = btn.querySelector('.material-symbols-outlined');
+      const originalIcon = icon.textContent;
+      icon.textContent = 'check';
+      btn.classList.add('active');
+      
+      setTimeout(() => {
+        icon.textContent = originalIcon;
+        btn.classList.remove('active');
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+    
+    closeAllMenus();
   });
 
   bindMenuButtons('.files-menu-btn', () => {
@@ -2929,6 +3135,11 @@ document.addEventListener('DOMContentLoaded', () => {
     placeholder.className = 'image-loading-placeholder';
     placeholder.innerHTML = '<span class="material-symbols-outlined">progress_activity</span> Creating image...';
     editor.appendChild(placeholder);
+
+    // Add a break and move cursor after the placeholder immediately
+    const br = document.createElement('br');
+    editor.appendChild(br);
+    window.predictionManager.placeCursorAfterNode(br);
 
     try {
       console.log('Image generation started for text:', text.substring(0, 50) + '...');

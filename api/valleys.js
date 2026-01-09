@@ -136,12 +136,15 @@ export default async function handler(req, res) {
 
       const { title, text, rules, contextSessionId } = req.body;
 
-      if (!text) {
-        return res.status(400).json({ error: 'Text is required' });
-      }
+      const updateData = {
+        updated_at: new Date().toISOString()
+      };
+
+      if (title !== undefined) updateData.title = title || 'Untitled';
+      if (text !== undefined) updateData.text = text;
+      if (rules !== undefined) updateData.rules = rules || null;
 
       // Fetch file content if contextSessionId provided
-      let filesData = null;
       if (contextSessionId) {
         const { data: contextData } = await supabase
           .from('contexts')
@@ -150,23 +153,12 @@ export default async function handler(req, res) {
           .single();
 
         if (contextData) {
-          filesData = {
+          updateData.files = {
             content: contextData.text,
             files: contextData.files,
             estimatedTokens: contextData.estimated_tokens
           };
         }
-      }
-
-      const updateData = {
-        title: title || 'Untitled',
-        text,
-        rules: rules || null,
-        updated_at: new Date().toISOString()
-      };
-
-      if (filesData) {
-        updateData.files = filesData;
       }
 
       const { data, error } = await supabase
