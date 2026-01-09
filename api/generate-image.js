@@ -1,7 +1,7 @@
 const CONFIG = {
     PROMPT_MODEL: 'xiaomi/mimo-v2-flash:free',
     OPENROUTER_IMAGE_MODEL: 'bytedance-seed/seedream-4.5',
-    REPLICATE_MODEL: process.env.REPLICATE_MODEL || 'prunaai/z-image-turbo',
+    REPLICATE_MODEL: process.env.REPLICATE_MODEL || 'prunaai/p-image',
 };
 
 const STYLE_MAPPING = {

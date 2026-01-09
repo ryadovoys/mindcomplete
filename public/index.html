@@ -20,91 +20,129 @@
 </head>
 
 <body>
-  <header class="header">
-    <div class="header-left">
-      <button class="icon-btn" id="menu-btn" aria-label="Menu">
-        <span class="material-symbols-outlined">dehaze</span>
-      </button>
-      <span class="logo" role="img" aria-label="Purple Valley"></span>
-    </div>
-    <div class="header-right">
-      <button class="icon-btn" id="settings-btn" aria-label="Settings">
-        <span class="material-symbols-outlined">edit</span>
-      </button>
-    </div>
-  </header>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-scroll">
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">
+            <span>Valleys</span>
+          </div>
+          <div class="sidebar-valleys" id="sidebar-valleys-list"></div>
+          <div class="sidebar-valleys-empty" id="sidebar-valleys-empty">
+            <p class="section-description">No valleys saved yet</p>
+          </div>
+        </div>
+      </div>
 
-  <!-- Select confirm button (floating) -->
-  <button class="select-confirm-btn" aria-label="Confirm selection">
-    <span class="material-symbols-outlined">check</span>
-  </button>
+      <div class="sidebar-bottom">
+        <button class="sidebar-text-btn theme-toggle-btn">
+          <span class="material-symbols-outlined">dark_mode</span>
+          <span class="menu-label">Light mode</span>
+        </button>
+        <div class="sidebar-account">
+          <button class="sidebar-account-trigger" id="sidebar-account-trigger">
+            <div class="sidebar-avatar" id="sidebar-avatar">PV</div>
+            <div class="sidebar-account-text">
+              <span class="sidebar-account-name" id="sidebar-account-name">Guest</span>
+              <span class="sidebar-account-plan" id="sidebar-account-plan">Sign in</span>
+            </div>
+            <span class="material-symbols-outlined">expand_more</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
-  <!-- Gradient overlay to fade text under header -->
-  <div class="header-gradient-overlay"></div>
+    <div class="app-main">
+      <header class="header">
+        <div class="header-left">
+          <button class="icon-btn" id="menu-btn" aria-label="Menu">
+            <span class="material-symbols-outlined">dehaze</span>
+          </button>
+          <span class="logo" role="img" aria-label="Purple Valley"></span>
+        </div>
+        <div class="header-right">
+          <button class="icon-btn" id="settings-btn" aria-label="Settings">
+            <span class="material-symbols-outlined">edit</span>
+          </button>
+        </div>
+      </header>
 
-  <!-- Burger Menu Overlay -->
-  <div class="menu-overlay right-menu-overlay">
-    <div class="menu-content">
-      <button class="menu-item files-menu-btn">
-        <span class="material-symbols-outlined">attach_file</span>
-        <span class="menu-label">Upload files</span>
+      <!-- Select confirm button (floating) -->
+      <button class="select-confirm-btn" aria-label="Confirm selection">
+        <span class="material-symbols-outlined">check</span>
       </button>
-      <button class="menu-item rules-menu-btn">
-        <span class="material-symbols-outlined">edit_note</span>
-        <span class="menu-label">Add rules</span>
-      </button>
-      <button class="menu-item create-image-btn">
-        <span class="material-symbols-outlined">image</span>
-        <span class="menu-label">Create image</span>
-      </button>
-      <button class="menu-item select-menu-btn">
-        <span class="material-symbols-outlined">text_select_end</span>
-        <span class="menu-label">Select part</span>
-      </button>
-      <button class="menu-item share-menu-btn">
-        <span class="material-symbols-outlined">ios_share</span>
-        <span class="menu-label">Share</span>
-      </button>
-      <button class="menu-item clear-menu-btn">
-        <span class="material-symbols-outlined">ink_eraser</span>
-        <span class="menu-label">Clear</span>
-      </button>
-      <button class="menu-item save-valley-btn">
-        <span class="material-symbols-outlined">save</span>
-        <span class="menu-label">Save valley</span>
-      </button>
-    </div>
-  </div>
 
-  <!-- Left Menu Overlay -->
-  <div class="menu-overlay left-menu-overlay">
-    <button class="menu-close-btn left-menu-close-btn" aria-label="Close menu">
-      <span class="material-symbols-outlined">close</span>
-    </button>
-    <div class="menu-content left-aligned">
-      <button class="menu-item theme-toggle-btn">
-        <span class="material-symbols-outlined">dark_mode</span>
-        <span class="menu-label">Dark mode</span>
-      </button>
-      <button class="menu-item valleys-menu-btn">
-        <span class="material-symbols-outlined">landscape</span>
-        <span class="menu-label">Valleys</span>
-      </button>
-      <button class="menu-item profile-menu-btn">
-        <span class="material-symbols-outlined">person</span>
-        <span class="menu-label">Sign In</span>
-      </button>
-      <button class="menu-item about-menu-btn">
-        <span class="material-symbols-outlined">info</span>
-        <span class="menu-label">About</span>
-      </button>
-    </div>
-  </div>
+      <!-- Gradient overlay to fade text under header -->
+      <div class="header-gradient-overlay"></div>
 
-  <div class="container">
-    <div class="editor-wrapper">
-      <!-- Editable layer with inline predictions -->
-      <div class="editor" contenteditable="true" data-placeholder="What's on your mind" spellcheck="false"></div>
+      <!-- Quick Actions Menu (header button) -->
+      <div class="menu-overlay right-menu-overlay">
+        <div class="menu-content">
+          <button class="menu-item files-menu-btn">
+            <span class="material-symbols-outlined">attach_file</span>
+            <span class="menu-label">Upload files</span>
+          </button>
+          <button class="menu-item rules-menu-btn">
+            <span class="material-symbols-outlined">edit_note</span>
+            <span class="menu-label">Add rules</span>
+          </button>
+          <button class="menu-item create-image-btn">
+            <span class="material-symbols-outlined">image</span>
+            <span class="menu-label">Create image</span>
+          </button>
+          <button class="menu-item select-menu-btn">
+            <span class="material-symbols-outlined">text_select_end</span>
+            <span class="menu-label">Select part</span>
+          </button>
+          <button class="menu-item share-menu-btn">
+            <span class="material-symbols-outlined">ios_share</span>
+            <span class="menu-label">Share</span>
+          </button>
+          <button class="menu-item clear-menu-btn">
+            <span class="material-symbols-outlined">ink_eraser</span>
+            <span class="menu-label">Clear</span>
+          </button>
+          <button class="menu-item save-valley-btn">
+            <span class="material-symbols-outlined">save</span>
+            <span class="menu-label">Save valley</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- User Menu (Left Sidebar) -->
+      <div class="menu-overlay user-menu-overlay">
+        <div class="menu-content user-menu-content">
+          <!-- User Profile Header (Click to edit) -->
+          <div class="user-menu-header" id="user-menu-header">
+             <div class="sidebar-avatar large" id="user-menu-avatar">PV</div>
+             <div class="user-menu-info">
+               <span class="user-menu-name" id="user-menu-name">Guest</span>
+               <span class="user-menu-email" id="user-menu-email">Tap to edit name</span>
+             </div>
+          </div>
+          <div class="menu-divider"></div>
+          <button class="menu-item" id="user-settings-btn">
+            <span class="material-symbols-outlined">settings</span>
+            <span class="menu-label">Settings</span>
+          </button>
+          <button class="menu-item about-menu-btn">
+            <span class="material-symbols-outlined">info</span>
+            <span class="menu-label">About</span>
+          </button>
+          <button class="menu-item" id="user-logout-btn">
+            <span class="material-symbols-outlined">logout</span>
+            <span class="menu-label">Log out</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="editor-wrapper">
+          <!-- Editable layer with inline predictions -->
+          <div class="editor" contenteditable="true" data-placeholder="What's on your mind" spellcheck="false"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -339,23 +377,119 @@
     </div>
   </div>
 
-  <!-- Account Modal -->
-  <div class="modal" id="account-modal">
-    <div class="modal-content context-modal-content">
+  <!-- Edit Name Modal -->
+  <div class="modal" id="edit-name-modal">
+    <div class="modal-content context-modal-content" style="max-width: 400px; min-width: auto;">
       <div class="context-modal-header">
         <div class="header-spacer"></div>
-        <span class="context-modal-title">Account</span>
-        <button class="context-modal-close" id="account-modal-close">
+        <span class="context-modal-title">Edit Name</span>
+        <button class="context-modal-close" id="edit-name-close">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
       <div class="context-modal-body">
-        <div class="context-section">
-          <div class="account-email" id="account-email"></div>
-          <div class="section-buttons account-buttons">
-            <button class="btn-primary" id="signout-btn">Sign Out</button>
-            <button class="btn-danger" id="delete-account-btn">Delete Account</button>
-          </div>
+        <input type="text" id="edit-user-name-input" class="auth-input" placeholder="Enter your name">
+        <div class="section-buttons">
+          <button class="btn-primary" id="save-user-name-btn" style="width: 100%">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account / Settings Modal -->
+  <div class="modal settings-modal" id="account-modal">
+    <div class="settings-panel">
+      <div class="settings-panel-header">
+        <div>
+          <h3>Settings</h3>
+          <p>Manage your account and workspace</p>
+        </div>
+        <button class="settings-close-btn" id="account-modal-close" aria-label="Close settings">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="settings-panel-body">
+        <nav class="settings-nav" id="settings-nav">
+          <button class="settings-nav-btn active" data-settings-panel="general">
+            <span class="material-symbols-outlined">settings</span>
+            <span>General</span>
+          </button>
+          <button class="settings-nav-btn" data-settings-panel="notifications">
+            <span class="material-symbols-outlined">notifications</span>
+            <span>Notifications</span>
+          </button>
+          <button class="settings-nav-btn" data-settings-panel="appearance">
+            <span class="material-symbols-outlined">palette</span>
+            <span>Appearance</span>
+          </button>
+          <button class="settings-nav-btn" data-settings-panel="security">
+            <span class="material-symbols-outlined">shield_lock</span>
+            <span>Security</span>
+          </button>
+          <button class="settings-nav-btn" data-settings-panel="account">
+            <span class="material-symbols-outlined">account_circle</span>
+            <span>Account</span>
+          </button>
+        </nav>
+        <div class="settings-content" id="settings-content">
+          <section class="settings-section active" data-settings-panel="general">
+            <h4>General</h4>
+            <div class="settings-row">
+              <div>
+                <p>Appearance</p>
+                <small>Switch between light and dark themes.</small>
+              </div>
+              <div class="settings-control">
+                <button class="btn-secondary theme-toggle-btn">Toggle theme</button>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div>
+                <p>Accent color</p>
+                <small>Choose a highlight to personalize the editor.</small>
+              </div>
+              <div class="settings-control">
+                <select id="accent-select">
+                  <option value="purple" selected>Purple</option>
+                  <option value="blue">Blue</option>
+                  <option value="green">Green</option>
+                </select>
+              </div>
+            </div>
+          </section>
+          <section class="settings-section" data-settings-panel="notifications">
+            <h4>Notifications</h4>
+            <p class="section-description">Notifications are coming soon.</p>
+          </section>
+          <section class="settings-section" data-settings-panel="appearance">
+            <h4>Appearance</h4>
+            <p class="section-description">Adjust typography and layout preferences to fine-tune your writing space.</p>
+          </section>
+          <section class="settings-section" data-settings-panel="security">
+            <h4>Security</h4>
+            <p class="section-description">Use a secure password and enable two-factor authentication.</p>
+          </section>
+          <section class="settings-section" data-settings-panel="account">
+            <h4>Account</h4>
+            <div class="settings-row">
+              <div>
+                <p>Email</p>
+                <small id="account-email">Sign in to see your email</small>
+              </div>
+              <div class="settings-control">
+                <button class="btn-primary" id="signout-btn">Sign Out</button>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div>
+                <p>Danger zone</p>
+                <small>Permanently remove your account and valleys.</small>
+              </div>
+              <div class="settings-control">
+                <button class="btn-danger" id="delete-account-btn">Delete account</button>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </div>

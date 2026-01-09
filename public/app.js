@@ -1606,7 +1606,12 @@ class ValleysManager {
     this.modal = document.getElementById('valleys-modal');
     this.listContainer = document.getElementById('valleys-list');
     this.emptyState = document.getElementById('valleys-empty');
+    this.sidebarList = document.getElementById('sidebar-valleys-list');
+    this.sidebarEmpty = document.getElementById('sidebar-valleys-empty');
+    this.activeValleyId = null;
     this.init();
+    this.loadValleys();
+    this.renderSidebarList();
   }
 
   init() {
@@ -1642,6 +1647,8 @@ class ValleysManager {
       await window.contextManager.clearContext();
     }
 
+    this.activeValleyId = null;
+    this.highlightSidebarValleys();
     this.closeModal();
   }
 
@@ -1751,6 +1758,8 @@ class ValleysManager {
         window.contextManager.updateUI();
       }
 
+      this.activeValleyId = id;
+      this.highlightSidebarValleys();
       this.closeModal();
       editor.focus();
     } catch (error) {
@@ -1808,6 +1817,9 @@ class ValleysManager {
       if (!response.ok) throw new Error('Failed to delete valley');
 
       this.valleys = this.valleys.filter((v) => v.id !== id);
+      if (this.activeValleyId === id) {
+        this.activeValleyId = null;
+      }
       this.renderList();
     } catch (error) {
       console.error('Delete valley error:', error);
@@ -1815,43 +1827,97 @@ class ValleysManager {
   }
 
   renderList() {
-    if (!this.listContainer) return;
-
-    if (this.valleys.length === 0) {
-      this.listContainer.innerHTML = '';
+    if (!this.listContainer) {
+      this.renderSidebarList();
       return;
     }
 
-    this.listContainer.innerHTML = this.valleys
+    if (this.emptyState) {
+      this.emptyState.style.display = this.valleys.length ? 'none' : 'block';
+    }
+
+    if (this.valleys.length === 0) {
+      if (this.listContainer) this.listContainer.innerHTML = '';
+      this.renderSidebarList();
+      return;
+    }
+
+    if (this.listContainer) {
+      this.listContainer.innerHTML = this.valleys
+        .map(
+          (valley) => `
+        <div class="valley-item" data-id="${valley.id}">
+          <div class="valley-item-content">
+            <span class="valley-item-title">${this.escapeHtml(valley.title)}</span>
+            <span class="valley-item-date">${this.formatDate(valley.created_at)}</span>
+          </div>
+          <button class="valley-item-delete" data-id="${valley.id}">
+            <span class="material-symbols-outlined">delete</span>
+          </button>
+        </div>
+      `
+        )
+        .join('');
+
+      // Add click handlers
+      this.listContainer.querySelectorAll('.valley-item').forEach((item) => {
+        item.addEventListener('click', (e) => {
+          if (!e.target.closest('.valley-item-delete')) {
+            this.loadValley(item.dataset.id);
+          }
+        });
+      });
+
+      this.listContainer.querySelectorAll('.valley-item-delete').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.deleteValley(btn.dataset.id);
+        });
+      });
+    }
+
+    this.renderSidebarList();
+  }
+
+
+  renderSidebarList() {
+    if (!this.sidebarList) return;
+
+    if (!this.valleys.length) {
+      this.sidebarList.innerHTML = '';
+      if (this.sidebarEmpty) this.sidebarEmpty.classList.add('visible');
+      return;
+    }
+
+    if (this.sidebarEmpty) this.sidebarEmpty.classList.remove('visible');
+
+    this.sidebarList.innerHTML = this.valleys
       .map(
         (valley) => `
-      <div class="valley-item" data-id="${valley.id}">
-        <div class="valley-item-content">
-          <span class="valley-item-title">${this.escapeHtml(valley.title)}</span>
-          <span class="valley-item-date">${this.formatDate(valley.created_at)}</span>
-        </div>
-        <button class="valley-item-delete" data-id="${valley.id}">
-          <span class="material-symbols-outlined">delete</span>
+        <button class="sidebar-valley-row" data-id="${valley.id}">
+          <span class="valley-title">${this.escapeHtml(valley.title)}</span>
+          <span class="valley-meta">${this.formatDate(valley.created_at)}</span>
         </button>
-      </div>
-    `
+      `
       )
       .join('');
 
-    // Add click handlers
-    this.listContainer.querySelectorAll('.valley-item').forEach((item) => {
-      item.addEventListener('click', (e) => {
-        if (!e.target.closest('.valley-item-delete')) {
-          this.loadValley(item.dataset.id);
-        }
+    this.sidebarList.querySelectorAll('.sidebar-valley-row').forEach((item) => {
+      item.addEventListener('click', () => {
+        this.loadValley(item.dataset.id);
+        document.body.classList.remove('sidebar-open');
+        const menuIcon = document.querySelector('#menu-btn .material-symbols-outlined');
+        if (menuIcon) menuIcon.textContent = 'dehaze';
       });
     });
 
-    this.listContainer.querySelectorAll('.valley-item-delete').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.deleteValley(btn.dataset.id);
-      });
+    this.highlightSidebarValleys();
+  }
+
+  highlightSidebarValleys() {
+    if (!this.sidebarList) return;
+    this.sidebarList.querySelectorAll('.sidebar-valley-row').forEach((row) => {
+      row.classList.toggle('active', row.dataset.id === this.activeValleyId);
     });
   }
 
@@ -1896,6 +1962,17 @@ class AuthManager {
     this.submitBtn = document.getElementById('auth-submit-btn');
     this.errorEl = document.getElementById('auth-error');
     this.accountEmailEl = document.getElementById('account-email');
+    this.sidebarAccountName = document.getElementById('sidebar-account-name');
+    this.sidebarAccountPlan = document.getElementById('sidebar-account-plan');
+    this.sidebarAvatar = document.getElementById('sidebar-avatar');
+    
+    // User Menu Elements
+    this.userMenuName = document.getElementById('user-menu-name');
+    this.userMenuEmail = document.getElementById('user-menu-email');
+    this.userMenuAvatar = document.getElementById('user-menu-avatar');
+
+    this.signoutBtn = document.getElementById('signout-btn');
+    this.deleteAccountBtn = document.getElementById('delete-account-btn');
     this.currentTab = 'signin';
 
     this.init();
@@ -2003,15 +2080,19 @@ class AuthManager {
     }
 
     // Sign out
-    const signoutBtn = document.getElementById('signout-btn');
-    if (signoutBtn) {
-      signoutBtn.addEventListener('click', () => this.signOut());
+    if (this.signoutBtn) {
+      this.signoutBtn.addEventListener('click', () => {
+        if (this.user) {
+          this.signOut();
+        } else {
+          this.closeAccountModal();
+          this.openModal();
+        }
+      });
     }
 
-    // Delete account
-    const deleteBtn = document.getElementById('delete-account-btn');
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', () => this.deleteAccount());
+    if (this.deleteAccountBtn) {
+      this.deleteAccountBtn.addEventListener('click', () => this.deleteAccount());
     }
 
     // Escape key closes modals
@@ -2138,9 +2219,31 @@ class AuthManager {
     if (this.user) {
       if (profileLabel) profileLabel.textContent = 'Account';
       if (profileIcon) profileIcon.textContent = 'account_circle';
+      if (this.sidebarAccountName) this.sidebarAccountName.textContent = this.user.email?.split('@')[0] || 'Account';
+      if (this.sidebarAccountPlan) this.sidebarAccountPlan.textContent = 'Signed in';
+      if (this.sidebarAvatar) this.sidebarAvatar.textContent = (this.user.email?.[0] || 'P').toUpperCase();
+      
+      // Update User Menu
+      if (this.userMenuName) this.userMenuName.textContent = this.user.user_metadata?.full_name || this.user.email?.split('@')[0] || 'Account';
+      if (this.userMenuEmail) this.userMenuEmail.textContent = this.user.email;
+      if (this.userMenuAvatar) this.userMenuAvatar.textContent = (this.user.email?.[0] || 'P').toUpperCase();
+
+      if (this.signoutBtn) this.signoutBtn.textContent = 'Sign Out';
+      if (this.deleteAccountBtn) this.deleteAccountBtn.disabled = false;
     } else {
       if (profileLabel) profileLabel.textContent = 'Sign In';
       if (profileIcon) profileIcon.textContent = 'person';
+      if (this.sidebarAccountName) this.sidebarAccountName.textContent = 'Guest';
+      if (this.sidebarAccountPlan) this.sidebarAccountPlan.textContent = 'Tap to sign in';
+      if (this.sidebarAvatar) this.sidebarAvatar.textContent = 'PV';
+      
+      // Update User Menu (Guest)
+      if (this.userMenuName) this.userMenuName.textContent = 'Guest';
+      if (this.userMenuEmail) this.userMenuEmail.textContent = 'Tap to sign in';
+      if (this.userMenuAvatar) this.userMenuAvatar.textContent = 'PV';
+
+      if (this.signoutBtn) this.signoutBtn.textContent = 'Sign In';
+      if (this.deleteAccountBtn) this.deleteAccountBtn.disabled = true;
     }
   }
 
@@ -2161,12 +2264,11 @@ class AuthManager {
   }
 
   openAccountModal() {
-    if (this.accountModal && this.user) {
-      if (this.accountEmailEl) {
-        this.accountEmailEl.textContent = this.user.email;
-      }
-      this.accountModal.classList.add('visible');
+    if (!this.accountModal) return;
+    if (this.accountEmailEl) {
+      this.accountEmailEl.textContent = this.user?.email || 'Sign in to manage your account';
     }
+    this.accountModal.classList.add('visible');
   }
 
   closeAccountModal() {
@@ -2222,6 +2324,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Settings modal navigation
+  const settingsNavButtons = document.querySelectorAll('.settings-nav-btn');
+  const settingsSections = document.querySelectorAll('.settings-section');
+  settingsNavButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const panel = btn.dataset.settingsPanel;
+      settingsNavButtons.forEach((navBtn) => navBtn.classList.toggle('active', navBtn === btn));
+      settingsSections.forEach((section) => {
+        section.classList.toggle('active', section.dataset.settingsPanel === panel);
+      });
+    });
+  });
+
   // MENU FUNCTIONALITY
   // MENU FUNCTIONALITY
   const settingsBtn = document.getElementById('settings-btn');
@@ -2230,13 +2345,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const menuBtn = document.getElementById('menu-btn');
   const menuIcon = menuBtn ? menuBtn.querySelector('.material-symbols-outlined') : null;
 
-  const rightMenuOverlay = document.querySelector('.right-menu-overlay');
-  const leftMenuOverlay = document.querySelector('.left-menu-overlay');
-  const leftMenuCloseBtn = document.querySelector('.left-menu-close-btn');
+  // Initialize menu icon for desktop
+  if (window.innerWidth >= 1025 && menuIcon) {
+    menuIcon.textContent = 'close';
+  }
 
-  const shareMenuBtn = document.querySelector('.share-menu-btn');
-  const clearMenuBtn = document.querySelector('.clear-menu-btn');
-  const selectMenuBtn = document.querySelector('.select-menu-btn');
+  const rightMenuOverlay = document.querySelector('.right-menu-overlay');
+  const userMenuOverlay = document.querySelector('.user-menu-overlay');
+  const sidebar = document.getElementById('sidebar');
+  const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+
+  const shareMenuButtons = Array.from(document.querySelectorAll('.share-menu-btn'));
+  const clearMenuButtons = Array.from(document.querySelectorAll('.clear-menu-btn'));
+  const selectMenuButtons = Array.from(document.querySelectorAll('.select-menu-btn'));
   const editor = document.querySelector('.editor');
   let menuReadyTimeout = null;
 
@@ -2253,7 +2374,6 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const closeMenu = () => {
-    // Close Right Menu
     if (rightMenuOverlay && rightMenuOverlay.classList.contains('visible')) {
       if (menuReadyTimeout) {
         clearTimeout(menuReadyTimeout);
@@ -2263,17 +2383,31 @@ document.addEventListener('DOMContentLoaded', () => {
       rightMenuOverlay.classList.remove('visible');
       if (settingsIcon) settingsIcon.textContent = 'edit';
     }
-
-    // Close Left Menu
-    if (leftMenuOverlay && leftMenuOverlay.classList.contains('visible')) {
+    if (userMenuOverlay && userMenuOverlay.classList.contains('visible')) {
       if (menuReadyTimeout) {
         clearTimeout(menuReadyTimeout);
         menuReadyTimeout = null;
       }
-      leftMenuOverlay.classList.remove('menu-ready');
-      leftMenuOverlay.classList.remove('visible');
-      if (menuIcon) menuIcon.textContent = 'dehaze';
+      userMenuOverlay.classList.remove('menu-ready');
+      userMenuOverlay.classList.remove('visible');
+      const sidebarIcon = document.querySelector('#sidebar-account-trigger .material-symbols-outlined');
+      if (sidebarIcon) sidebarIcon.textContent = 'expand_more';
     }
+  };
+
+  const openSidebarDrawer = () => {
+    document.body.classList.add('sidebar-open');
+    if (menuIcon) menuIcon.textContent = 'close';
+  };
+
+  const closeSidebarDrawer = () => {
+    document.body.classList.remove('sidebar-open');
+    if (menuIcon) menuIcon.textContent = 'dehaze';
+  };
+
+  const closeAllMenus = () => {
+    closeMenu();
+    closeSidebarDrawer();
   };
 
   settingsBtn.addEventListener('click', () => {
@@ -2291,13 +2425,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  if (menuBtn && leftMenuOverlay) {
+  if (menuBtn) {
     menuBtn.addEventListener('click', () => {
-      if (leftMenuOverlay.classList.contains('visible')) {
-        closeMenu();
+      // Desktop toggle
+      if (window.innerWidth >= 1025) {
+        document.body.classList.toggle('sidebar-collapsed');
+        if (menuIcon) {
+          menuIcon.textContent = document.body.classList.contains('sidebar-collapsed') ? 'dehaze' : 'close';
+        }
+        return;
+      }
+
+      if (document.body.classList.contains('sidebar-open')) {
+        closeSidebarDrawer();
       } else {
         closeMenu();
-        openMenu(leftMenuOverlay, menuIcon, 'close');
+        closeSidebarDrawer();
+        openSidebarDrawer();
       }
     });
   }
@@ -2310,20 +2454,128 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (leftMenuOverlay) {
-    leftMenuOverlay.addEventListener('click', (e) => {
-      if (e.target === leftMenuOverlay) {
+  if (userMenuOverlay) {
+    userMenuOverlay.addEventListener('click', (e) => {
+      if (e.target === userMenuOverlay) {
         closeMenu();
       }
     });
   }
 
-  if (leftMenuCloseBtn) {
-    leftMenuCloseBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      closeMenu();
+  const sidebarAccountTrigger = document.getElementById('sidebar-account-trigger');
+  if (sidebarAccountTrigger) {
+    sidebarAccountTrigger.addEventListener('click', () => {
+      if (userMenuOverlay.classList.contains('visible')) {
+        closeMenu();
+      } else {
+        closeMenu(); // Close other menus
+        openMenu(userMenuOverlay, sidebarAccountTrigger.querySelector('.material-symbols-outlined'), 'expand_less');
+      }
     });
   }
+
+  const userSettingsBtn = document.getElementById('user-settings-btn');
+  if (userSettingsBtn) {
+    userSettingsBtn.addEventListener('click', () => {
+      closeAllMenus();
+      window.authManager?.openAccountModal();
+    });
+  }
+
+  const userLogoutBtn = document.getElementById('user-logout-btn');
+  if (userLogoutBtn) {
+    userLogoutBtn.addEventListener('click', () => {
+      closeAllMenus();
+      if (window.authManager?.isAuthenticated()) {
+        window.authManager.signOut();
+      } else {
+        window.authManager?.openModal();
+      }
+    });
+  }
+
+  // Edit Name Modal Logic
+  const userMenuHeader = document.getElementById('user-menu-header');
+  const editNameModal = document.getElementById('edit-name-modal');
+  const editNameClose = document.getElementById('edit-name-close');
+  const editNameInput = document.getElementById('edit-user-name-input');
+  const saveNameBtn = document.getElementById('save-user-name-btn');
+
+  if (userMenuHeader) {
+    userMenuHeader.addEventListener('click', () => {
+      if (!window.authManager?.isAuthenticated()) {
+        closeAllMenus();
+        window.authManager?.openModal();
+        return;
+      }
+      closeAllMenus();
+      if (editNameModal) {
+        editNameModal.classList.add('visible');
+        if (editNameInput) {
+          const user = window.authManager.user;
+          editNameInput.value = user.user_metadata?.full_name || user.email?.split('@')[0] || '';
+          editNameInput.focus();
+        }
+      }
+    });
+  }
+
+  const closeEditNameModal = () => {
+    if (editNameModal) editNameModal.classList.remove('visible');
+  };
+
+  if (editNameClose) editNameClose.addEventListener('click', closeEditNameModal);
+  
+  if (editNameModal) {
+    editNameModal.addEventListener('click', (e) => {
+      if (e.target === editNameModal) closeEditNameModal();
+    });
+  }
+
+  if (saveNameBtn) {
+    saveNameBtn.addEventListener('click', async () => {
+      const newName = editNameInput?.value.trim();
+      if (!newName) return;
+      
+      saveNameBtn.disabled = true;
+      saveNameBtn.textContent = 'Saving...';
+      
+      try {
+        const { error } = await window.supabase.auth.updateUser({
+          data: { full_name: newName }
+        });
+        
+        if (error) throw error;
+        
+        // Update local state immediately
+        if (window.authManager.user) {
+            window.authManager.user.user_metadata = { ...window.authManager.user.user_metadata, full_name: newName };
+            window.authManager.updateMenuState();
+        }
+        
+        closeEditNameModal();
+      } catch (error) {
+        console.error('Error updating name:', error);
+        alert('Failed to update name');
+      } finally {
+        saveNameBtn.disabled = false;
+        saveNameBtn.textContent = 'Save';
+      }
+    });
+  }
+
+  if (sidebarBackdrop) {
+    sidebarBackdrop.addEventListener('click', closeSidebarDrawer);
+  }
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 1025) {
+      closeSidebarDrawer();
+      if (!document.body.classList.contains('sidebar-collapsed') && menuIcon) {
+        menuIcon.textContent = 'close';
+      }
+    }
+  });
 
   // Left menu specific items
   const aboutMenuBtn = document.querySelector('.about-menu-btn');
@@ -2347,23 +2599,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  shareMenuBtn.addEventListener('click', async () => {
+  const bindMenuButtons = (selector, handler) => {
+    document.querySelectorAll(selector).forEach((btn) => {
+      btn.addEventListener('click', (event) => handler(event, btn));
+    });
+  };
+
+  bindMenuButtons('.share-menu-btn', async (_event, btn) => {
     const text = predictionManager.getEditorText();
     if (!text) {
-      closeMenu();
+      closeAllMenus();
       return;
     }
 
-    const shareLabel = shareMenuBtn.querySelector('.menu-label');
+    const shareLabel = btn.querySelector('.menu-label');
     const originalText = shareLabel ? shareLabel.textContent : 'Share';
 
-    // Get image from editor if present
-    const editorImg = editor.querySelector('.editor-image');
     let imageFile = null;
-
-    if (editorImg && editorImg.src) {
+    if (editor && editor.querySelector('img')) {
+      const editorImg = editor.querySelector('img');
       try {
-        // Convert image to blob/file
         const response = await fetch(editorImg.src);
         const blob = await response.blob();
         imageFile = new File([blob], 'image.png', { type: blob.type || 'image/png' });
@@ -2373,111 +2628,100 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      // Try Web Share API first (works on mobile and some desktop browsers)
       if (navigator.share) {
         const shareData = { text };
-
-        // Add image if available and sharing files is supported
         if (imageFile && navigator.canShare && navigator.canShare({ files: [imageFile] })) {
           shareData.files = [imageFile];
         }
-
         await navigator.share(shareData);
-        closeMenu();
+        closeAllMenus();
       } else {
-        // Fallback to clipboard
         await navigator.clipboard.writeText(text);
         if (shareLabel) shareLabel.textContent = 'Copied!';
         setTimeout(() => {
           if (shareLabel) shareLabel.textContent = originalText;
-          closeMenu();
+          closeAllMenus();
         }, 800);
       }
     } catch (err) {
-      // User cancelled share or error occurred - fallback to copy
       if (err.name !== 'AbortError') {
         try {
           await navigator.clipboard.writeText(text);
           if (shareLabel) shareLabel.textContent = 'Copied!';
           setTimeout(() => {
             if (shareLabel) shareLabel.textContent = originalText;
-            closeMenu();
+            closeAllMenus();
           }, 800);
         } catch (copyErr) {
           console.error('Failed to share or copy:', copyErr);
-          closeMenu();
+          closeAllMenus();
         }
       } else {
-        closeMenu();
+        closeAllMenus();
       }
     }
   });
 
-  clearMenuBtn.addEventListener('click', () => {
+  bindMenuButtons('.clear-menu-btn', () => {
     predictionManager.removeInlinePrediction();
     editor.textContent = '';
     editor.focus();
     editor.dispatchEvent(new Event('input'));
-    closeMenu();
+    closeAllMenus();
   });
 
-  selectMenuBtn.addEventListener('click', () => {
-    if (predictionManager.selectModeActive) {
-      predictionManager.disableSelectMode();
-    } else {
-      predictionManager.enableSelectMode();
-    }
-    closeMenu();
-  });
-
-  // Files menu button
-  const filesMenuBtn = document.querySelector('.files-menu-btn');
-  if (filesMenuBtn) {
-    filesMenuBtn.addEventListener('click', () => {
-      window.contextManager.openFilesModal();
-      closeMenu();
+  const updateSelectButtons = () => {
+    selectMenuButtons.forEach((btn) => {
+      btn.classList.toggle('active', predictionManager.selectModeActive);
     });
-  }
+  };
 
-  // Rules menu button
-  const rulesMenuBtn = document.querySelector('.rules-menu-btn');
-  if (rulesMenuBtn) {
-    rulesMenuBtn.addEventListener('click', () => {
-      window.contextManager.openRulesModal();
-      closeMenu();
-    });
-  }
-
-  // Valleys menu button (left menu)
-  const valleysMenuBtn = document.querySelector('.valleys-menu-btn');
-  if (valleysMenuBtn) {
-    valleysMenuBtn.addEventListener('click', () => {
-      window.valleysManager.openModal();
-      closeMenu(leftMenuOverlay, menuIcon, 'dehaze');
-    });
-  }
-
-  // Save valley button (right menu)
-  const saveValleyBtn = document.querySelector('.save-valley-btn');
-  if (saveValleyBtn) {
-    saveValleyBtn.addEventListener('click', async () => {
-      const saveLabel = saveValleyBtn.querySelector('.menu-label');
-      const originalText = saveLabel ? saveLabel.textContent : 'Save valley';
-
-      const result = await window.valleysManager.saveValley();
-
-      if (result.success) {
-        if (saveLabel) saveLabel.textContent = 'Saved!';
-        setTimeout(() => {
-          if (saveLabel) saveLabel.textContent = originalText;
-          closeMenu();
-        }, 800);
+  selectMenuButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (predictionManager.selectModeActive) {
+        predictionManager.disableSelectMode();
       } else {
-        if (saveLabel) saveLabel.textContent = result.error || 'Error';
-        setTimeout(() => {
-          if (saveLabel) saveLabel.textContent = originalText;
-        }, 1500);
+        predictionManager.enableSelectMode();
       }
+      updateSelectButtons();
+      closeAllMenus();
+    });
+  });
+
+  bindMenuButtons('.files-menu-btn', () => {
+    window.contextManager.openFilesModal();
+    closeAllMenus();
+  });
+
+  bindMenuButtons('.rules-menu-btn', () => {
+    window.contextManager.openRulesModal();
+    closeAllMenus();
+  });
+
+  bindMenuButtons('.save-valley-btn', async (_event, btn) => {
+    const saveLabel = btn.querySelector('.menu-label');
+    const originalText = saveLabel ? saveLabel.textContent : 'Save valley';
+    const result = await window.valleysManager.saveValley();
+
+    if (result.success) {
+      if (saveLabel) saveLabel.textContent = 'Saved!';
+      setTimeout(() => {
+        if (saveLabel) saveLabel.textContent = originalText;
+        closeAllMenus();
+      }, 800);
+    } else {
+      if (saveLabel) saveLabel.textContent = result.error || 'Error';
+      setTimeout(() => {
+        if (saveLabel) saveLabel.textContent = originalText;
+      }, 1500);
+    }
+  });
+
+  const sidebarNewValleyBtn = document.getElementById('sidebar-new-valley');
+  if (sidebarNewValleyBtn) {
+    sidebarNewValleyBtn.addEventListener('click', async () => {
+      await window.valleysManager.newValley();
+      closeAllMenus();
     });
   }
 
@@ -2490,7 +2734,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Create image button and guidance modal
-  const createImageBtn = document.querySelector('.create-image-btn');
+  const createImageButtons = Array.from(document.querySelectorAll('.create-image-btn'));
+  const primaryCreateImageBtn = createImageButtons[0] || null;
   const imageGuidanceModal = document.getElementById('image-guidance-modal');
   const imageGuidanceTextarea = document.getElementById('image-guidance-textarea');
   const applyGuidanceBtn = document.getElementById('apply-guidance-btn');
@@ -2504,8 +2749,8 @@ document.addEventListener('DOMContentLoaded', () => {
     predictionManager.removeInlinePrediction();
 
     // Add loading state
-    createImageBtn.classList.add('loading');
-    const imageIcon = createImageBtn.querySelector('.material-symbols-outlined');
+    primaryCreateImageBtn.classList.add('loading');
+    const imageIcon = primaryCreateImageBtn.querySelector('.material-symbols-outlined');
     if (imageIcon) imageIcon.textContent = 'progress_activity';
 
     // Insert loading placeholder into editor
@@ -2539,6 +2784,8 @@ document.addEventListener('DOMContentLoaded', () => {
         container.className = 'editor-image-container';
         container.contentEditable = 'false';
 
+        let trailingBr = null;
+
         // Create image element
         const img = document.createElement('img');
         img.className = 'editor-image';
@@ -2565,6 +2812,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const scrollTop = scrollElement ? scrollElement.scrollTop : 0;
 
           container.remove();
+          if (trailingBr) trailingBr.remove();
 
           // Restore scroll position on the next frame to keep the viewport stable
           requestAnimationFrame(() => {
@@ -2593,7 +2841,8 @@ document.addEventListener('DOMContentLoaded', () => {
         editor.appendChild(container);
 
         // Add line break after image for continued writing
-        editor.appendChild(document.createElement('br'));
+        trailingBr = document.createElement('br');
+        editor.appendChild(trailingBr);
       }
     } catch (error) {
       console.error('Image generation error:', error);
@@ -2601,7 +2850,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => placeholder.remove(), 2000);
     } finally {
       // Remove loading state
-      createImageBtn.classList.remove('loading');
+      if (primaryCreateImageBtn) primaryCreateImageBtn.classList.remove('loading');
       if (imageIcon) imageIcon.textContent = 'image';
     }
   }
@@ -2609,21 +2858,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // Store text for image generation
   let pendingImageText = '';
 
-  if (createImageBtn && imageGuidanceModal) {
-    createImageBtn.addEventListener('click', () => {
-      // Get text BEFORE removing prediction (getEditorText already excludes predictions)
-      const text = predictionManager.getEditorText();
-      if (!text || text.trim().length < 10) {
-        closeMenu();
-        return;
-      }
+  if (createImageButtons.length && imageGuidanceModal) {
+    createImageButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const text = predictionManager.getEditorText();
+        if (!text || text.trim().length < 10) {
+          closeAllMenus();
+          return;
+        }
 
-      // Store text and show guidance modal
-      pendingImageText = text;
-      closeMenu();
-      imageGuidanceModal.classList.add('visible');
-      imageGuidanceTextarea.value = '';
-      imageGuidanceTextarea.focus();
+        pendingImageText = text;
+        closeAllMenus();
+        imageGuidanceModal.classList.add('visible');
+        if (imageGuidanceTextarea) {
+          imageGuidanceTextarea.value = '';
+          imageGuidanceTextarea.focus();
+        }
+      });
     });
 
     // Apply guidance button
@@ -2694,34 +2945,34 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Theme toggle button (in header or menu)
-  const themeToggleBtn = document.querySelector('.theme-toggle-btn');
-  if (themeToggleBtn) {
-    const themeIcon = themeToggleBtn.querySelector('.material-symbols-outlined');
-    const themeLabel = themeToggleBtn.querySelector('.menu-label');
-
-    const updateThemeButton = () => {
-      // Light mode is now the default (no attribute or any value other than 'dark')
+  const themeToggleButtons = Array.from(document.querySelectorAll('.theme-toggle-btn'));
+  if (themeToggleButtons.length) {
+    const updateThemeButtons = () => {
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      if (themeIcon) {
-        // Show sun (light_mode) when in dark theme, moon (dark_mode) when in light theme
-        themeIcon.textContent = isDark ? 'light_mode' : 'dark_mode';
-      }
-      if (themeLabel) {
-        themeLabel.textContent = isDark ? 'Light mode' : 'Dark mode';
-      }
+      themeToggleButtons.forEach((btn) => {
+        const themeIcon = btn.querySelector('.material-symbols-outlined');
+        const themeLabel = btn.querySelector('.menu-label');
+        if (themeIcon) {
+          themeIcon.textContent = isDark ? 'light_mode' : 'dark_mode';
+        }
+        if (themeLabel) {
+          themeLabel.textContent = isDark ? 'Light mode' : 'Dark mode';
+        }
+      });
     };
 
-    themeToggleBtn.addEventListener('click', () => {
-      const html = document.documentElement;
-      const isCurrentlyDark = html.getAttribute('data-theme') === 'dark';
-      playThemeDissolve();
-      html.setAttribute('data-theme', isCurrentlyDark ? 'light' : 'dark');
-      updateThemeButton();
-      closeMenu(); // Close menu after toggling
+    themeToggleButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const html = document.documentElement;
+        const isCurrentlyDark = html.getAttribute('data-theme') === 'dark';
+        playThemeDissolve();
+        html.setAttribute('data-theme', isCurrentlyDark ? 'light' : 'dark');
+        updateThemeButtons();
+        closeAllMenus();
+      });
     });
 
-    // Initialize button icon based on current theme
-    updateThemeButton();
+    updateThemeButtons();
   }
 
   document.addEventListener('keydown', (e) => {
