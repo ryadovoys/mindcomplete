@@ -4,5 +4,10 @@
       "source": "/((?!api).*)",
       "destination": "/public/$1"
     }
-  ]
+  ],
+  "functions": {
+    "api/generate-image.js": {
+      "maxDuration": 60
+    }
+  }
 }

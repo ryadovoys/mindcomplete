@@ -17,7 +17,7 @@ const STYLE_MAPPING = {
 };
 
 function getImageProvider() {
-    return process.env.IMAGE_PROVIDER || 'openrouter';
+    return (process.env.IMAGE_PROVIDER || 'openrouter').trim();
 }
 
 async function generateImagePrompt(text, apiKey, host, guidance = '', style = 'realistic') {
@@ -85,7 +85,7 @@ async function generateImageOpenRouter(prompt, apiKey, host) {
     if (!response.ok) {
         const errorText = await response.text();
         console.error('OpenRouter image generation error:', errorText);
-        throw new Error('Failed to generate image');
+        throw new Error(`OpenRouter error: ${errorText}`);
     }
 
     const data = await response.json();
@@ -209,7 +209,8 @@ export default async function handler(req, res) {
     const host = req.headers.host || 'purple-valley.vercel.app';
 
     try {
-        console.log(`[IMAGE] Request: text_len=${text?.length}, style=${style}`);
+        const provider = getImageProvider();
+        console.log(`[IMAGE] Request: provider=${provider}, text_len=${text?.length}, style=${style}`);
         const basePrompt = await generateImagePrompt(text, apiKey, host, guidance, style);
 
         if (!basePrompt) {
@@ -231,7 +232,7 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        console.error('[IMAGE] Server error:', error);
-        res.status(500).json({ error: error.message || 'Failed to generate image' });
+        console.error('[IMAGE] Server error:', error.message, error.stack);
+        res.status(500).json({ error: error.message || 'Failed to generate image', provider: getImageProvider() });
     }
 }

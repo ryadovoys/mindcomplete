@@ -742,19 +742,21 @@ h2 {
   transition: background-color 0.2s ease;
 }
 
-.icon-sidebar {
+/* Menu button icon toggle - show menu when closed, X when open */
+.menu-icon-open {
   display: block;
-  width: 32px;
-  height: 32px;
-  background-color: currentColor;
-  mask-image: url('sidebar-toggle.svg');
-  mask-repeat: no-repeat;
-  mask-position: center;
-  mask-size: contain;
-  -webkit-mask-image: url('sidebar-toggle.svg');
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  -webkit-mask-size: contain;
+}
+
+.menu-icon-close {
+  display: none;
+}
+
+.sidebar-open .menu-icon-open {
+  display: none;
+}
+
+.sidebar-open .menu-icon-close {
+  display: block;
 }
 
 /* Icon Button (Circular Ghost style from Figma) */
