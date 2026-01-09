@@ -1,8 +1,8 @@
-# Mindcomplete: How Text Selection Works
+# Purple Valley: How Text Selection Works
 
 ## Overview
 
-Mindcomplete is an AI writing assistant that predicts and suggests text continuations. When you type text and pause, the app generates a prediction that appears inline (in pink color) after your text.
+Purple Valley is an AI writing assistant that predicts and suggests text continuations. When you type text and pause, the app generates a prediction that appears inline (in pink color) after your text.
 
 You can accept all or part of this prediction using different interaction modes.
 

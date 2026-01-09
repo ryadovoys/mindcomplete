@@ -1,4 +1,4 @@
-# Purple Valley (Ideas Autocomplete)
+# Purple Valley
 
 AI-powered writing assistant that completes your thoughts as you type, with image generation capabilities.
 

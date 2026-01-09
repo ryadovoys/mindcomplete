@@ -1,38 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
+import { getContext } from './lib/contextService.js';
 
 const CONFIG = {
   MAX_TOKENS: 400,
   TEMPERATURE: 0.7,
   MODEL: 'xiaomi/mimo-v2-flash:free',
 };
-
-// Initialize Supabase
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-const supabase = supabaseUrl && supabaseServiceKey
-  ? createClient(supabaseUrl, supabaseServiceKey)
-  : null;
-
-// Get context from Supabase
-async function getContext(sessionId) {
-  if (!supabase || !sessionId) return null;
-
-  const { data, error } = await supabase
-    .from('contexts')
-    .select('text, char_count, estimated_tokens, files, expires_at')
-    .eq('session_id', sessionId)
-    .gt('expires_at', new Date().toISOString())
-    .single();
-
-  if (error || !data) return null;
-
-  return {
-    text: data.text,
-    charCount: data.char_count,
-    estimatedTokens: data.estimated_tokens,
-    files: data.files
-  };
-}
 
 export default async function handler(req, res) {
   // Only allow POST requests
@@ -89,11 +61,10 @@ ${rules}
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': `https://${req.headers.host}`,
-        'X-Title': 'Mindcomplete'
-      },
-      body: JSON.stringify({
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': `https://${host}`,
+                    'X-Title': 'Purple Valley'
+                },      body: JSON.stringify({
         model: CONFIG.MODEL,
         stream: true,
         messages: [

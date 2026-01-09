@@ -1,15 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
-
-const CONTEXT_TTL_MS = 30 * 60 * 1000; // 30 minutes
-const MAX_TOTAL_CHARS = 50000;
-
-// Initialize Supabase
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-const supabase = supabaseUrl && supabaseServiceKey
-  ? createClient(supabaseUrl, supabaseServiceKey)
-  : null;
+import { supabase } from './lib/supabaseClient.js';
+import { CONTEXT_TTL_MS, MAX_CONTEXT_CHARS } from './lib/constants.js';
 
 // Dynamic imports for modules that may have issues in serverless
 let Busboy = null;
@@ -56,8 +47,8 @@ function combineContexts(parsedFiles) {
   const files = [];
 
   for (const file of parsedFiles) {
-    if (combinedText.length + file.text.length > MAX_TOTAL_CHARS) {
-      const remaining = MAX_TOTAL_CHARS - combinedText.length;
+    if (combinedText.length + file.text.length > MAX_CONTEXT_CHARS) {
+      const remaining = MAX_CONTEXT_CHARS - combinedText.length;
       if (remaining > 0) {
         combinedText += file.text.slice(0, remaining);
         files.push({ name: file.filename, chars: remaining, truncated: true });

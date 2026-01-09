@@ -1,20 +1,13 @@
 {
-  "name": "mindcomplete",
+  "name": "purple-valley",
   "version": "1.0.0",
   "description": "AI-powered writing assistant that completes your thoughts in real-time",
   "type": "module",
   "scripts": {
-    "start": "node server/index.js",
-    "dev": "node server/index.js"
+    "dev": "vercel dev"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
-    "busboy": "^1.6.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "multer": "^2.0.2",
-    "pdf-parse": "^2.4.5",
     "uuid": "^13.0.0"
   }
 }

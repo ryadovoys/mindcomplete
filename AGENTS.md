@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-Mindcomplete ships a static client in `public/` served by the slim Express stub in `server/index.js`. API logic (predict, context, Valleys, auth, images) lives in `api/` so Vercel can deploy it verbatim, while persistence helpers (`contextStore.js`, `valleysStore.js`, `supabaseClient.js`) fall back to in-memory Maps when Supabase keys are missing. Reference notes stay in `docs/`; `SUPABASE_SETUP.md` and `VALLEYS_STATUS.md` describe outstanding database chores.
+Purple Valley ships a static client in `public/` served by the slim Express stub in `server/index.js`. API logic (predict, context, Valleys, auth, images) lives in `api/` so Vercel can deploy it verbatim, while persistence helpers (`contextStore.js`, `valleysStore.js`, `supabaseClient.js`) fall back to in-memory Maps when Supabase keys are missing. Reference notes stay in `docs/`; `SUPABASE_SETUP.md` and `VALLEYS_STATUS.md` describe outstanding database chores.
 
 ## Build, Test, and Development Commands
 - `npm install` — install Express, Supabase, and browser dependencies.

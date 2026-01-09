@@ -1,10 +1,10 @@
-# Mindcomplete
+# Purple Valley
 
 **AI-powered writing assistant that completes your thoughts in real-time.**
 
-Mindcomplete helps you write faster and more fluidly by predicting and suggesting how to continue your paragraphs. Simply pause while typing, and AI will suggest a natural continuation matching your tone and style.
+Purple Valley helps you write faster and more fluidly by predicting and suggesting how to continue your paragraphs. Simply pause while typing, and AI will suggest a natural continuation matching your tone and style.
 
-![Mindcomplete Demo](https://via.placeholder.com/800x400?text=Mindcomplete+Demo)
+![Purple Valley Demo](https://via.placeholder.com/800x400?text=Purple Valley+Demo)
 
 ## Features
 
@@ -44,8 +44,8 @@ Mindcomplete helps you write faster and more fluidly by predicting and suggestin
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/mindcomplete.git
-cd mindcomplete
+git clone https://github.com/yourusername/purple-valley.git
+cd purple-valley
 ```
 
 2. Install dependencies:
@@ -99,7 +99,7 @@ this.debounceMs = options.debounceMs || 300;
 ## Project Structure
 
 ```
-mindcomplete/
+purple-valley/
 ├── server/
 │   ├── index.js              # Express server + OpenRouter proxy
 │   └── prompts-archive.js    # System prompt history

@@ -1,10 +1,45 @@
 const ENABLE_WORD_FADE = true; // Enabled for Word Fade appearance as seen in motion lab
 
 const CONFIG = {
+  // Core settings
   DEBOUNCE_MS: 1000,
   MIN_TEXT_LENGTH: 10,
   MOBILE_BREAKPOINT_PX: 768,
+  DESKTOP_BREAKPOINT_PX: 1025,
   TOUCH_MOVE_THRESHOLD_PX: 5,
+
+  // Timeouts
+  TIMEOUT_FEEDBACK_MS: 800,
+  TIMEOUT_MESSAGE_MS: 2000,
+  AUTO_SAVE_DEBOUNCE_MS: 2000,
+  SUPABASE_CHECK_INTERVAL_MS: 50,
+  MENU_READY_DELAY_MS: 120,
+
+  // Content limits
+  TITLE_MAX_LENGTH: 30,
+  TITLE_MIN_SPACE_POS: 10,
+  FILE_SIZE_KB: 1024,
+  FILE_SIZE_MB: 1024 * 1024,
+
+  // Time thresholds (for relative dates)
+  TIME_MINUTE_MS: 60000,
+  TIME_HOUR_MS: 3600000,
+  TIME_DAY_MS: 86400000,
+  TIME_WEEK_MS: 604800000,
+
+  // localStorage keys
+  STORAGE_SESSION_ID: 'purplevalley_session_id',
+  STORAGE_FILES: 'purplevalley_files',
+  STORAGE_TOKENS: 'purplevalley_tokens',
+  STORAGE_RULES: 'purplevalley_rules',
+
+  // API endpoints
+  API_PREDICT: '/api/predict',
+  API_CONTEXT: '/api/context',
+  API_CONTEXT_RESTORE: '/api/context/restore',
+  API_VALLEYS: '/api/valleys',
+  API_AUTH_DELETE: '/api/auth/delete-account',
+  API_GENERATE_IMAGE: '/api/generate-image',
 };
 
 class PredictionManager {
@@ -23,7 +58,6 @@ class PredictionManager {
     this.selectEndOffset = null;
     this.selectPreviewOffset = null;
     this.selectTouchActive = false;
-    this.pointerSelecting = false;
     this.selectionReady = false;
     this.selectionFixed = false;
     this.hoverWordEnd = null;
@@ -297,7 +331,6 @@ class PredictionManager {
     this.currentPrediction = '';
     this.navigationOffset = 0;
     this.hoverOffset = 0;
-    this.motionRemainText = '';
     this.predictionAnchorRange = null;
     this.touchOnPrediction = false;
   }
@@ -315,11 +348,7 @@ class PredictionManager {
               this.hoverWordEnd = wordBounds.end;
             } else {
               this.hoverWordEnd = null;
-              if (wordBounds.end <= this.selectStartOffset) {
-                this.selectPreviewOffset = wordBounds.start;
-              } else {
-                this.selectPreviewOffset = wordBounds.end;
-              }
+              this.updateSelectPreviewOffset(wordBounds);
             }
             this.hoverOffset = 0;
             this.navigationOffset = 0;
@@ -455,25 +484,18 @@ class PredictionManager {
     const touch = e.touches[0];
     const x = touch.clientX;
     const y = touch.clientY;
-    const mode = this.selectModeActive ? 'SELECT' : 'NORMAL';
-
-    console.log(`[TouchStart:${mode}] coords=(${x.toFixed(0)}, ${y.toFixed(0)})`);
 
     const withinPrediction = this.isPointWithinPrediction(x, y);
-    console.log(`[TouchStart:${mode}] withinPrediction=${withinPrediction}`);
 
     if (!withinPrediction) {
       this.touchOnPrediction = false;
-      console.log(`[TouchStart:${mode}] EARLY EXIT - not within prediction`);
       return;
     }
 
     const offsetAtStart = this.getOffsetFromPoint(x, y);
-    console.log(`[TouchStart:${mode}] offsetAtStart=${offsetAtStart}`);
 
     if (offsetAtStart === null) {
       this.touchOnPrediction = false;
-      console.log(`[TouchStart:${mode}] EARLY EXIT - offset is null`);
       return;
     }
 
@@ -482,8 +504,6 @@ class PredictionManager {
     this.touchStartOffset = offsetAtStart;
     this.touchMoved = false;
     this.touchOnPrediction = true;
-
-    console.log(`[TouchStart:${mode}] SUCCESS - touchOnPrediction=true, offset=${offsetAtStart}`);
 
     // Normal mode: let TouchEnd handle logic to distinguish tap vs swipe
     if (!this.selectModeActive) {
@@ -498,7 +518,6 @@ class PredictionManager {
       // Tap cycle: 1st tap = start, 2nd tap = end, 3rd tap = reset & new start
       if (this.selectStartOffset === null) {
         // First tap: set start point
-        console.log(`[TouchStart:SELECT] First tap - setting start`);
         this.selectStartOffset = wordBounds.start;
         this.selectPreviewOffset = wordBounds.end;
         this.selectionFixed = false;
@@ -506,18 +525,12 @@ class PredictionManager {
         this.setSelectionReady(false);
       } else if (!this.selectionFixed) {
         // Second tap: set end point, fix selection
-        console.log(`[TouchStart:SELECT] Second tap - setting end`);
-        if (wordBounds.end <= this.selectStartOffset) {
-          this.selectPreviewOffset = wordBounds.start;
-        } else {
-          this.selectPreviewOffset = wordBounds.end;
-        }
+        this.updateSelectPreviewOffset(wordBounds);
         this.selectionFixed = true;
         this.updatePredictionDisplay();
         this.setSelectionReady(true);
       } else {
         // Third tap: reset and start fresh
-        console.log(`[TouchStart:SELECT] Third tap - reset, new start`);
         this.selectStartOffset = wordBounds.start;
         this.selectPreviewOffset = wordBounds.end;
         this.selectionFixed = false;
@@ -528,9 +541,6 @@ class PredictionManager {
   }
 
   onEditorTouchMove(e) {
-    const mode = this.selectModeActive ? 'SELECT' : 'NORMAL';
-    console.log(`[TouchMove:${mode}] FIRED - touchOnPrediction=${this.touchOnPrediction}, selectTouchActive=${this.selectTouchActive}`);
-
     if (!this.touchOnPrediction) {
       return;
     }
@@ -547,50 +557,34 @@ class PredictionManager {
     if (this.selectModeActive && this.selectTouchActive) {
       e.preventDefault();
       const offset = this.getOffsetFromPoint(touch.clientX, touch.clientY);
-      console.log(`[TouchMove:SELECT] offset=${offset}, selectTouchActive=${this.selectTouchActive}`);
       if (offset === null) return;
       const wordBounds = this.getWordBoundaries(offset);
       if (!wordBounds) return;
 
-      if (wordBounds.end <= this.selectStartOffset) {
-        this.selectPreviewOffset = wordBounds.start;
-      } else {
-        this.selectPreviewOffset = wordBounds.end;
-      }
-      console.log(`[TouchMove:SELECT] start=${this.selectStartOffset}, preview=${this.selectPreviewOffset}`);
+      this.updateSelectPreviewOffset(wordBounds);
       this.updatePredictionDisplay();
       this.setSelectionReady(this.selectStartOffset !== this.selectPreviewOffset);
     }
   }
 
   onEditorTouchEnd(e) {
-    const mode = this.selectModeActive ? 'SELECT' : 'NORMAL';
-    console.log(`[TouchEnd:${mode}] touchOnPrediction=${this.touchOnPrediction}`);
-
     if (!this.touchOnPrediction) {
-      console.log(`[TouchEnd:${mode}] EARLY EXIT - touchOnPrediction is false`);
       return;
     }
 
     // Save touchStart coords before reset (more accurate for tap detection on mobile)
-    const startX = this.touchStartX;
-    const startY = this.touchStartY;
     const startOffset = this.touchStartOffset;
 
     const touch = e.changedTouches?.[0];
     if (!touch) {
-      console.log(`[TouchEnd:${mode}] EARLY EXIT - no touch in changedTouches`);
       return;
     }
 
     const coords = { x: touch.clientX, y: touch.clientY };
     const gestureMoved = this.touchMoved;
 
-    console.log(`[TouchEnd:${mode}] startOffset=${startOffset}, gestureMoved=${gestureMoved}`);
-
     // Reset state
     this.touchStartX = null;
-
     this.touchStartY = null;
     this.touchStartOffset = null;
     this.touchMoved = false;
@@ -601,18 +595,13 @@ class PredictionManager {
 
     // Select mode with drag
     if (this.selectModeActive && this.selectTouchActive) {
-      console.log(`[TouchEnd:SELECT] Taking SELECT DRAG path`);
       const offset = this.getOffsetFromPoint(coords.x, coords.y);
       this.selectTouchActive = false;
 
       if (offset !== null) {
         const wordBounds = this.getWordBoundaries(offset);
         if (wordBounds) {
-          if (wordBounds.end <= this.selectStartOffset) {
-            this.selectPreviewOffset = wordBounds.start;
-          } else {
-            this.selectPreviewOffset = wordBounds.end;
-          }
+          this.updateSelectPreviewOffset(wordBounds);
         }
       }
       this.updatePredictionDisplay();
@@ -622,7 +611,6 @@ class PredictionManager {
 
     // Select mode tap
     if (this.selectModeActive) {
-      console.log(`[TouchEnd:SELECT] Taking SELECT TAP path`);
       const offset = this.getOffsetFromPoint(coords.x, coords.y);
       this.handleSelectModeSelection(offset);
       return;
@@ -630,28 +618,22 @@ class PredictionManager {
 
     // Normal mode - ignore if finger moved
     if (gestureMoved) {
-      console.log(`[TouchEnd:NORMAL] EARLY EXIT - finger moved`);
       return;
     }
 
     // Normal mode - use saved offset from touchStart (most reliable)
     // This fixes the bug where touchend coordinates drift or map to wrong range
     const offset = startOffset;
-    console.log(`[TouchEnd:NORMAL] Using startOffset=${offset}`);
 
     if (offset !== null) {
       const wordBounds = this.getWordBoundaries(offset);
-      console.log(`[TouchEnd:NORMAL] wordBounds=`, wordBounds);
       if (wordBounds) {
         this.hoverOffset = wordBounds.end;
       } else {
         this.hoverOffset = offset;
       }
       this.navigationOffset = 0;
-      console.log(`[TouchEnd:NORMAL] Calling acceptPrediction() with hoverOffset=${this.hoverOffset}`);
       this.acceptPrediction();
-    } else {
-      console.log(`[TouchEnd:NORMAL] SKIP - offset is null`);
     }
   }
 
@@ -793,6 +775,15 @@ class PredictionManager {
     return { start: wordStart, end: wordEnd };
   }
 
+  // Helper to update selectPreviewOffset based on word boundaries
+  updateSelectPreviewOffset(wordBounds) {
+    if (wordBounds.end <= this.selectStartOffset) {
+      this.selectPreviewOffset = wordBounds.start;
+    } else {
+      this.selectPreviewOffset = wordBounds.end;
+    }
+  }
+
   isCursorAtEnd() {
     const selection = window.getSelection();
     if (!selection.rangeCount) return false;
@@ -824,7 +815,7 @@ class PredictionManager {
     this.preparePredictionAnchor();
 
     try {
-      const response = await fetch('/api/predict', {
+      const response = await fetch(CONFIG.API_PREDICT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1079,7 +1070,6 @@ class PredictionManager {
       this.currentPrediction = remainingPrediction;
       this.navigationOffset = 0;
       this.hoverOffset = 0;
-      this.motionRemainText = '';
       this.updatePredictionDisplay();
       this.refreshAnchorAfterPrediction();
     } else {
@@ -1105,10 +1095,7 @@ class PredictionManager {
   }
 
   acceptPrediction() {
-    console.log(`[acceptPrediction] currentPrediction="${this.currentPrediction?.substring(0, 30)}...", hoverOffset=${this.hoverOffset}, navigationOffset=${this.navigationOffset}`);
-
     if (!this.currentPrediction) {
-      console.log(`[acceptPrediction] EARLY EXIT - no currentPrediction`);
       return;
     }
 
@@ -1117,7 +1104,6 @@ class PredictionManager {
       ? activeOffset
       : this.currentPrediction.length;
 
-    console.log(`[acceptPrediction] activeOffset=${activeOffset}, endOffset=${endOffset}, calling commitAcceptance(0, ${endOffset})`);
     this.commitAcceptance(0, endOffset);
   }
 
@@ -1129,7 +1115,6 @@ class PredictionManager {
     this.selectEndOffset = null;
     this.selectPreviewOffset = null;
     this.selectTouchActive = false;
-    this.pointerSelecting = false;
     this.selectionFixed = false;
     this.setSelectionReady(false);
 
@@ -1152,7 +1137,6 @@ class PredictionManager {
     this.selectEndOffset = null;
     this.selectPreviewOffset = null;
     this.selectTouchActive = false;
-    this.pointerSelecting = false;
     this.selectionFixed = false;
     this.setSelectionReady(false);
 
@@ -1261,10 +1245,10 @@ class ContextManager {
 
   init() {
     // Restore session from localStorage if available
-    const savedSessionId = localStorage.getItem('mindcomplete_session_id');
-    const savedFiles = localStorage.getItem('mindcomplete_files');
-    const savedTokens = localStorage.getItem('mindcomplete_tokens');
-    const savedRules = localStorage.getItem('mindcomplete_rules');
+    const savedSessionId = localStorage.getItem(CONFIG.STORAGE_SESSION_ID);
+    const savedFiles = localStorage.getItem(CONFIG.STORAGE_FILES);
+    const savedTokens = localStorage.getItem(CONFIG.STORAGE_TOKENS);
+    const savedRules = localStorage.getItem(CONFIG.STORAGE_RULES);
 
     if (savedSessionId && savedFiles) {
       this.sessionId = savedSessionId;
@@ -1400,9 +1384,9 @@ class ContextManager {
 
     // Save to localStorage
     if (text) {
-      localStorage.setItem('mindcomplete_rules', text);
+      localStorage.setItem(CONFIG.STORAGE_RULES, text);
     } else {
-      localStorage.removeItem('mindcomplete_rules');
+      localStorage.removeItem(CONFIG.STORAGE_RULES);
     }
 
     if (this.rulesStatusEl) {
@@ -1421,7 +1405,7 @@ class ContextManager {
     this.rulesText = '';
     if (this.rulesTextarea) this.rulesTextarea.value = '';
     if (this.rulesTextareaMobile) this.rulesTextareaMobile.value = '';
-    localStorage.removeItem('mindcomplete_rules');
+    localStorage.removeItem(CONFIG.STORAGE_RULES);
 
     if (this.rulesStatusEl) {
       this.rulesStatusEl.textContent = 'Rules cleared';
@@ -1448,7 +1432,7 @@ class ContextManager {
     }
 
     try {
-      const response = await fetch('/api/context', {
+      const response = await fetch(CONFIG.API_CONTEXT, {
         method: 'POST',
         body: formData
       });
@@ -1475,9 +1459,9 @@ class ContextManager {
       this.estimatedTokens = data.estimatedTokens;
 
       // Save to localStorage for session recovery
-      localStorage.setItem('mindcomplete_session_id', this.sessionId);
-      localStorage.setItem('mindcomplete_files', JSON.stringify(this.files));
-      localStorage.setItem('mindcomplete_tokens', this.estimatedTokens.toString());
+      localStorage.setItem(CONFIG.STORAGE_SESSION_ID, this.sessionId);
+      localStorage.setItem(CONFIG.STORAGE_FILES, JSON.stringify(this.files));
+      localStorage.setItem(CONFIG.STORAGE_TOKENS, this.estimatedTokens.toString());
 
       this.updateUI();
     } catch (error) {
@@ -1496,7 +1480,7 @@ class ContextManager {
   async clearFiles() {
     if (this.sessionId) {
       try {
-        await fetch(`/api/context/${this.sessionId}`, { method: 'DELETE' });
+        await fetch(`${CONFIG.API_CONTEXT}/${this.sessionId}`, { method: 'DELETE' });
       } catch (e) {
         console.error('Error clearing files:', e);
       }
@@ -1507,9 +1491,9 @@ class ContextManager {
     this.estimatedTokens = 0;
 
     // Clear file-related localStorage (keep rules)
-    localStorage.removeItem('mindcomplete_session_id');
-    localStorage.removeItem('mindcomplete_files');
-    localStorage.removeItem('mindcomplete_tokens');
+    localStorage.removeItem(CONFIG.STORAGE_SESSION_ID);
+    localStorage.removeItem(CONFIG.STORAGE_FILES);
+    localStorage.removeItem(CONFIG.STORAGE_TOKENS);
 
     this.updateUI();
   }
@@ -1525,7 +1509,7 @@ class ContextManager {
       await this.clearFiles();
     } else {
       // Update localStorage
-      localStorage.setItem('mindcomplete_files', JSON.stringify(this.files));
+      localStorage.setItem(CONFIG.STORAGE_FILES, JSON.stringify(this.files));
       this.updateUI();
     }
   }
@@ -1721,7 +1705,7 @@ class ValleysManager {
     try {
       const token = await window.authManager.getAccessToken();
       const method = this.activeValleyId ? 'PUT' : 'POST';
-      const url = this.activeValleyId ? `/api/valleys?id=${this.activeValleyId}` : '/api/valleys';
+      const url = this.activeValleyId ? `${CONFIG.API_VALLEYS}?id=${this.activeValleyId}` : CONFIG.API_VALLEYS;
 
       const response = await fetch(url, {
         method: method,
@@ -1764,7 +1748,7 @@ class ValleysManager {
       const token = await window.authManager?.getAccessToken();
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-      const response = await fetch('/api/valleys', { headers });
+      const response = await fetch(CONFIG.API_VALLEYS, { headers });
       if (!response.ok) throw new Error('Failed to load valleys');
 
       const data = await response.json();
@@ -1780,7 +1764,7 @@ class ValleysManager {
   async loadValley(id) {
     try {
       const token = await window.authManager?.getAccessToken();
-      const response = await fetch(`/api/valleys?id=${id}`, {
+      const response = await fetch(`${CONFIG.API_VALLEYS}?id=${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to load valley');
@@ -1801,9 +1785,9 @@ class ValleysManager {
         const textarea = document.getElementById('context-textarea');
         if (textarea) textarea.value = valley.rules || '';
         if (valley.rules) {
-          localStorage.setItem('mindcomplete_rules', valley.rules);
+          localStorage.setItem(CONFIG.STORAGE_RULES, valley.rules);
         } else {
-          localStorage.removeItem('mindcomplete_rules');
+          localStorage.removeItem(CONFIG.STORAGE_RULES);
         }
 
         // Restore files
@@ -1833,7 +1817,7 @@ class ValleysManager {
 
     try {
       const token = await window.authManager?.getAccessToken();
-      const response = await fetch('/api/context/restore', {
+      const response = await fetch(CONFIG.API_CONTEXT_RESTORE, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1856,9 +1840,9 @@ class ValleysManager {
       window.contextManager.estimatedTokens = filesData.estimatedTokens || 0;
 
       // Save to localStorage
-      localStorage.setItem('mindcomplete_session_id', data.sessionId);
-      localStorage.setItem('mindcomplete_files', JSON.stringify(filesData.files || []));
-      localStorage.setItem('mindcomplete_tokens', (filesData.estimatedTokens || 0).toString());
+      localStorage.setItem(CONFIG.STORAGE_SESSION_ID, data.sessionId);
+      localStorage.setItem(CONFIG.STORAGE_FILES, JSON.stringify(filesData.files || []));
+      localStorage.setItem(CONFIG.STORAGE_TOKENS, (filesData.estimatedTokens || 0).toString());
     } catch (error) {
       console.error('Failed to restore files:', error);
       await window.contextManager.clearFiles();
@@ -1868,7 +1852,7 @@ class ValleysManager {
   async deleteValley(id) {
     try {
       const token = await window.authManager?.getAccessToken();
-      const response = await fetch(`/api/valleys?id=${id}`, {
+      const response = await fetch(`${CONFIG.API_VALLEYS}?id=${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -1976,7 +1960,7 @@ class ValleysManager {
         }
 
         this.loadValley(item.dataset.id);
-        if (window.innerWidth < 1025) {
+        if (window.innerWidth < CONFIG.DESKTOP_BREAKPOINT_PX) {
           document.body.classList.remove('sidebar-open');
           const menuIcon = document.querySelector('#menu-btn .material-symbols-outlined');
           if (menuIcon) menuIcon.textContent = 'dehaze';
@@ -2310,7 +2294,7 @@ class AuthManager {
       const { data: { session } } = await window.supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const response = await fetch('/api/auth/delete-account', {
+      const response = await fetch(CONFIG.API_AUTH_DELETE, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${session.access_token}`
@@ -2464,7 +2448,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const menuIcon = menuBtn ? menuBtn.querySelector('.material-symbols-outlined') : null;
 
   // Initialize menu icon for desktop
-  if (window.innerWidth >= 1025 && menuIcon) {
+  if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX && menuIcon) {
     menuIcon.textContent = document.body.classList.contains('sidebar-collapsed') ? 'dehaze' : 'close';
   }
 
@@ -2546,7 +2530,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (menuBtn) {
     menuBtn.addEventListener('click', () => {
       // Desktop toggle
-      if (window.innerWidth >= 1025) {
+      if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX) {
         document.body.classList.toggle('sidebar-collapsed');
         if (menuIcon) {
           menuIcon.textContent = document.body.classList.contains('sidebar-collapsed') ? 'dehaze' : 'close';
@@ -2687,7 +2671,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.addEventListener('resize', () => {
-    if (window.innerWidth >= 1025) {
+    if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX) {
       closeSidebarDrawer();
       if (!document.body.classList.contains('sidebar-collapsed') && menuIcon) {
         menuIcon.textContent = 'close';
@@ -2740,8 +2724,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch(editorImg.src);
         const blob = await response.blob();
         imageFile = new File([blob], 'image.png', { type: blob.type || 'image/png' });
-      } catch (e) {
-        console.log('Could not convert image for sharing');
+      } catch {
+        // Image conversion failed, continue without image
       }
     }
 
@@ -2876,7 +2860,7 @@ document.addEventListener('DOMContentLoaded', () => {
     editor.appendChild(placeholder);
 
     try {
-      const response = await fetch('/api/generate-image', {
+      const response = await fetch(CONFIG.API_GENERATE_IMAGE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, guidance, style })
@@ -2921,7 +2905,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error('Image generation error:', error);
       placeholder.innerHTML = 'Failed to generate image';
-      setTimeout(() => placeholder.remove(), 2000);
+      setTimeout(() => placeholder.remove(), CONFIG.TIMEOUT_MESSAGE_MS);
     } finally {
       // Remove loading state
       if (primaryCreateImageBtn) primaryCreateImageBtn.classList.remove('loading');
@@ -2957,7 +2941,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const guidance = imageGuidanceTextarea.value.trim();
         const styleSelect = document.getElementById('image-style-select');
         const style = styleSelect ? styleSelect.value : 'anime';
-        console.log(`[Frontend] Sending image request - Style: ${style}, Guidance: ${guidance}`);
         imageGuidanceModal.classList.remove('visible');
         generateImageWithGuidance(pendingImageText, guidance, style);
       });

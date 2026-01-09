@@ -1,11 +1,11 @@
-const CACHE_NAME = 'mindcomplete-cache-v2';
+const CACHE_NAME = 'purple-valley-cache-v1';
 const ASSETS = [
   '/',
   '/index.html',
   '/styles.css',
   '/app.js',
-  '/mindcomplete-logo.png',
-  '/mindcomplete-favicon.png',
+  '/purple-valley-favicon.png',
+  '/purple-valley-logo.svg',
   '/manifest.json'
 ];
 
