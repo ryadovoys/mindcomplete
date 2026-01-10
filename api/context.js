@@ -67,12 +67,31 @@ function combineContexts(parsedFiles) {
   };
 }
 
+// Collect request body as buffer (needed for vercel dev compatibility)
+async function collectRequestBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', (chunk) => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
 // Parse multipart form data using busboy (reliable for Vercel serverless)
 async function parseMultipartForm(req) {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const contentType = req.headers['content-type'] || '';
     if (!contentType.includes('multipart/form-data')) {
       return reject(new Error('Expected multipart/form-data'));
+    }
+
+    // For vercel dev, we need to collect the body first
+    let bodyBuffer;
+    try {
+      bodyBuffer = await collectRequestBody(req);
+      console.log('[parseMultipartForm] Body collected, size:', bodyBuffer.length);
+    } catch (err) {
+      return reject(new Error('Failed to read request body: ' + err.message));
     }
 
     const busboy = Busboy({ headers: req.headers });
@@ -95,7 +114,8 @@ async function parseMultipartForm(req) {
     busboy.on('finish', () => resolve(files));
     busboy.on('error', (err) => reject(err));
 
-    req.pipe(busboy);
+    // Write the collected buffer to busboy instead of piping
+    busboy.end(bodyBuffer);
   });
 }
 
