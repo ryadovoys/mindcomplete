@@ -434,12 +434,12 @@ body {
 .sidebar-valleys {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 2px;
 }
 
 .sidebar-valley-row {
   width: 100%;
-  height: 48px;
+  height: 36px;
   padding: 0;
   border-radius: 10px;
   display: flex;
@@ -465,7 +465,7 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: left;
-  line-height: 48px;
+  line-height: 36px;
   min-width: 0;
   padding-left: 12px;
   padding-right: 12px;
@@ -1062,7 +1062,7 @@ body.select-mode-active .inline-prediction {
 .modal-content {
   background: var(--modal-background);
   border: 1px solid var(--modal-border);
-  border-radius: 32px;
+  border-radius: 16px;
   padding: 48px;
   max-width: 500px;
   position: relative;
@@ -1075,7 +1075,7 @@ body.select-mode-active .inline-prediction {
   width: min(900px, 90vw);
   background: var(--modal-background);
   border: 1px solid var(--modal-border);
-  border-radius: 32px;
+  border-radius: 16px;
   padding: 32px;
   box-shadow: var(--modal-shadow);
   display: flex;
@@ -1491,7 +1491,7 @@ body.selection-ready .select-confirm-btn {
     width: calc(100vw - 40px);
     max-width: 400px;
     height: auto;
-    border-radius: 32px;
+    border-radius: 16px;
     padding: 0;
     background: var(--background);
   }
@@ -1635,7 +1635,7 @@ body.selection-ready .select-confirm-btn {
   padding: 0;
   display: flex;
   flex-direction: column;
-  border-radius: 32px;
+  border-radius: 16px;
   background: var(--modal-background);
   border: 1px solid var(--modal-border);
   box-shadow: var(--modal-shadow);
@@ -2074,7 +2074,7 @@ body.selection-ready .select-confirm-btn {
   padding: 0;
   display: flex;
   flex-direction: column;
-  border-radius: 32px;
+  border-radius: 16px;
   background: var(--modal-background);
   border: 1px solid var(--modal-border);
   -webkit-backdrop-filter: blur(24px);
@@ -2980,8 +2980,8 @@ body.side-menu-open .side-menu-backdrop {
   z-index: var(--z-sidebar);
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 20px 12px;
+  gap: 24px;
+  padding: 24px;
   transform: translateX(100%);
   transition: transform 0.3s ease;
   overflow-y: auto;
@@ -3006,7 +3006,7 @@ body.side-menu-open .side-menu {
 .side-menu-section {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
   width: 100%;
 }
 
@@ -3190,6 +3190,6 @@ body.side-menu-open .side-menu {
 @media (max-width: 768px) {
   .side-menu {
     width: 100%;
-    padding: 20px;
+    padding: 24px;
   }
 }
