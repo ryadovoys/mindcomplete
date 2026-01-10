@@ -1476,24 +1476,43 @@ class ContextManager {
   }
 
   renderSideMenuFilesList() {
-    if (!this.sideMenuFilesList) return;
+    console.log('[renderSideMenuFilesList] called, files:', this.files);
+    console.log('[renderSideMenuFilesList] sideMenuFilesList element:', this.sideMenuFilesList);
 
-    if (this.files.length === 0) {
-      this.sideMenuFilesList.innerHTML = '';
+    if (!this.sideMenuFilesList) {
+      console.log('[renderSideMenuFilesList] ERROR: sideMenuFilesList is null!');
       return;
     }
 
-    this.sideMenuFilesList.innerHTML = this.files.map((file, index) => `
-      <div class="side-menu-file" data-index="${index}">
-        <div class="side-menu-file-icon">
-          <span class="material-symbols-outlined">description</span>
-        </div>
-        <span class="side-menu-file-name">${file.name || file}</span>
-        <button class="side-menu-file-remove" data-index="${index}">
-          <span class="material-symbols-outlined">close</span>
-        </button>
-      </div>
-    `).join('');
+    // Get or create tokens display element
+    let tokensDisplay = document.getElementById('side-menu-tokens-display');
+
+    if (this.files.length === 0) {
+      this.sideMenuFilesList.innerHTML = '';
+      if (tokensDisplay) tokensDisplay.style.display = 'none';
+      return;
+    }
+
+    // Render file items
+    this.sideMenuFilesList.innerHTML = this.files.map((file, index) =>
+      `<div class="side-menu-file" data-index="${index}">` +
+        `<div class="side-menu-file-icon">` +
+          `<span class="material-symbols-outlined">description</span>` +
+        `</div>` +
+        `<span class="side-menu-file-name">${file.name || file}</span>` +
+        `<button class="side-menu-file-remove" data-index="${index}" aria-label="Remove file">` +
+          `<span class="material-symbols-outlined">close</span>` +
+        `</button>` +
+      `</div>`
+    ).join('');
+
+    console.log('[renderSideMenuFilesList] innerHTML set:', this.sideMenuFilesList.innerHTML.substring(0, 100));
+
+    // Show estimated tokens
+    if (tokensDisplay) {
+      tokensDisplay.textContent = `~${this.estimatedTokens.toLocaleString()} tokens`;
+      tokensDisplay.style.display = 'block';
+    }
 
     // Add delete handlers
     this.sideMenuFilesList.querySelectorAll('.side-menu-file-remove').forEach(btn => {
@@ -1558,10 +1577,12 @@ class ContextManager {
   }
 
   async handleFiles(fileList) {
+    console.log('[handleFiles] called with', fileList?.length, 'files');
     if (!fileList || fileList.length === 0) return;
 
     const formData = new FormData();
     for (const file of fileList) {
+      console.log('[handleFiles] Adding file:', file.name);
       formData.append('files', file);
     }
 
@@ -1570,10 +1591,13 @@ class ContextManager {
     }
 
     try {
+      console.log('[handleFiles] Uploading to', CONFIG.API_CONTEXT);
       const response = await fetch(CONFIG.API_CONTEXT, {
         method: 'POST',
         body: formData
       });
+
+      console.log('[handleFiles] Response status:', response.status);
 
       if (!response.ok) {
         let errorMessage = 'Upload failed';
@@ -1592,6 +1616,7 @@ class ContextManager {
       }
 
       const data = await response.json();
+      console.log('[handleFiles] Success! Data:', data);
       this.sessionId = data.sessionId;
       this.files = data.files;
       this.estimatedTokens = data.estimatedTokens;
@@ -1601,6 +1626,7 @@ class ContextManager {
       localStorage.setItem(CONFIG.STORAGE_FILES, JSON.stringify(this.files));
       localStorage.setItem(CONFIG.STORAGE_TOKENS, this.estimatedTokens.toString());
 
+      console.log('[handleFiles] Calling updateUI');
       this.updateUI();
     } catch (error) {
       console.error('Upload error:', error);
