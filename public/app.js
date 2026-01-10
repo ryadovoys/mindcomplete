@@ -1273,6 +1273,17 @@ class ContextManager {
     this.filesMenuBtn = document.querySelector('.files-menu-btn');
     this.rulesMenuBtn = document.querySelector('.rules-menu-btn');
 
+    // Side menu elements
+    this.sideMenu = document.getElementById('side-menu');
+    this.sideMenuBackdrop = document.getElementById('side-menu-backdrop');
+    this.sideMenuClose = document.getElementById('side-menu-close');
+    this.sideMenuFilesList = document.getElementById('side-menu-files-list');
+    this.sideMenuUploadBtn = document.getElementById('side-menu-upload-btn');
+    this.sideMenuRemoveFilesBtn = document.getElementById('side-menu-remove-files-btn');
+    this.sideMenuRulesTextarea = document.getElementById('side-menu-rules-textarea');
+    this.sideMenuSaveRulesBtn = document.getElementById('side-menu-save-rules-btn');
+    this.sideMenuClearRulesBtn = document.getElementById('side-menu-clear-rules-btn');
+
     this.init();
   }
 
@@ -1294,6 +1305,7 @@ class ContextManager {
       this.rulesText = savedRules;
       if (this.rulesTextarea) this.rulesTextarea.value = savedRules;
       if (this.rulesTextareaMobile) this.rulesTextareaMobile.value = savedRules;
+      if (this.sideMenuRulesTextarea) this.sideMenuRulesTextarea.value = savedRules;
     }
 
     this.updateUI();
@@ -1342,6 +1354,20 @@ class ContextManager {
     });
     this.rulesTextareaMobile?.addEventListener('input', () => {
       if (this.rulesTextarea) this.rulesTextarea.value = this.rulesTextareaMobile.value;
+    });
+
+    // Side menu handlers
+    this.sideMenuClose?.addEventListener('click', () => this.closeSideMenu());
+    this.sideMenuBackdrop?.addEventListener('click', () => this.closeSideMenu());
+    this.sideMenuUploadBtn?.addEventListener('click', () => this.fileInput?.click());
+    this.sideMenuRemoveFilesBtn?.addEventListener('click', () => this.clearFiles());
+    this.sideMenuSaveRulesBtn?.addEventListener('click', () => this.handleSaveRulesFromSideMenu());
+    this.sideMenuClearRulesBtn?.addEventListener('click', () => this.handleClearRulesFromSideMenu());
+
+    // Sync side menu rules textarea with other textareas
+    this.sideMenuRulesTextarea?.addEventListener('input', () => {
+      if (this.rulesTextarea) this.rulesTextarea.value = this.sideMenuRulesTextarea.value;
+      if (this.rulesTextareaMobile) this.rulesTextareaMobile.value = this.sideMenuRulesTextarea.value;
     });
   }
 
@@ -1398,6 +1424,85 @@ class ContextManager {
   closeRulesModal() {
     this.rulesModal?.classList.remove('visible');
     this.rulesBottomSheet?.classList.remove('visible');
+  }
+
+  openSideMenu() {
+    // Sync rules textarea values before opening
+    if (this.sideMenuRulesTextarea) {
+      this.sideMenuRulesTextarea.value = this.rulesText || '';
+    }
+    // Render files list
+    this.renderSideMenuFilesList();
+    document.body.classList.add('side-menu-open');
+  }
+
+  closeSideMenu() {
+    document.body.classList.remove('side-menu-open');
+  }
+
+  toggleSideMenu() {
+    if (document.body.classList.contains('side-menu-open')) {
+      this.closeSideMenu();
+    } else {
+      this.openSideMenu();
+    }
+  }
+
+  handleSaveRulesFromSideMenu() {
+    const text = (this.sideMenuRulesTextarea?.value || '').trim();
+    this.rulesText = text;
+
+    // Sync with other textareas
+    if (this.rulesTextarea) this.rulesTextarea.value = text;
+    if (this.rulesTextareaMobile) this.rulesTextareaMobile.value = text;
+
+    // Save to localStorage
+    if (text) {
+      localStorage.setItem(CONFIG.STORAGE_RULES, text);
+    } else {
+      localStorage.removeItem(CONFIG.STORAGE_RULES);
+    }
+
+    this.updateUI();
+  }
+
+  handleClearRulesFromSideMenu() {
+    this.rulesText = '';
+    if (this.sideMenuRulesTextarea) this.sideMenuRulesTextarea.value = '';
+    if (this.rulesTextarea) this.rulesTextarea.value = '';
+    if (this.rulesTextareaMobile) this.rulesTextareaMobile.value = '';
+    localStorage.removeItem(CONFIG.STORAGE_RULES);
+    this.updateUI();
+  }
+
+  renderSideMenuFilesList() {
+    if (!this.sideMenuFilesList) return;
+
+    if (this.files.length === 0) {
+      this.sideMenuFilesList.innerHTML = '';
+      return;
+    }
+
+    this.sideMenuFilesList.innerHTML = this.files.map((file, index) => `
+      <div class="side-menu-file" data-index="${index}">
+        <div class="side-menu-file-icon">
+          <span class="material-symbols-outlined">description</span>
+        </div>
+        <span class="side-menu-file-name">${file.name || file}</span>
+        <button class="side-menu-file-remove" data-index="${index}">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+    `).join('');
+
+    // Add delete handlers
+    this.sideMenuFilesList.querySelectorAll('.side-menu-file-remove').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.removeFile(parseInt(btn.dataset.index));
+        this.renderSideMenuFilesList();
+      });
+    });
   }
 
   // Legacy methods for backwards compatibility
@@ -1553,9 +1658,10 @@ class ContextManager {
   }
 
   updateUI() {
-    // Render file lists (both desktop and mobile)
+    // Render file lists (both desktop, mobile, and side menu)
     this.renderFilesList(this.filesList);
     this.renderFilesList(this.filesListMobile);
+    this.renderSideMenuFilesList();
 
     // Update file counts
     const count = this.files.length;
@@ -2730,6 +2836,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeAllMenus = () => {
     closeMenu();
     closeSidebarDrawer();
+    window.contextManager?.closeSideMenu();
   };
 
   settingsBtn.addEventListener('click', () => {
@@ -2739,12 +2846,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (rightMenuOverlay.classList.contains('visible')) {
-      closeMenu();
-    } else {
-      closeMenu(); // Close others
-      openMenu(rightMenuOverlay, settingsIcon, 'close');
-    }
+    // Toggle side menu
+    window.contextManager.toggleSideMenu();
   });
 
   if (menuBtn) {
@@ -3264,12 +3367,7 @@ document.addEventListener('DOMContentLoaded', () => {
     createImageButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
         const text = window.predictionManager.getEditorText();
-        if (!text || text.trim().length < 10) {
-          closeAllMenus();
-          return;
-        }
-
-        pendingImageText = text;
+        pendingImageText = text || '';
         closeAllMenus();
         imageGuidanceModal.classList.add('visible');
         if (imageGuidanceTextarea) {
@@ -3285,6 +3383,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const guidance = imageGuidanceTextarea.value.trim();
         const styleSelect = document.getElementById('image-style-select');
         const style = styleSelect ? styleSelect.value : 'anime';
+        
+        if (!pendingImageText && !guidance) {
+          imageGuidanceTextarea.placeholder = "Please describe the image first...";
+          imageGuidanceTextarea.focus();
+          return;
+        }
+
         imageGuidanceModal.classList.remove('visible');
         generateImageWithGuidance(pendingImageText, guidance, style);
       });
@@ -3379,6 +3484,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       closeMenu();
+      window.contextManager?.closeSideMenu();
     }
   });
 

@@ -347,7 +347,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: var(--font-caption-size);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--sidebar-muted);
@@ -381,7 +381,7 @@ body {
   padding: 14px 28px;
   border-radius: 999px;
   font-family: 'Google Sans Flex', sans-serif;
-  font-size: 14px;
+  font-size: var(--font-body-small-size);
   font-weight: 300;
   cursor: pointer;
   display: flex;
@@ -407,7 +407,7 @@ body {
   padding: 10px 16px;
   border-radius: 10px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-body-small-size);
   transition: background 0.2s ease, color 0.2s ease;
 }
 
@@ -455,7 +455,7 @@ body {
 .sidebar-valley-row .valley-title {
   flex: 1;
   font-weight: 300;
-  font-size: 14px;
+  font-size: var(--font-body-small-size);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -568,7 +568,7 @@ body {
 
 .sidebar-account-name {
   flex: 1;
-  font-size: 14px;
+  font-size: var(--font-body-small-size);
   font-weight: 300;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -597,7 +597,7 @@ body {
   align-items: center;
   justify-content: center;
   font-weight: 300;
-  font-size: 14px;
+  font-size: var(--font-body-small-size);
   flex-shrink: 0;
 }
 
@@ -1070,7 +1070,7 @@ body.select-mode-active .inline-prediction {
 
 .settings-panel-header p {
   color: var(--ghost);
-  font-size: 14px;
+  font-size: var(--font-body-small-size);
 }
 
 .settings-close-btn {
@@ -1393,6 +1393,11 @@ body.selection-ready .select-confirm-btn {
 }
 
 @media (max-width: 768px) {
+  :root {
+    --font-body-small-size: 16px;
+    --font-caption-size: 14px;
+  }
+
   .sidebar {
     box-shadow: none;
   }
@@ -1733,7 +1738,7 @@ body.selection-ready .select-confirm-btn {
   gap: 12px;
   padding: 14px 28px;
   height: 58px;
-  font-size: 14px;
+  font-size: var(--font-body-small-size);
   font-weight: 300;
   font-family: 'Google Sans Flex', sans-serif;
   color: var(--text-btn);
@@ -1773,7 +1778,7 @@ body.selection-ready .select-confirm-btn {
   gap: 12px;
   padding: 14px 28px;
   height: 58px;
-  font-size: 14px;
+  font-size: var(--font-body-small-size);
   font-weight: 300;
   font-family: 'Google Sans Flex', sans-serif;
   color: var(--text);
@@ -2327,7 +2332,7 @@ body.selection-ready .select-confirm-btn {
   border-radius: 16px;
   margin: 20px 0;
   color: var(--ghost);
-  font-size: 14px;
+  font-size: var(--font-body-small-size);
 }
 
 .image-loading-placeholder .material-symbols-outlined {
@@ -2911,4 +2916,203 @@ body.selection-ready .select-confirm-btn {
 
 .menu-overlay.menu-ready .user-menu-content {
   transform: scale(1) translateY(0);
+}
+
+/* ============================================
+   Right Side Menu Panel
+   ============================================ */
+.side-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: var(--z-sidebar-backdrop);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+body.side-menu-open .side-menu-backdrop {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.side-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 360px;
+  background: var(--modal-background);
+  z-index: var(--z-sidebar);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 12px;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+}
+
+body.side-menu-open .side-menu {
+  transform: translateX(0);
+}
+
+.side-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.side-menu-close {
+  width: 32px;
+  height: 32px;
+}
+
+.side-menu-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.side-menu-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.side-menu-title {
+  font-family: 'Literata', Georgia, serif;
+  font-size: 24px;
+  font-weight: 300;
+  color: var(--text);
+  line-height: 1.2;
+  margin: 0;
+}
+
+.side-menu-description {
+  font-family: 'Google Sans Flex', sans-serif;
+  font-size: var(--font-body-small-size);
+  font-weight: 300;
+  color: var(--text);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.side-menu-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.side-menu-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 12px;
+  background: var(--input-background);
+  border-radius: 16px;
+}
+
+.side-menu-file-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.side-menu-file-icon .material-symbols-outlined {
+  font-size: 24px;
+  color: var(--text);
+}
+
+.side-menu-file-name {
+  flex: 1;
+  font-family: 'Google Sans Flex', sans-serif;
+  font-size: var(--font-body-small-size);
+  font-weight: 300;
+  color: var(--text);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.side-menu-file-remove {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+
+.side-menu-file-remove .material-symbols-outlined {
+  font-size: 24px;
+  color: var(--text);
+}
+
+@media (hover: hover) {
+  .side-menu-file-remove:hover {
+    opacity: 0.7;
+  }
+}
+
+.side-menu-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.side-menu-buttons .btn-primary {
+  height: 48px;
+  padding: 14px 28px;
+}
+
+.side-menu-buttons .btn-primary:has(.material-symbols-outlined) {
+  padding-left: 18px;
+}
+
+.side-menu-buttons .btn-secondary {
+  height: 54px;
+  padding: 12px 20px;
+}
+
+.side-menu-textarea {
+  width: 100%;
+  height: 140px;
+  padding: 12px;
+  background: var(--input-background);
+  border: none;
+  border-radius: 16px;
+  color: var(--text);
+  font-family: 'Google Sans Flex', sans-serif;
+  font-size: 17px;
+  font-weight: 300;
+  resize: none;
+  line-height: 1.4;
+}
+
+.side-menu-textarea:focus {
+  outline: none;
+}
+
+.side-menu-textarea::placeholder {
+  color: var(--placeholder);
+  opacity: 0.5;
+}
+
+/* Side Menu Mobile */
+@media (max-width: 768px) {
+  .side-menu {
+    width: 100%;
+    padding: 20px;
+  }
 }

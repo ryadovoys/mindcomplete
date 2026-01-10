@@ -61,7 +61,7 @@
         </div>
         <div class="header-right">
           <button class="btn-icon" id="settings-btn" aria-label="Settings">
-            <span class="material-symbols-outlined">more_horiz</span>
+            <span class="material-symbols-outlined">psychology</span>
           </button>
         </div>
       </header>
@@ -69,16 +69,42 @@
       <!-- Gradient overlay to fade text under header -->
       <div class="header-gradient-overlay"></div>
 
-      <div class="menu-overlay right-menu-overlay">
-        <div class="menu-content">
-          <button class="menu-item files-menu-btn">
-            <span class="material-symbols-outlined">attach_file</span>
-            <span class="menu-label">Upload files</span>
+      <!-- Right Side Menu Panel -->
+      <div class="side-menu-backdrop" id="side-menu-backdrop"></div>
+      <div class="side-menu" id="side-menu">
+        <div class="side-menu-header">
+          <button class="btn-icon side-menu-close" id="side-menu-close" aria-label="Close">
+            <span class="material-symbols-outlined">close</span>
           </button>
-          <button class="menu-item rules-menu-btn">
-            <span class="material-symbols-outlined">edit_note</span>
-            <span class="menu-label">Add rules</span>
-          </button>
+        </div>
+
+        <!-- Add Files Section -->
+        <div class="side-menu-section">
+          <div class="side-menu-section-header">
+            <h3 class="side-menu-title">Add files</h3>
+            <p class="side-menu-description">Upload files to help the AI understand what you're writing about.</p>
+          </div>
+          <div class="side-menu-files-list" id="side-menu-files-list"></div>
+          <div class="side-menu-buttons">
+            <button class="btn-primary" id="side-menu-upload-btn">
+              <span class="material-symbols-outlined">attach_file</span>
+              Upload files
+            </button>
+            <button class="btn-secondary" id="side-menu-remove-files-btn">Remove files</button>
+          </div>
+        </div>
+
+        <!-- Add Rules Section -->
+        <div class="side-menu-section">
+          <div class="side-menu-section-header">
+            <h3 class="side-menu-title">Add rules</h3>
+            <p class="side-menu-description">This is a field to add context to make magic complete understand you faster.</p>
+          </div>
+          <textarea class="side-menu-textarea" id="side-menu-rules-textarea" placeholder="Write or paste your rules"></textarea>
+          <div class="side-menu-buttons">
+            <button class="btn-primary" id="side-menu-save-rules-btn">Save rules</button>
+            <button class="btn-secondary" id="side-menu-clear-rules-btn">Clear rules</button>
+          </div>
         </div>
       </div>
 
@@ -253,8 +279,8 @@
           </select>
         </div>
         <div class="image-guidance-field">
-          <label for="image-guidance-textarea" class="section-description">Context (Optional)</label>
-          <textarea id="image-guidance-textarea" placeholder="Describe specific details..."></textarea>
+          <label for="image-guidance-textarea" class="section-description">Prompt</label>
+          <textarea id="image-guidance-textarea" placeholder="Describe the image you want to create..."></textarea>
         </div>
         <div class="image-guidance-buttons">
           <button class="btn-secondary" id="skip-guidance-btn">Cancel</button>
