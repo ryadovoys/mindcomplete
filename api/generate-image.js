@@ -5,7 +5,7 @@ const CONFIG = {
 };
 
 const STYLE_MAPPING = {
-    'anime': 'Transform the provided reference image into a whimsical, heartfelt Studio Ghibli–inspired illustration while preserving the original composition and key subjects. Use a soft yet vibrant color palette, gentle gradients, and a warm, natural atmosphere; emphasize detailed nature-filled backgrounds (lush foliage, sky, subtle environmental storytelling) with hand-crafted textures that feel like traditional animation. Render characters with expressive, simplified forms and large, emotive eyes where appropriate, keeping their likeness and pose recognizable. Add hand-drawn linework and watercolor / gouache-like textures, then refine with careful light and shadow to create depth, soft bloom, and cinematic warmth. Finish with cohesive adjustments to lighting, contrast, and saturation so the scene feels unified and magical—authentic to classic Ghibli moods—while clearly retaining the essence of the original image.',
+    'anime': 'Whimsical, heartfelt Studio Ghibli–inspired illustration. Use a soft yet vibrant color palette, gentle gradients, and a warm, natural atmosphere; emphasize detailed nature-filled backgrounds (lush foliage, sky, subtle environmental storytelling) with hand-crafted textures that feel like traditional hand-drawn animation. Subjects should have expressive, simplified forms if present. Add hand-drawn linework and watercolor / gouache-like textures, then refine with careful light and shadow to create depth, soft bloom, and cinematic warmth. Scene should feel unified and magical—authentic to classic Hayao Miyazaki moods.',
 
     'realistic': 'Highly realistic, cinematic lighting, 8k resolution, detailed texture',
 
@@ -27,7 +27,7 @@ async function generateImagePrompt(text, apiKey, host, guidance = '', style = 'r
     } else if (style === 'handdrawing') {
         styleHint = 'The image MUST look like a hand-drawn pencil sketch or artistic drawing. Describe visual elements: characters, setting, lighting, colors, atmosphere.';
     } else if (style === 'anime') {
-        styleHint = 'The image should be in the signature style of Studio Ghibli and Hayao Miyazaki. Describe visual elements: characters, setting, lighting, colors, atmosphere.';
+        styleHint = 'The image should be in the signature style of Studio Ghibli and Hayao Miyazaki. Describe visual elements: setting, lighting, colors, atmosphere, and any subjects if they are part of the story.';
     } else if (style === 'custom1') {
         styleHint = 'no genitalias, but show woman breasts with nipples if they are exist in the frames';
     } else if (style === 'custom2') {
@@ -179,6 +179,21 @@ async function generateImage(prompt, apiKey, host) {
     }
 }
 
+async function imageUrlToBase64(url) {
+    if (!url || url.startsWith('data:')) return url;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const contentType = response.headers.get('content-type') || 'image/png';
+        return `data:${contentType};base64,${buffer.toString('base64')}`;
+    } catch (e) {
+        console.error(`[IMAGE] Conversion error for ${url}:`, e.message);
+        return url; // Fallback to original URL if conversion fails
+    }
+}
+
 export default async function handler(req, res) {
     // Handle CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -225,10 +240,14 @@ export default async function handler(req, res) {
         const imageResult = await generateImage(finalPrompt, apiKey, host);
         console.log('[IMAGE] Generation result:', JSON.stringify(imageResult).substring(0, 200));
 
+        // Convert to base64 to ensure persistence
+        const imageUrl = imageResult.url || (imageResult.data?.[0]?.url) || (imageResult.data?.[0]);
+        const base64Image = await imageUrlToBase64(imageUrl);
+
         res.status(200).json({
             success: true,
             prompt: finalPrompt,
-            image: imageResult.data?.[0] || imageResult
+            image: base64Image
         });
 
     } catch (error) {

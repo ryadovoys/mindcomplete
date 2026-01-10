@@ -2407,7 +2407,22 @@ class ValleysManager {
 }
 
 function setupImageContainer(container) {
+  const img = container.querySelector('.editor-image');
   const removeBtn = container.querySelector('.editor-image-remove');
+
+  const handleBrokenImage = () => {
+    container.classList.add('is-broken');
+    if (removeBtn) removeBtn.style.opacity = '1';
+  };
+
+  if (img) {
+    // Check if already broken or becomes broken
+    if (img.complete && img.naturalWidth === 0) {
+      handleBrokenImage();
+    }
+    img.addEventListener('error', handleBrokenImage);
+  }
+
   if (removeBtn) {
     removeBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -3443,17 +3458,23 @@ document.addEventListener('DOMContentLoaded', () => {
       // Remove placeholder
       placeholder.remove();
 
-      // Get the image URL from the response
-      const imageUrl = data.image?.url || data.image?.b64_json || data.image;
-      console.log('Detected imageUrl:', imageUrl ? (typeof imageUrl === 'string' ? imageUrl.substring(0, 50) + '...' : 'object') : 'null');
-
-      if (imageUrl) {
+      // Get the image URL or base64 data from the response
+      const imageData = data.image;
+      if (imageData) {
         // Create container for image with remove button
         const container = document.createElement('div');
         container.className = 'editor-image-container';
         container.contentEditable = 'false';
 
-        const finalSrc = data.image?.b64_json ? `data:image/png;base64,${data.image.b64_json}` : imageUrl;
+        // Detect if it's already a base64 string, an object with url/b64, or just a URL
+        let finalSrc = '';
+        if (typeof imageData === 'string') {
+          finalSrc = imageData; // Could be URL or data:image/...
+        } else if (imageData.b64_json) {
+          finalSrc = `data:image/png;base64,${imageData.b64_json}`;
+        } else {
+          finalSrc = imageData.url || imageData.data?.[0]?.url || '';
+        }
         
         container.innerHTML = `
           <img class="editor-image" src="${finalSrc}" alt="Generated illustration">
