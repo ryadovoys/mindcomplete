@@ -846,8 +846,8 @@ body.sidebar-open .header-logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: var(--size-icon-btn-sm);
+  height: var(--size-icon-btn-sm);
   background: transparent;
   border: none;
   border-radius: 999px;
@@ -871,9 +871,9 @@ body.sidebar-open .header-logo {
 }
 
 .btn-icon .material-symbols-outlined {
-  font-size: 24px;
-  width: 24px;
-  height: 24px;
+  font-size: var(--icon-size-sm);
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
   color: var(--text);
 }
 
@@ -882,8 +882,8 @@ body.sidebar-open .header-logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: var(--size-icon-btn-sm);
+  height: var(--size-icon-btn-sm);
   background: transparent;
   border: none;
   border-radius: 999px;
@@ -907,9 +907,9 @@ body.sidebar-open .header-logo {
 }
 
 .icon-btn .material-symbols-outlined {
-  font-size: 24px;
-  width: 24px;
-  height: 24px;
+  font-size: var(--icon-size-sm);
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
   color: var(--text);
 }
 
@@ -1498,6 +1498,8 @@ body.selection-ready .select-confirm-btn {
   :root {
     --font-body-small-size: 16px;
     --font-caption-size: 14px;
+    --size-icon-btn-sm: 44px;
+    --icon-size-sm: 28px;
   }
 
   .sidebar {
@@ -3052,8 +3054,8 @@ body.selection-ready .select-confirm-btn {
 .side-menu-backdrop {
   position: fixed;
   inset: 0;
-  background: transparent;
-  z-index: var(--z-sidebar-backdrop);
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 450;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
@@ -3071,7 +3073,7 @@ body.side-menu-open .side-menu-backdrop {
   bottom: 0;
   width: 360px;
   background: var(--modal-background);
-  z-index: var(--z-sidebar);
+  z-index: 500;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -3289,8 +3291,13 @@ body.side-menu-open .side-menu {
 /* Side Menu Mobile */
 @media (max-width: 768px) {
   .side-menu {
-    width: 80%;
-    max-width: 320px;
+    width: 100%;
+    max-width: 360px;
     padding: 24px;
+  }
+
+  .side-menu-backdrop {
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 450;
   }
 }

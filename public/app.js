@@ -3141,6 +3141,63 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
   })();
 
+  // Swipe to open/close right side menu on mobile
+  (function initRightMenuSwipe() {
+    let touchStartX = null;
+    let touchStartY = null;
+    let isSwiping = false;
+
+    const EDGE_THRESHOLD = 30; // pixels from right edge to trigger
+    const SWIPE_THRESHOLD = 50; // minimum swipe distance
+
+    document.addEventListener('touchstart', (e) => {
+      // Only enable swipe on mobile
+      if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX) return;
+
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+
+      // Track swipes starting from right edge (to open) or anywhere when menu is open (to close)
+      const sideMenuOpen = document.body.classList.contains('side-menu-open');
+      isSwiping = touchStartX >= window.innerWidth - EDGE_THRESHOLD || sideMenuOpen;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+      if (!isSwiping || touchStartX === null) return;
+
+      // Only process on mobile
+      if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX) {
+        touchStartX = null;
+        touchStartY = null;
+        isSwiping = false;
+        return;
+      }
+
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - touchStartX;
+      const deltaY = Math.abs(touch.clientY - touchStartY);
+
+      // Must be primarily horizontal swipe
+      if (Math.abs(deltaX) > deltaY && Math.abs(deltaX) > SWIPE_THRESHOLD) {
+        const sideMenuOpen = document.body.classList.contains('side-menu-open');
+
+        if (deltaX < 0 && !sideMenuOpen && touchStartX >= window.innerWidth - EDGE_THRESHOLD) {
+          // Swipe left from right edge - open menu
+          window.contextManager.openSideMenu();
+        } else if (deltaX > 0 && sideMenuOpen) {
+          // Swipe right - close menu
+          window.contextManager.closeSideMenu();
+        }
+      }
+
+      // Reset
+      touchStartX = null;
+      touchStartY = null;
+      isSwiping = false;
+    }, { passive: true });
+  })();
+
   // Left menu specific items
   const aboutMenuBtn = document.querySelector('.about-menu-btn');
   if (aboutMenuBtn) {
