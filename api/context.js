@@ -89,7 +89,6 @@ async function parseMultipartForm(req) {
     let bodyBuffer;
     try {
       bodyBuffer = await collectRequestBody(req);
-      console.log('[parseMultipartForm] Body collected, size:', bodyBuffer.length);
     } catch (err) {
       return reject(new Error('Failed to read request body: ' + err.message));
     }

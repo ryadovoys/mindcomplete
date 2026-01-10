@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
+    "busboy": "^1.6.0",
     "uuid": "^13.0.0"
   }
 }

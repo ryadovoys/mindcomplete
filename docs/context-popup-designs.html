@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Context Popup Design Options</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -140,7 +143,7 @@
       background: var(--input-bg);
       border-radius: var(--radius-lg);
       margin: 20px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
       overflow: hidden;
     }
 
@@ -332,7 +335,7 @@
       background: var(--input-bg);
       border-radius: var(--radius-lg);
       margin: 20px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
       overflow: hidden;
     }
 
@@ -381,7 +384,7 @@
 
     .opt2-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .opt2-card-add {
@@ -417,7 +420,7 @@
       width: 20px;
       height: 20px;
       border-radius: 50%;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0, 0, 0, 0.5);
       border: none;
       color: white;
       cursor: pointer;
@@ -489,7 +492,7 @@
       background: var(--input-bg);
       border-radius: var(--radius-lg);
       margin: 20px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
       overflow: hidden;
     }
 
@@ -517,7 +520,7 @@
       align-items: center;
       justify-content: center;
       padding: 48px 24px;
-      background: linear-gradient(135deg, rgba(255,101,51,0.05) 0%, transparent 100%);
+      background: linear-gradient(135deg, rgba(255, 101, 51, 0.05) 0%, transparent 100%);
       border-bottom: 1px solid var(--border);
       position: relative;
     }
@@ -634,7 +637,7 @@
     }
 
     .opt3-file-delete:hover {
-      background: rgba(255,0,0,0.1);
+      background: rgba(255, 0, 0, 0.1);
       color: #e53935;
     }
 
@@ -645,7 +648,7 @@
       background: var(--input-bg);
       border-radius: var(--radius-lg);
       margin: 20px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
       overflow: hidden;
     }
 
@@ -703,7 +706,7 @@
     .opt4-tab.active {
       background: var(--input-bg);
       color: var(--text);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
 
     .opt4-tab-badge {
@@ -770,7 +773,7 @@
 
     .opt4-add-file:hover {
       border-color: var(--accent);
-      background: rgba(255,101,51,0.03);
+      background: rgba(255, 101, 51, 0.03);
     }
 
     .opt4-add-icon {
@@ -828,7 +831,7 @@
     .opt5-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(0,0,0,0.3);
+      background: rgba(0, 0, 0, 0.3);
     }
 
     .opt5-sheet {
@@ -951,7 +954,7 @@
     .opt5-chip-remove {
       width: 18px;
       height: 18px;
-      background: rgba(0,0,0,0.1);
+      background: rgba(0, 0, 0, 0.1);
       border: none;
       border-radius: 50%;
       cursor: pointer;
@@ -1022,6 +1025,7 @@
     }
   </style>
 </head>
+
 <body>
   <nav class="nav">
     <button class="nav-btn active" data-page="1">1. Classic List</button>
@@ -1034,7 +1038,8 @@
   <!-- OPTION 1: Classic List View -->
   <div class="page active" data-page="1">
     <h2 class="page-title">Classic List View</h2>
-    <p class="page-desc">Traditional approach with clear sections. Rules at top, file upload below.<br>Best for: Users who prefer familiar patterns and clear hierarchy.</p>
+    <p class="page-desc">Traditional approach with clear sections. Rules at top, file upload below.<br>Best for: Users
+      who prefer familiar patterns and clear hierarchy.</p>
 
     <div class="devices">
       <div class="device desktop">
@@ -1048,7 +1053,8 @@
             <div class="opt1-body">
               <div class="opt1-section">
                 <div class="opt1-label">Rules & Instructions</div>
-                <textarea class="opt1-textarea" placeholder="Add rules or instructions for the AI...">Write in a casual, friendly tone. Focus on clarity over formality.</textarea>
+                <textarea class="opt1-textarea"
+                  placeholder="Add rules or instructions for the AI...">Write in a casual, friendly tone. Focus on clarity over formality.</textarea>
               </div>
               <div class="opt1-section">
                 <div class="opt1-label">Reference Files</div>
@@ -1096,7 +1102,8 @@
             <div class="opt1-body" style="padding: 16px;">
               <div class="opt1-section">
                 <div class="opt1-label">Rules</div>
-                <textarea class="opt1-textarea" placeholder="Add rules..." style="min-height: 60px;">Write casually.</textarea>
+                <textarea class="opt1-textarea" placeholder="Add rules..."
+                  style="min-height: 60px;">Write casually.</textarea>
               </div>
               <div class="opt1-section">
                 <div class="opt1-label">Files</div>
@@ -1128,7 +1135,8 @@
   <!-- OPTION 2: Card-Based Grid -->
   <div class="page" data-page="2">
     <h2 class="page-title">Card-Based Grid</h2>
-    <p class="page-desc">Visual file cards with thumbnails. Rules collapsed at bottom.<br>Best for: Visual thinkers who work with many files.</p>
+    <p class="page-desc">Visual file cards with thumbnails. Rules collapsed at bottom.<br>Best for: Visual thinkers who
+      work with many files.</p>
 
     <div class="devices">
       <div class="device desktop">
@@ -1142,17 +1150,20 @@
             <div class="opt2-body">
               <div class="opt2-grid">
                 <div class="opt2-card">
-                  <button class="opt2-card-remove"><span class="material-symbols-outlined" style="font-size: 14px;">close</span></button>
+                  <button class="opt2-card-remove"><span class="material-symbols-outlined"
+                      style="font-size: 14px;">close</span></button>
                   <span class="material-symbols-outlined opt2-card-icon">picture_as_pdf</span>
                   <span class="opt2-card-name">project-brief.pdf</span>
                 </div>
                 <div class="opt2-card">
-                  <button class="opt2-card-remove"><span class="material-symbols-outlined" style="font-size: 14px;">close</span></button>
+                  <button class="opt2-card-remove"><span class="material-symbols-outlined"
+                      style="font-size: 14px;">close</span></button>
                   <span class="material-symbols-outlined opt2-card-icon">description</span>
                   <span class="opt2-card-name">style-guide.md</span>
                 </div>
                 <div class="opt2-card">
-                  <button class="opt2-card-remove"><span class="material-symbols-outlined" style="font-size: 14px;">close</span></button>
+                  <button class="opt2-card-remove"><span class="material-symbols-outlined"
+                      style="font-size: 14px;">close</span></button>
                   <span class="material-symbols-outlined opt2-card-icon">article</span>
                   <span class="opt2-card-name">notes.txt</span>
                 </div>
@@ -1166,7 +1177,8 @@
                   <span class="material-symbols-outlined opt2-rules-icon">edit_note</span>
                   <span class="opt2-rules-label">Custom Rules</span>
                 </div>
-                <textarea class="opt2-rules-textarea" placeholder="Add rules or instructions...">Write in a casual tone.</textarea>
+                <textarea class="opt2-rules-textarea"
+                  placeholder="Add rules or instructions...">Write in a casual tone.</textarea>
               </div>
               <button class="opt2-done">Done</button>
             </div>
@@ -1211,7 +1223,8 @@
   <!-- OPTION 3: Drag & Drop Focus -->
   <div class="page" data-page="3">
     <h2 class="page-title">Drag & Drop Focus</h2>
-    <p class="page-desc">Large prominent drop zone. Files listed below. Rules separate.<br>Best for: Power users who frequently upload files.</p>
+    <p class="page-desc">Large prominent drop zone. Files listed below. Rules separate.<br>Best for: Power users who
+      frequently upload files.</p>
 
     <div class="devices">
       <div class="device desktop">
@@ -1257,7 +1270,8 @@
         <div class="device-label">Mobile</div>
         <div class="device-frame">
           <div class="opt3-modal" style="margin: 12px;">
-            <button class="opt3-close" style="top: 8px; right: 8px; width: 32px; height: 32px;"><span class="material-symbols-outlined">close</span></button>
+            <button class="opt3-close" style="top: 8px; right: 8px; width: 32px; height: 32px;"><span
+                class="material-symbols-outlined">close</span></button>
             <div class="opt3-dropzone" style="min-height: 150px; padding: 24px;">
               <div class="opt3-dropzone-icon" style="width: 56px; height: 56px;">
                 <span class="material-symbols-outlined" style="font-size: 28px;">upload_file</span>
@@ -1288,7 +1302,8 @@
   <!-- OPTION 4: Tabbed Interface -->
   <div class="page" data-page="4">
     <h2 class="page-title">Tabbed Interface</h2>
-    <p class="page-desc">Separate tabs for Rules and Files. Clean separation of concerns.<br>Best for: Users who want focused, single-purpose views.</p>
+    <p class="page-desc">Separate tabs for Rules and Files. Clean separation of concerns.<br>Best for: Users who want
+      focused, single-purpose views.</p>
 
     <div class="devices">
       <div class="device desktop">
@@ -1378,14 +1393,16 @@
   <!-- OPTION 5: Bottom Sheet / Minimalist -->
   <div class="page" data-page="5">
     <h2 class="page-title">Bottom Sheet / Minimalist</h2>
-    <p class="page-desc">Compact chip-based design. Slides up from bottom on mobile.<br>Best for: Quick access without interrupting flow.</p>
+    <p class="page-desc">Compact chip-based design. Slides up from bottom on mobile.<br>Best for: Quick access without
+      interrupting flow.</p>
 
     <div class="devices">
       <div class="device desktop">
         <div class="device-label">Desktop (Modal)</div>
         <div class="device-frame">
           <div class="opt5-overlay"></div>
-          <div class="opt5-sheet" style="position: absolute; bottom: auto; top: 50%; left: 50%; right: auto; transform: translate(-50%, -50%); width: 400px; border-radius: var(--radius-lg); max-height: none;">
+          <div class="opt5-sheet"
+            style="position: absolute; bottom: auto; top: 50%; left: 50%; right: auto; transform: translate(-50%, -50%); width: 400px; border-radius: var(--radius-lg); max-height: none;">
             <div class="opt5-header" style="padding: 20px 20px 12px;">
               <h3 class="opt5-title">Context</h3>
               <button class="opt5-clear">Clear all</button>
@@ -1397,7 +1414,8 @@
                   <button class="opt5-expand"><span class="material-symbols-outlined">edit</span></button>
                 </div>
                 <div class="opt5-rules-preview">
-                  <div class="opt5-rules-preview-text">Write in a casual, friendly tone. Focus on clarity over formality. Keep paragraphs short.</div>
+                  <div class="opt5-rules-preview-text">Write in a casual, friendly tone. Focus on clarity over
+                    formality. Keep paragraphs short.</div>
                 </div>
               </div>
               <div class="opt5-section">
@@ -1504,4 +1522,5 @@
     });
   </script>
 </body>
+
 </html>

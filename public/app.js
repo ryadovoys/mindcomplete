@@ -1476,16 +1476,10 @@ class ContextManager {
   }
 
   renderSideMenuFilesList() {
-    console.log('[renderSideMenuFilesList] called, files:', this.files);
-    console.log('[renderSideMenuFilesList] sideMenuFilesList element:', this.sideMenuFilesList);
+    if (!this.sideMenuFilesList) return;
 
-    if (!this.sideMenuFilesList) {
-      console.log('[renderSideMenuFilesList] ERROR: sideMenuFilesList is null!');
-      return;
-    }
-
-    // Get or create tokens display element
-    let tokensDisplay = document.getElementById('side-menu-tokens-display');
+    // Get tokens display element
+    const tokensDisplay = document.getElementById('side-menu-tokens-display');
 
     if (this.files.length === 0) {
       this.sideMenuFilesList.innerHTML = '';
@@ -1506,8 +1500,6 @@ class ContextManager {
       `</div>`
     ).join('');
 
-    console.log('[renderSideMenuFilesList] innerHTML set:', this.sideMenuFilesList.innerHTML.substring(0, 100));
-
     // Show estimated tokens
     if (tokensDisplay) {
       tokensDisplay.textContent = `~${this.estimatedTokens.toLocaleString()} tokens`;
@@ -1519,7 +1511,6 @@ class ContextManager {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.removeFile(parseInt(btn.dataset.index));
-        this.renderSideMenuFilesList();
       });
     });
   }
@@ -1577,12 +1568,24 @@ class ContextManager {
   }
 
   async handleFiles(fileList) {
-    console.log('[handleFiles] called with', fileList?.length, 'files');
     if (!fileList || fileList.length === 0) return;
 
-    const formData = new FormData();
+    // Store new files in pending array for accumulation
+    if (!this.pendingFiles) this.pendingFiles = [];
+
+    // Add new files to pending (for re-upload with existing)
     for (const file of fileList) {
-      console.log('[handleFiles] Adding file:', file.name);
+      // Check if file with same name already exists
+      const existingIndex = this.pendingFiles.findIndex(f => f.name === file.name);
+      if (existingIndex >= 0) {
+        this.pendingFiles[existingIndex] = file; // Replace
+      } else {
+        this.pendingFiles.push(file); // Add new
+      }
+    }
+
+    const formData = new FormData();
+    for (const file of this.pendingFiles) {
       formData.append('files', file);
     }
 
@@ -1591,13 +1594,10 @@ class ContextManager {
     }
 
     try {
-      console.log('[handleFiles] Uploading to', CONFIG.API_CONTEXT);
       const response = await fetch(CONFIG.API_CONTEXT, {
         method: 'POST',
         body: formData
       });
-
-      console.log('[handleFiles] Response status:', response.status);
 
       if (!response.ok) {
         let errorMessage = 'Upload failed';
@@ -1616,7 +1616,6 @@ class ContextManager {
       }
 
       const data = await response.json();
-      console.log('[handleFiles] Success! Data:', data);
       this.sessionId = data.sessionId;
       this.files = data.files;
       this.estimatedTokens = data.estimatedTokens;
@@ -1626,7 +1625,6 @@ class ContextManager {
       localStorage.setItem(CONFIG.STORAGE_FILES, JSON.stringify(this.files));
       localStorage.setItem(CONFIG.STORAGE_TOKENS, this.estimatedTokens.toString());
 
-      console.log('[handleFiles] Calling updateUI');
       this.updateUI();
     } catch (error) {
       console.error('Upload error:', error);
@@ -1652,6 +1650,7 @@ class ContextManager {
 
     this.sessionId = null;
     this.files = [];
+    this.pendingFiles = []; // Clear pending files too
     this.estimatedTokens = 0;
 
     // Clear file-related localStorage (keep rules)
@@ -1665,14 +1664,54 @@ class ContextManager {
   async removeFile(index) {
     if (index < 0 || index >= this.files.length) return;
 
-    // Remove from local array
+    // Get the filename being removed
+    const removedFile = this.files[index];
+    const removedFileName = removedFile.name || removedFile;
+
+    // Remove from files array
     this.files.splice(index, 1);
+
+    // Remove from pendingFiles array (the actual File objects)
+    if (this.pendingFiles) {
+      const pendingIndex = this.pendingFiles.findIndex(f => f.name === removedFileName);
+      if (pendingIndex >= 0) {
+        this.pendingFiles.splice(pendingIndex, 1);
+      }
+    }
 
     // If no files left, clear session on server
     if (this.files.length === 0) {
       await this.clearFiles();
+    } else if (this.pendingFiles && this.pendingFiles.length > 0) {
+      // Re-upload remaining files to get new session
+      const formData = new FormData();
+      for (const file of this.pendingFiles) {
+        formData.append('files', file);
+      }
+
+      try {
+        const response = await fetch(CONFIG.API_CONTEXT, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          this.sessionId = data.sessionId;
+          this.files = data.files;
+          this.estimatedTokens = data.estimatedTokens;
+
+          localStorage.setItem(CONFIG.STORAGE_SESSION_ID, this.sessionId);
+          localStorage.setItem(CONFIG.STORAGE_FILES, JSON.stringify(this.files));
+          localStorage.setItem(CONFIG.STORAGE_TOKENS, this.estimatedTokens.toString());
+        }
+      } catch (e) {
+        console.error('Error re-uploading files:', e);
+      }
+
+      this.updateUI();
     } else {
-      // Update localStorage
+      // Just update localStorage and UI
       localStorage.setItem(CONFIG.STORAGE_FILES, JSON.stringify(this.files));
       this.updateUI();
     }
