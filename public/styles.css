@@ -334,6 +334,12 @@ body {
   gap: 12px;
   flex: 1;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sidebar-top::-webkit-scrollbar {
+  display: none;
 }
 
 .sidebar-brand {
@@ -1521,6 +1527,14 @@ body.selection-ready .select-confirm-btn {
   .sidebar-create-btn,
   .sidebar-valley-row .valley-title {
     font-size: var(--font-body-size);
+  }
+
+  .sidebar-top {
+    gap: 16px;
+  }
+
+  .sidebar-valleys {
+    gap: 4px;
   }
 
   /* Menu overlay adjustments for mobile */
@@ -3081,6 +3095,12 @@ body.side-menu-open .side-menu-backdrop {
   transform: translateX(100%);
   transition: transform 0.3s ease;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.side-menu::-webkit-scrollbar {
+  display: none;
 }
 
 body.side-menu-open .side-menu {
