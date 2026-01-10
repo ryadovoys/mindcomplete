@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/public/landing.html"
+    },
+    {
+      "source": "/app",
+      "destination": "/public/index.html"
+    },
+    {
       "source": "/((?!api).*)",
       "destination": "/public/$1"
     }

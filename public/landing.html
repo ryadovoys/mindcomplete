@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Purple Valley - AI Writing Assistant</title>
+  <meta name="description" content="Extension for your thoughts. Purple Valley is an AI-powered writing assistant.">
+  <link rel="icon" type="image/png" href="/purple-valley-favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Literata:wght@300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/landing.css">
+</head>
+<body>
+  <div class="landing-bg">
+    <div class="landing-overlay"></div>
+  </div>
+
+  <header class="landing-header">
+    <img src="/purple-valley-logo.svg" alt="Purple Valley" class="landing-logo">
+  </header>
+
+  <main class="landing-main">
+    <h1 class="landing-title">
+      <span>Extension for your</span>
+      <span class="rotating-word">thoughts</span>
+    </h1>
+    <a href="/app" class="landing-cta">Try it out</a>
+  </main>
+
+  <script>
+    const words = ['thoughts', 'ideas', 'stories', 'posts', 'emails', 'essays', 'notes', 'tweets', 'blogs'];
+    const wordElement = document.querySelector('.rotating-word');
+    let currentIndex = 0;
+
+    // Measure text width helper
+    function measureWidth(text) {
+      const span = document.createElement('span');
+      span.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font:inherit';
+      span.textContent = text;
+      wordElement.parentElement.appendChild(span);
+      const width = span.offsetWidth;
+      span.remove();
+      return width;
+    }
+
+    // Set initial width
+    wordElement.style.width = measureWidth(words[0]) + 'px';
+
+    function rotateWord() {
+      const nextIndex = (currentIndex + 1) % words.length;
+      const nextWidth = measureWidth(words[nextIndex]);
+
+      // Phase 1: Fade out and start sliding to new width
+      wordElement.style.opacity = '0';
+      wordElement.style.width = nextWidth + 'px';
+
+      // Phase 2: Change text after fade out, then fade in
+      setTimeout(() => {
+        currentIndex = nextIndex;
+        wordElement.textContent = words[currentIndex];
+        wordElement.style.opacity = '1';
+      }, 500);
+    }
+
+    setInterval(rotateWord, 3000);
+  </script>
+</body>
+</html>

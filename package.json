@@ -4,11 +4,13 @@
   "description": "AI-powered writing assistant that completes your thoughts in real-time",
   "type": "module",
   "scripts": {
+    "dev": "node server/index.js",
     "start": "node -e 'console.log(\"Production start\")'"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
     "busboy": "^1.6.0",
+    "express": "^4.18.2",
     "uuid": "^13.0.0"
   }
 }
