@@ -27,7 +27,10 @@ CREATE TABLE IF NOT EXISTS valleys (
   title TEXT NOT NULL,
   text TEXT NOT NULL,
   rules TEXT,
+  writing_style TEXT,
   context_session_id TEXT,
+  files JSONB,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -37,6 +40,14 @@ CREATE INDEX IF NOT EXISTS idx_valleys_created_at ON valleys(created_at DESC);
 ALTER TABLE valleys ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow anonymous access" ON valleys FOR ALL USING (true);
+```
+
+### Migration for existing tables:
+If you already have the valleys table, run:
+```sql
+ALTER TABLE valleys ADD COLUMN IF NOT EXISTS writing_style TEXT;
+ALTER TABLE valleys ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE valleys ADD COLUMN IF NOT EXISTS files JSONB;
 ```
 
 ## Testing

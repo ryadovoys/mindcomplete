@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { text, sessionId, rules } = req.body;
+  const { text, sessionId, rules, writingStyle } = req.body;
   const host = req.headers.host || 'purple-valley.vercel.app';
 
   console.log(`[PREDICT] Request received. Text length: ${text?.length}, Session: ${sessionId}`);
@@ -50,6 +50,17 @@ ${rules}
 ${systemPrompt}`;
   }
 
+  // Add writing style if provided
+  if (writingStyle && writingStyle.trim()) {
+    systemPrompt = `Follow this writing style:
+
+<writing_style>
+${writingStyle}
+</writing_style>
+
+${systemPrompt}`;
+  }
+
   // Add file context if available
   if (sessionId) {
     const context = await getContext(sessionId);
@@ -65,6 +76,12 @@ ${rules && rules.trim() ? `Also follow these rules when writing:
 <rules>
 ${rules}
 </rules>
+
+` : ''}${writingStyle && writingStyle.trim() ? `Also follow this writing style:
+
+<writing_style>
+${writingStyle}
+</writing_style>
 
 ` : ''}Based on this context, continue the user's thought from where they stopped. Write 1 paragraph that naturally extends their idea, incorporating relevant information from the reference material when appropriate. Match their tone and style. Do not repeat their text or add meta commentary. Just provide the seamless continuation.`;
     }

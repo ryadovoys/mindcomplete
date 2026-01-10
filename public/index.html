@@ -85,6 +85,50 @@
           </button>
         </div>
 
+        <!-- Add Rules Section -->
+        <div class="side-menu-section">
+          <div class="side-menu-section-header">
+            <h3 class="side-menu-title">Rules</h3>
+            <p class="side-menu-description">This is a field to add context to make magic complete understand you
+              faster.</p>
+          </div>
+          <textarea class="side-menu-textarea" id="side-menu-rules-textarea"
+            placeholder="Write or paste your rules"></textarea>
+          <div class="side-menu-buttons">
+            <button class="btn-primary" id="side-menu-save-rules-btn">Save rules</button>
+            <button class="btn-secondary" id="side-menu-clear-rules-btn">Clear rules</button>
+          </div>
+        </div>
+
+        <!-- Writing Style Section -->
+        <div class="side-menu-section style-section" style="gap: 0;">
+          <div class="side-menu-section-header" style="margin-bottom: 12px;">
+            <h3 class="side-menu-title">Writing Style</h3>
+            <p class="side-menu-description">Choose or define how the AI should write for you.</p>
+          </div>
+          
+          <div class="custom-dropdown" id="side-menu-style-dropdown">
+            <button class="custom-dropdown-trigger">
+              <span class="selected-value">No specific style</span>
+              <span class="material-symbols-outlined">expand_more</span>
+            </button>
+            <div class="custom-dropdown-menu">
+              <div class="custom-dropdown-item" data-value="none">No specific style</div>
+              <div class="custom-dropdown-item" data-value="social">Social Media (short, concise)</div>
+              <div class="custom-dropdown-item" data-value="story">Story (descriptive, narrative)</div>
+              <div class="custom-dropdown-item" data-value="ideation">Ideation (expansive, creative)</div>
+              <div class="custom-dropdown-item" data-value="custom">Custom style...</div>
+            </div>
+          </div>
+
+          <textarea class="side-menu-textarea" id="side-menu-custom-style-textarea"
+            placeholder="Describe your custom writing style..." style="display: none;"></textarea>
+          <div class="side-menu-buttons" style="margin-top: 12px;">
+            <button class="btn-primary" id="side-menu-save-style-btn">Save style</button>
+            <button class="btn-secondary" id="side-menu-clear-style-btn">Clear style</button>
+          </div>
+        </div>
+
         <!-- Add Files Section -->
         <div class="side-menu-section">
           <div class="side-menu-section-header">
@@ -99,21 +143,6 @@
               Upload files
             </button>
             <button class="btn-secondary" id="side-menu-remove-files-btn">Remove files</button>
-          </div>
-        </div>
-
-        <!-- Add Rules Section -->
-        <div class="side-menu-section">
-          <div class="side-menu-section-header">
-            <h3 class="side-menu-title">Rules</h3>
-            <p class="side-menu-description">This is a field to add context to make magic complete understand you
-              faster.</p>
-          </div>
-          <textarea class="side-menu-textarea" id="side-menu-rules-textarea"
-            placeholder="Write or paste your rules"></textarea>
-          <div class="side-menu-buttons">
-            <button class="btn-primary" id="side-menu-save-rules-btn">Save rules</button>
-            <button class="btn-secondary" id="side-menu-clear-rules-btn">Clear rules</button>
           </div>
         </div>
       </div>
@@ -221,6 +250,34 @@
           <button class="btn-secondary" id="clear-rules-btn">Clear rules</button>
           <span class="rules-status" id="rules-status"></span>
         </div>
+
+        <div class="writing-style-modal-section"
+          style="margin-top: 36px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; display: flex; flex-direction: column; gap: 0;">
+          <h3 class="side-menu-title" style="margin-bottom: 8px;">Writing Style</h3>
+          <p class="rules-description" style="margin-bottom: 12px;">Choose how the AI should write for you.</p>
+          
+          <div class="custom-dropdown" id="style-dropdown">
+            <button class="custom-dropdown-trigger">
+              <span class="selected-value">No specific style</span>
+              <span class="material-symbols-outlined">expand_more</span>
+            </button>
+            <div class="custom-dropdown-menu">
+              <div class="custom-dropdown-item" data-value="none">No specific style</div>
+              <div class="custom-dropdown-item" data-value="social">Social Media (short, concise)</div>
+              <div class="custom-dropdown-item" data-value="story">Story (descriptive, narrative)</div>
+              <div class="custom-dropdown-item" data-value="ideation">Ideation (expansive, creative)</div>
+              <div class="custom-dropdown-item" data-value="custom">Custom style...</div>
+            </div>
+          </div>
+
+          <textarea class="rules-textarea" id="custom-style-textarea" placeholder="Describe your custom writing style..."
+            style="display: none;"></textarea>
+          <div class="rules-buttons" style="margin-top: 12px;">
+            <button class="btn-primary" id="save-style-btn">Save style</button>
+            <button class="btn-secondary" id="clear-style-btn">Clear style</button>
+            <span class="rules-status" id="style-status"></span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -268,6 +325,33 @@
           <div class="rules-buttons">
             <button class="btn-primary" id="save-rules-btn-mobile">Save</button>
             <button class="btn-secondary" id="clear-rules-btn-mobile">Clear</button>
+          </div>
+
+          <div class="writing-style-modal-section"
+            style="margin-top: 36px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; display: flex; flex-direction: column; gap: 0;">
+            <h3 class="side-menu-title" style="margin-bottom: 8px;">Writing Style</h3>
+            <p class="rules-description" style="margin-bottom: 12px;">Choose how the AI should write for you.</p>
+            
+            <div class="custom-dropdown" id="style-dropdown-mobile">
+              <button class="custom-dropdown-trigger">
+                <span class="selected-value">No specific style</span>
+                <span class="material-symbols-outlined">expand_more</span>
+              </button>
+              <div class="custom-dropdown-menu">
+                <div class="custom-dropdown-item" data-value="none">No specific style</div>
+                <div class="custom-dropdown-item" data-value="social">Social Media (short, concise)</div>
+                <div class="custom-dropdown-item" data-value="story">Story (descriptive, narrative)</div>
+                <div class="custom-dropdown-item" data-value="ideation">Ideation (expansive, creative)</div>
+                <div class="custom-dropdown-item" data-value="custom">Custom style...</div>
+              </div>
+            </div>
+
+            <textarea class="rules-textarea" id="custom-style-textarea-mobile"
+              placeholder="Describe your custom writing style..." style="display: none;"></textarea>
+            <div class="rules-buttons" style="margin-top: 12px;">
+              <button class="btn-primary" id="save-style-btn-mobile">Save style</button>
+              <button class="btn-secondary" id="clear-style-btn-mobile">Clear</button>
+            </div>
           </div>
         </div>
       </div>

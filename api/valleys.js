@@ -79,7 +79,7 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: 'Sign in to save valleys' });
       }
 
-      const { title, text, rules, contextSessionId } = req.body;
+      const { title, text, rules, writingStyle, contextSessionId } = req.body;
 
       if (!text) {
         return res.status(400).json({ error: 'Text is required' });
@@ -114,6 +114,7 @@ export default async function handler(req, res) {
           title: title || 'Untitled',
           text,
           rules: rules || null,
+          writing_style: writingStyle || null,
           files: filesData,
           created_at: now,
           updated_at: now
@@ -134,7 +135,7 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: 'Authentication required' });
       }
 
-      const { title, text, rules, contextSessionId } = req.body;
+      const { title, text, rules, writingStyle, contextSessionId } = req.body;
 
       const updateData = {
         updated_at: new Date().toISOString()
@@ -143,6 +144,7 @@ export default async function handler(req, res) {
       if (title !== undefined) updateData.title = title || 'Untitled';
       if (text !== undefined) updateData.text = text;
       if (rules !== undefined) updateData.rules = rules || null;
+      if (writingStyle !== undefined) updateData.writing_style = writingStyle || null;
 
       // Fetch file content if contextSessionId provided
       if (contextSessionId) {

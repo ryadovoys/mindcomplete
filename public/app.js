@@ -32,6 +32,15 @@ const CONFIG = {
   STORAGE_FILES: 'purplevalley_files',
   STORAGE_TOKENS: 'purplevalley_tokens',
   STORAGE_RULES: 'purplevalley_rules',
+  STORAGE_STYLE: 'purplevalley_style',
+  STORAGE_CUSTOM_STYLE: 'purplevalley_custom_style',
+
+  // Prebuilt writing styles
+  WRITING_STYLES: {
+    social: "Write in a short, concise style suitable for social media platforms like Instagram and Twitter. Use emojis sparingly and focus on high engagement.",
+    story: "Use a storytelling, explanatory, and descriptive style. Focus on narrative flow and vivid imagery.",
+    ideation: "Focus on pushing boundaries, expanding ideas, and creative brainstorming. Be provocative and unconventional."
+  },
 
   // API endpoints
   API_PREDICT: '/api/predict',
@@ -835,7 +844,8 @@ class PredictionManager {
         body: JSON.stringify({
           text,
           sessionId: window.contextManager?.getSessionId(),
-          rules: window.contextManager?.getRulesText()
+          rules: window.contextManager?.getRulesText(),
+          writingStyle: window.contextManager?.getWritingStyleText()
         }),
         signal: this.abortController.signal
       });
@@ -1236,6 +1246,8 @@ class ContextManager {
     this.sessionId = null;
     this.files = [];
     this.rulesText = '';
+    this.selectedStyle = 'none';
+    this.customStyleText = '';
     this.estimatedTokens = 0;
     this.isMobile = window.matchMedia('(max-width: 768px)').matches;
 
@@ -1260,11 +1272,24 @@ class ContextManager {
     this.clearRulesBtn = document.getElementById('clear-rules-btn');
     this.rulesStatusEl = document.getElementById('rules-status');
 
+    // Writing Style modal elements (desktop)
+    this.styleDropdown = document.getElementById('style-dropdown');
+    this.customStyleTextarea = document.getElementById('custom-style-textarea');
+    this.saveStyleBtn = document.getElementById('save-style-btn');
+    this.clearStyleBtn = document.getElementById('clear-style-btn');
+    this.styleStatusEl = document.getElementById('style-status');
+
     // Rules bottom sheet elements (mobile)
     this.rulesBottomSheet = document.getElementById('rules-bottom-sheet');
     this.rulesTextareaMobile = document.getElementById('rules-textarea-mobile');
     this.saveRulesBtnMobile = document.getElementById('save-rules-btn-mobile');
     this.clearRulesBtnMobile = document.getElementById('clear-rules-btn-mobile');
+
+    // Writing Style bottom sheet elements (mobile)
+    this.styleDropdownMobile = document.getElementById('style-dropdown-mobile');
+    this.customStyleTextareaMobile = document.getElementById('custom-style-textarea-mobile');
+    this.saveStyleBtnMobile = document.getElementById('save-style-btn-mobile');
+    this.clearStyleBtnMobile = document.getElementById('clear-rules-btn-mobile');
 
     // Shared file input
     this.fileInput = document.getElementById('file-input');
@@ -1283,6 +1308,10 @@ class ContextManager {
     this.sideMenuRulesTextarea = document.getElementById('side-menu-rules-textarea');
     this.sideMenuSaveRulesBtn = document.getElementById('side-menu-save-rules-btn');
     this.sideMenuClearRulesBtn = document.getElementById('side-menu-clear-rules-btn');
+    this.sideMenuStyleDropdown = document.getElementById('side-menu-style-dropdown');
+    this.sideMenuCustomStyleTextarea = document.getElementById('side-menu-custom-style-textarea');
+    this.sideMenuSaveStyleBtn = document.getElementById('side-menu-save-style-btn');
+    this.sideMenuClearStyleBtn = document.getElementById('side-menu-clear-style-btn');
 
     this.init();
   }
@@ -1293,6 +1322,8 @@ class ContextManager {
     const savedFiles = localStorage.getItem(CONFIG.STORAGE_FILES);
     const savedTokens = localStorage.getItem(CONFIG.STORAGE_TOKENS);
     const savedRules = localStorage.getItem(CONFIG.STORAGE_RULES);
+    const savedStyle = localStorage.getItem(CONFIG.STORAGE_STYLE);
+    const savedCustomStyle = localStorage.getItem(CONFIG.STORAGE_CUSTOM_STYLE);
 
     if (savedSessionId && savedFiles) {
       this.sessionId = savedSessionId;
@@ -1308,6 +1339,22 @@ class ContextManager {
       if (this.sideMenuRulesTextarea) this.sideMenuRulesTextarea.value = savedRules;
     }
 
+    // Restore writing style
+    if (savedStyle) {
+      this.selectedStyle = savedStyle;
+      this.updateDropdownUI(this.styleDropdown, savedStyle);
+      this.updateDropdownUI(this.styleDropdownMobile, savedStyle);
+      this.updateDropdownUI(this.sideMenuStyleDropdown, savedStyle);
+    }
+
+    if (savedCustomStyle) {
+      this.customStyleText = savedCustomStyle;
+      if (this.customStyleTextarea) this.customStyleTextarea.value = savedCustomStyle;
+      if (this.customStyleTextareaMobile) this.customStyleTextareaMobile.value = savedCustomStyle;
+      if (this.sideMenuCustomStyleTextarea) this.sideMenuCustomStyleTextarea.value = savedCustomStyle;
+    }
+
+    this.toggleCustomStyleTextarea();
     this.updateUI();
 
     // Listen for resize to update isMobile
@@ -1348,12 +1395,46 @@ class ContextManager {
     this.clearRulesBtn?.addEventListener('click', () => this.handleClearRules());
     this.clearRulesBtnMobile?.addEventListener('click', () => this.handleClearRules());
 
+    // Save style buttons
+    this.saveStyleBtn?.addEventListener('click', () => this.handleSaveStyle());
+    this.saveStyleBtnMobile?.addEventListener('click', () => this.handleSaveStyle());
+
+    // Clear style buttons
+    this.clearStyleBtn?.addEventListener('click', () => this.handleClearStyle());
+    this.clearStyleBtnMobile?.addEventListener('click', () => this.handleClearStyle());
+
     // Sync textarea values between desktop and mobile
     this.rulesTextarea?.addEventListener('input', () => {
       if (this.rulesTextareaMobile) this.rulesTextareaMobile.value = this.rulesTextarea.value;
     });
     this.rulesTextareaMobile?.addEventListener('input', () => {
       if (this.rulesTextarea) this.rulesTextarea.value = this.rulesTextareaMobile.value;
+    });
+
+    // Initialize custom dropdowns
+    this.initDropdown(this.styleDropdown);
+    this.initDropdown(this.styleDropdownMobile);
+    this.initDropdown(this.sideMenuStyleDropdown);
+
+    // Close dropdowns on outside click
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.custom-dropdown')) {
+        document.querySelectorAll('.custom-dropdown.active').forEach(d => d.classList.remove('active'));
+      }
+    });
+
+    // Custom style textarea sync
+    this.customStyleTextarea?.addEventListener('input', () => {
+      if (this.customStyleTextareaMobile) this.customStyleTextareaMobile.value = this.customStyleTextarea.value;
+      if (this.sideMenuCustomStyleTextarea) this.sideMenuCustomStyleTextarea.value = this.customStyleTextarea.value;
+    });
+    this.customStyleTextareaMobile?.addEventListener('input', () => {
+      if (this.customStyleTextarea) this.customStyleTextarea.value = this.customStyleTextareaMobile.value;
+      if (this.sideMenuCustomStyleTextarea) this.sideMenuCustomStyleTextarea.value = this.customStyleTextareaMobile.value;
+    });
+    this.sideMenuCustomStyleTextarea?.addEventListener('input', () => {
+      if (this.customStyleTextarea) this.customStyleTextarea.value = this.sideMenuCustomStyleTextarea.value;
+      if (this.customStyleTextareaMobile) this.customStyleTextareaMobile.value = this.sideMenuCustomStyleTextarea.value;
     });
 
     // Side menu handlers
@@ -1363,6 +1444,8 @@ class ContextManager {
     this.sideMenuRemoveFilesBtn?.addEventListener('click', () => this.clearFiles());
     this.sideMenuSaveRulesBtn?.addEventListener('click', () => this.handleSaveRulesFromSideMenu());
     this.sideMenuClearRulesBtn?.addEventListener('click', () => this.handleClearRulesFromSideMenu());
+    this.sideMenuSaveStyleBtn?.addEventListener('click', () => this.handleSaveStyleFromSideMenu());
+    this.sideMenuClearStyleBtn?.addEventListener('click', () => this.handleClearStyleFromSideMenu());
 
     // Sync side menu rules textarea with other textareas
     this.sideMenuRulesTextarea?.addEventListener('input', () => {
@@ -1413,6 +1496,52 @@ class ContextManager {
     this.filesBottomSheet?.classList.remove('visible');
   }
 
+  initDropdown(dropdown) {
+    if (!dropdown) return;
+    const trigger = dropdown.querySelector('.custom-dropdown-trigger');
+    const items = dropdown.querySelectorAll('.custom-dropdown-item');
+
+    trigger?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Close other dropdowns
+      document.querySelectorAll('.custom-dropdown.active').forEach(d => {
+        if (d !== dropdown) d.classList.remove('active');
+      });
+      dropdown.classList.toggle('active');
+    });
+
+    items.forEach(item => {
+      item.addEventListener('click', () => {
+        const value = item.dataset.value;
+        this.handleStyleChange(value);
+        dropdown.classList.remove('active');
+      });
+    });
+  }
+
+  updateDropdownUI(dropdown, value) {
+    if (!dropdown) return;
+    const trigger = dropdown.querySelector('.custom-dropdown-trigger .selected-value');
+    const items = dropdown.querySelectorAll('.custom-dropdown-item');
+    const selectedItem = dropdown.querySelector(`.custom-dropdown-item[data-value="${value}"]`);
+
+    if (trigger && selectedItem) {
+      trigger.textContent = selectedItem.textContent;
+    }
+
+    items.forEach(item => {
+      item.classList.toggle('selected', item.dataset.value === value);
+    });
+  }
+
+  handleStyleChange(value) {
+    this.selectedStyle = value;
+    this.updateDropdownUI(this.styleDropdown, value);
+    this.updateDropdownUI(this.styleDropdownMobile, value);
+    this.updateDropdownUI(this.sideMenuStyleDropdown, value);
+    this.toggleCustomStyleTextarea();
+  }
+
   openRulesModal() {
     if (this.isMobile) {
       this.rulesBottomSheet?.classList.add('visible');
@@ -1431,6 +1560,15 @@ class ContextManager {
     if (this.sideMenuRulesTextarea) {
       this.sideMenuRulesTextarea.value = this.rulesText || '';
     }
+    // Sync style values before opening
+    if (this.sideMenuStyleDropdown) {
+      this.updateDropdownUI(this.sideMenuStyleDropdown, this.selectedStyle || 'none');
+    }
+    if (this.sideMenuCustomStyleTextarea) {
+      this.sideMenuCustomStyleTextarea.value = this.customStyleText || '';
+    }
+    this.toggleCustomStyleTextarea();
+
     // Render files list
     this.renderSideMenuFilesList();
     document.body.classList.add('side-menu-open');
@@ -1446,6 +1584,149 @@ class ContextManager {
     } else {
       this.openSideMenu();
     }
+  }
+
+  toggleCustomStyleTextarea() {
+    const show = this.selectedStyle === 'custom';
+    if (this.customStyleTextarea) this.customStyleTextarea.style.display = show ? 'block' : 'none';
+    if (this.customStyleTextareaMobile) this.customStyleTextareaMobile.style.display = show ? 'block' : 'none';
+    if (this.sideMenuCustomStyleTextarea) this.sideMenuCustomStyleTextarea.style.display = show ? 'block' : 'none';
+  }
+
+  handleSaveStyleFromSideMenu() {
+    const style = this.selectedStyle || 'none';
+    const customText = (this.sideMenuCustomStyleTextarea?.value || '').trim();
+
+    this.selectedStyle = style;
+    this.customStyleText = customText;
+
+    // Save to localStorage
+    localStorage.setItem(CONFIG.STORAGE_STYLE, style);
+    if (customText) {
+      localStorage.setItem(CONFIG.STORAGE_CUSTOM_STYLE, customText);
+    } else {
+      localStorage.removeItem(CONFIG.STORAGE_CUSTOM_STYLE);
+    }
+
+    this.updateUI();
+  }
+
+  handleClearStyleFromSideMenu() {
+    this.selectedStyle = 'none';
+    this.customStyleText = '';
+
+    this.updateDropdownUI(this.sideMenuStyleDropdown, 'none');
+    this.updateDropdownUI(this.styleDropdown, 'none');
+    this.updateDropdownUI(this.styleDropdownMobile, 'none');
+
+    if (this.sideMenuCustomStyleTextarea) this.sideMenuCustomStyleTextarea.value = '';
+    if (this.customStyleTextarea) this.customStyleTextarea.value = '';
+    if (this.customStyleTextareaMobile) this.customStyleTextareaMobile.value = '';
+
+    localStorage.removeItem(CONFIG.STORAGE_STYLE);
+    localStorage.removeItem(CONFIG.STORAGE_CUSTOM_STYLE);
+    this.toggleCustomStyleTextarea();
+    this.updateUI();
+  }
+
+  handleSaveStyle() {
+    const style = this.selectedStyle || 'none';
+    const customText = (this.customStyleTextarea?.value || this.customStyleTextareaMobile?.value || '').trim();
+
+    this.selectedStyle = style;
+    this.customStyleText = customText;
+
+    // Save to localStorage
+    localStorage.setItem(CONFIG.STORAGE_STYLE, style);
+    if (customText) {
+      localStorage.setItem(CONFIG.STORAGE_CUSTOM_STYLE, customText);
+    } else {
+      localStorage.removeItem(CONFIG.STORAGE_CUSTOM_STYLE);
+    }
+
+    if (this.styleStatusEl) {
+      this.styleStatusEl.textContent = 'Style saved';
+      setTimeout(() => {
+        if (this.styleStatusEl && this.styleStatusEl.textContent === 'Style saved') {
+          this.styleStatusEl.textContent = '';
+        }
+      }, 2000);
+    }
+
+    this.updateUI();
+  }
+
+  handleClearStyle() {
+    this.selectedStyle = 'none';
+    this.customStyleText = '';
+
+    this.updateDropdownUI(this.styleDropdown, 'none');
+    this.updateDropdownUI(this.styleDropdownMobile, 'none');
+    this.updateDropdownUI(this.sideMenuStyleDropdown, 'none');
+
+    if (this.customStyleTextarea) this.customStyleTextarea.value = '';
+    if (this.customStyleTextareaMobile) this.customStyleTextareaMobile.value = '';
+    if (this.sideMenuCustomStyleTextarea) this.sideMenuCustomStyleTextarea.value = '';
+
+    localStorage.removeItem(CONFIG.STORAGE_STYLE);
+    localStorage.removeItem(CONFIG.STORAGE_CUSTOM_STYLE);
+
+    if (this.styleStatusEl) {
+      this.styleStatusEl.textContent = 'Style cleared';
+      setTimeout(() => {
+        if (this.styleStatusEl && this.styleStatusEl.textContent === 'Style cleared') {
+          this.styleStatusEl.textContent = '';
+        }
+      }, 2000);
+    }
+
+    this.toggleCustomStyleTextarea();
+    this.updateUI();
+  }
+
+  getWritingStyleText() {
+    if (this.selectedStyle === 'none') return '';
+    if (this.selectedStyle === 'custom') return this.customStyleText;
+    return CONFIG.WRITING_STYLES[this.selectedStyle] || '';
+  }
+
+  restoreWritingStyle(styleText) {
+    if (!styleText) {
+      this.selectedStyle = 'none';
+      this.customStyleText = '';
+    } else {
+      // Find if it matches a prebuilt style
+      let foundKey = 'custom';
+      for (const [key, prompt] of Object.entries(CONFIG.WRITING_STYLES)) {
+        if (prompt === styleText) {
+          foundKey = key;
+          break;
+        }
+      }
+      this.selectedStyle = foundKey;
+      this.customStyleText = foundKey === 'custom' ? styleText : '';
+    }
+
+    // Update UI elements
+    this.updateDropdownUI(this.styleDropdown, this.selectedStyle);
+    this.updateDropdownUI(this.styleDropdownMobile, this.selectedStyle);
+    this.updateDropdownUI(this.sideMenuStyleDropdown, this.selectedStyle);
+
+    if (this.customStyleTextarea) this.customStyleTextarea.value = this.customStyleText;
+    if (this.customStyleTextareaMobile) this.customStyleTextareaMobile.value = this.customStyleText;
+    if (this.sideMenuCustomStyleTextarea) this.sideMenuCustomStyleTextarea.value = this.customStyleText;
+
+    this.toggleCustomStyleTextarea();
+
+    // Save to localStorage
+    localStorage.setItem(CONFIG.STORAGE_STYLE, this.selectedStyle);
+    if (this.customStyleText) {
+      localStorage.setItem(CONFIG.STORAGE_CUSTOM_STYLE, this.customStyleText);
+    } else {
+      localStorage.removeItem(CONFIG.STORAGE_CUSTOM_STYLE);
+    }
+
+    this.updateUI();
   }
 
   handleSaveRulesFromSideMenu() {
@@ -1742,7 +2023,9 @@ class ContextManager {
       this.filesMenuBtn.classList.toggle('has-context', this.files.length > 0);
     }
     if (this.rulesMenuBtn) {
-      this.rulesMenuBtn.classList.toggle('has-context', this.rulesText.length > 0);
+      const hasRules = this.rulesText.length > 0;
+      const hasStyle = this.selectedStyle !== 'none';
+      this.rulesMenuBtn.classList.toggle('has-context', hasRules || hasStyle);
     }
   }
 
@@ -2092,6 +2375,7 @@ class ValleysManager {
 
     const title = this.generateTitle(plainText);
     const rules = window.contextManager?.getRulesText() || '';
+    const writingStyle = window.contextManager?.getWritingStyleText() || '';
     const contextSessionId = window.contextManager?.getSessionId() || null;
 
     try {
@@ -2105,7 +2389,7 @@ class ValleysManager {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ title, text, rules, contextSessionId })
+        body: JSON.stringify({ title, text, rules, writingStyle, contextSessionId })
       });
 
       if (!response.ok) {
@@ -2190,6 +2474,11 @@ class ValleysManager {
           localStorage.setItem(CONFIG.STORAGE_RULES, valley.rules);
         } else {
           localStorage.removeItem(CONFIG.STORAGE_RULES);
+        }
+
+        // Restore writing style
+        if (window.contextManager.restoreWritingStyle) {
+          window.contextManager.restoreWritingStyle(valley.writing_style || '');
         }
 
         // Restore files
