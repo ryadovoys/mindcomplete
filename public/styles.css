@@ -1479,7 +1479,6 @@ body.selection-ready .select-confirm-btn {
 
   .modal-content p:not(.section-description),
   .modal-content ol {
-    font-size: 18pt;
     line-height: 1.4;
   }
 
