@@ -2934,8 +2934,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Sidebar close button and logo click handlers
-  const sidebarHeaderNewValleyBtn = document.getElementById('sidebar-header-new-valley');
-  const sidebarLogoBtn = document.getElementById('sidebar-logo-btn');
+  const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+  const sidebarCreateBtn = document.getElementById('sidebar-create-valley-btn');
 
   const collapseSidebar = () => {
     if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX) {
@@ -2945,15 +2945,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  if (sidebarHeaderNewValleyBtn) {
-    sidebarHeaderNewValleyBtn.addEventListener('click', async () => {
+  if (sidebarCreateBtn) {
+    sidebarCreateBtn.addEventListener('click', async () => {
       await window.valleysManager.newValley();
-      closeAllMenus();
+      closeSidebarDrawer();
     });
   }
 
-  if (sidebarLogoBtn) {
-    sidebarLogoBtn.addEventListener('click', collapseSidebar);
+  if (sidebarCloseBtn) {
+    sidebarCloseBtn.addEventListener('click', collapseSidebar);
   }
 
   if (rightMenuOverlay) {

@@ -26,13 +26,20 @@
       <div class="sidebar-top">
         <!-- Header: Logo + Close Button -->
         <div class="sidebar-header">
-          <button class="sidebar-logo-btn" id="sidebar-logo-btn" aria-label="Collapse sidebar">
-            <span class="logo sidebar-logo"></span>
+          <button class="btn-icon" id="sidebar-close-btn" aria-label="Close sidebar">
+            <span class="material-symbols-outlined">close</span>
           </button>
-          <button class="btn-icon" id="sidebar-header-new-valley" aria-label="New Valley">
-            <span class="material-symbols-outlined" style="font-size: 24px;">edit_square</span>
+          <img src="/purple-valley-favicon.png" alt="Purple Valley" class="sidebar-favicon">
+        </div>
+
+        <div class="sidebar-actions">
+          <button class="sidebar-item sidebar-create-btn" id="sidebar-create-valley-btn">
+            <span class="material-symbols-outlined">edit_square</span>
+            <span>Create new valley</span>
           </button>
         </div>
+
+        <div class="sidebar-divider"></div>
 
         <!-- Valleys List (gap-12) -->
         <div class="sidebar-valleys" id="sidebar-valleys-list"></div>
@@ -58,6 +65,7 @@
             <span class="material-symbols-outlined menu-icon-open">menu</span>
             <span class="material-symbols-outlined menu-icon-close">close</span>
           </button>
+          <span class="logo header-logo"></span>
         </div>
         <div class="header-right">
           <button class="btn-icon" id="settings-btn" aria-label="Settings">
