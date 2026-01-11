@@ -13,6 +13,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/landing.html'));
 });
 
+// Route for login page
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/login.html'));
+});
+
 // Route for app
 app.get('/app', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/editor.html'));

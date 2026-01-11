@@ -5,8 +5,9 @@ Purple Valley ships a static client in `public/` served by the slim Express stub
 
 ## Build, Test, and Development Commands
 - `npm install` — install Express, Supabase, and browser dependencies.
-- `npm run dev` / `npm start` — serve `/public` at `http://localhost:3000`, expose `/health`, and forward `/api/*` routes for local work.
+- `npm run dev` / `npm start` — serve `/public` at `http://localhost:3000`. **Note**: Restart this whenever you touch `server/index.js` or `vercel.json`.
 - `vercel dev` — run when you need the Vercel function environment locally.
+- **CRITICAL**: Routing changes must be applied to both `server/index.js` and `vercel.json` to avoid 404s.
 - `curl -N http://localhost:3000/api/health` or the CRUD snippets in `VALLEYS_STATUS.md` — low-friction API smoke tests.
 
 ## Coding Style & Naming Conventions

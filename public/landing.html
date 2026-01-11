@@ -3,67 +3,484 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Purple Valley - AI Writing Assistant</title>
-  <meta name="description" content="Extension for your thoughts. Purple Valley is an AI-powered writing assistant.">
-  <link rel="icon" type="image/png" href="/purple-valley-favicon.png">
+  <title>Purple Valley - Extension for your thoughts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Literata:wght@300&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/landing.css">
-</head>
-<body>
-  <div class="landing-bg">
-    <div class="landing-overlay"></div>
-  </div>
-
-  <header class="landing-header">
-    <img src="/purple-valley-logo.svg" alt="Purple Valley" class="landing-logo">
-  </header>
-
-  <main class="landing-main">
-    <h1 class="landing-title">
-      <span>Extension for your</span>
-      <span class="rotating-word">thoughts</span>
-    </h1>
-    <a href="/app" class="landing-cta">Try it out</a>
-  </main>
-
-  <script>
-    const words = ['thoughts', 'ideas', 'stories', 'posts', 'emails', 'essays', 'notes', 'tweets', 'blogs'];
-    const wordElement = document.querySelector('.rotating-word');
-    let currentIndex = 0;
-
-    // Measure text width helper
-    function measureWidth(text) {
-      const span = document.createElement('span');
-      span.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font:inherit';
-      span.textContent = text;
-      wordElement.parentElement.appendChild(span);
-      const width = span.offsetWidth;
-      span.remove();
-      return width;
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@100..900&family=Inter:wght@100..900&family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #301935;
+      --lavender: #e5e6fa;
+      --accent: #9246FF;
+      --sunlight: #fdfcf7;
+      --section-md: 5rem;
+      --section-lg: 8rem;
+      --text-prediction: rgba(48, 25, 53, 0.5);
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--primary);
+      background-color: var(--lavender);
+    }
+    
+    .font-literata { font-family: 'Literata', serif; }
+    .font-google-sans { font-family: 'Google Sans Flex', sans-serif; }
+    
+    .text-primary { color: var(--primary); }
+    .text-lavender { color: var(--lavender); }
+    .bg-primary { background-color: var(--primary); }
+    .bg-lavender { background-color: var(--lavender); }
+    
+    .py-section-md { padding-top: var(--section-md); padding-bottom: var(--section-md); }
+    .py-section-lg { padding-top: var(--section-lg); padding-bottom: var(--section-lg); }
+    .px-global { padding-left: 1.5rem; padding-right: 1.5rem; }
+    @media (min-width: 1024px) {
+      .px-global { padding-left: 4rem; padding-right: 4rem; }
     }
 
-    // Set initial width
-    wordElement.style.width = measureWidth(words[0]) + 'px';
+    @keyframes breathing {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .animate-breathing { animation: breathing 4s ease-in-out infinite; }
+
+    .ai-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .btn-variant-1 {
+      background-color: var(--primary);
+      color: var(--lavender);
+    }
+    .btn-variant-1:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+    .btn-white {
+      background-color: white;
+      color: var(--primary);
+    }
+    .btn-white:hover {
+      background-color: var(--lavender);
+      transform: translateY(-2px);
+    }
+
+    .rotating-word-container {
+      display: inline-flex;
+      flex-direction: column;
+      vertical-align: bottom;
+      height: 1.2em;
+      overflow: hidden;
+      position: relative;
+      text-align: center;
+      justify-content: center;
+      align-items: center;
+      min-width: 50px;
+    }
+
+    .rotating-word {
+      display: block;
+      white-space: nowrap;
+      position: relative;
+      width: 100%;
+    }
+
+    .bg-pattern {
+      background-image: radial-gradient(circle at 1px 1px, rgba(48, 25, 53, 0.05) 1px, transparent 0);
+      background-size: 40px 40px;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(48, 25, 53, 0.05);
+    }
+
+    .bg-blur {
+      position: fixed;
+      top: 10%;
+      left: 20%;
+      width: 60vw;
+      height: 60vw;
+      background: var(--accent);
+      filter: blur(120px);
+      opacity: 0.08;
+      border-radius: 50%;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    #hero-typing-section {
+      --text-prediction: rgba(229, 230, 250, 0.5);
+    }
+
+    /* MATCHING APP GHOST TEXT */
+    .prediction-remain {
+      color: var(--text-prediction);
+    }
+
+    .word-fade {
+      display: inline-block;
+      opacity: 0;
+      animation: word-fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    @keyframes word-fade-in {
+      from { opacity: 0; transform: translateX(-15px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Caret simulation */
+    .caret {
+      display: inline-block;
+      width: 2px;
+      height: 0.85em;
+      background: var(--accent);
+      margin-left: 2px;
+      vertical-align: middle;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    .feature-card {
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+  </style>
+</head>
+<body class="overflow-x-hidden bg-pattern">
+  <div class="bg-blur"></div>
+  
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full z-50 glass border-b border-primary/5 px-global py-4">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <a href="/"><img src="/purple-valley-logo.svg" alt="Purple Valley" class="h-7 w-auto block"></a>
+      <div class="hidden md:flex gap-8 items-center text-sm font-medium">
+        <a href="#thoughts" class="hover:opacity-70 transition-opacity text-primary/60">Thoughts</a>
+        <a href="#visual" class="hover:opacity-70 transition-opacity text-primary/60">Visual</a>
+        <a href="#style" class="hover:opacity-70 transition-opacity text-primary/60">Style</a>
+        <a href="#context" class="hover:opacity-70 transition-opacity text-primary/60">Context</a>
+        <a href="#flow" class="hover:opacity-70 transition-opacity text-primary/60 text-sm">Flow</a>
+        <a href="/login" class="ai-btn btn-variant-1 font-google-sans">Join</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HeroSection: Simulated Ghostwriting -->
+  <section class="relative min-h-[80vh] pt-64 pb-32 px-global flex flex-col items-center bg-primary text-lavender" id="hero-typing-section">
+    <div class="max-w-5xl w-full">
+      <h1 class="text-4xl md:text-7xl font-literata font-extralight mb-10 leading-[1.2] tracking-tight text-left text-lavender" id="hero-typing">
+        <span class="static-text"></span><span class="caret"></span><span class="dynamic-content"></span>
+      </h1>
+    </div>
+  </section>
+
+  <!-- Section 0: Neural Sync -->
+  <section class="py-section-lg px-global" id="thoughts">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid lg:grid-cols-2 gap-24 items-center">
+        <div class="order-2 lg:order-1 relative">
+           <div class="aspect-video bg-white rounded-[2.5rem] overflow-hidden border border-primary/10 relative group">
+              <div class="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+              <div class="absolute inset-0 flex items-center justify-center">
+                 <div class="text-primary/10 font-google-sans uppercase tracking-[0.3em] text-xs">Visual Coming Soon</div>
+              </div>
+           </div>
+           <div class="absolute -top-10 -left-10 h-40 w-40 bg-accent/10 blur-3xl rounded-full animate-breathing"></div>
+        </div>
+        <div class="text-center lg:text-left flex flex-col items-center lg:items-start order-1 lg:order-2">
+          <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block">IDEAS AUTOCOMPLETE</span>
+          <h2 class="text-4xl md:text-5xl font-literata font-light mb-8 leading-tight">An extension for <br/>your thoughts</h2>
+          <p class="text-lg text-primary/60 font-literata font-light leading-relaxed mb-10">
+            Start typing, and when you stop, AI will keep going for you. So you can approve part of the text, or the whole paragraph
+          </p>
+          <div class="flex gap-4">
+            <div class="h-1.5 w-20 bg-accent rounded-full"></div>
+            <div class="h-1.5 w-8 bg-primary/10 rounded-full"></div>
+            <div class="h-1.5 w-8 bg-primary/10 rounded-full"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 1: Image Generation -->
+  <section class="py-section-lg px-global" id="visual">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid lg:grid-cols-2 gap-24 items-center">
+        <div class="text-center lg:text-left flex flex-col items-center lg:items-start">
+          <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block">Visual Ideation</span>
+          <h2 class="text-4xl md:text-5xl font-literata font-light mb-8 leading-tight">From words to worlds</h2>
+          <p class="text-lg text-primary/60 font-literata font-light leading-relaxed mb-10">
+            Describe a scene and watch it come to life. Our <strong>Integrated Image Engine</strong> allows you to generate high-fidelity visuals directly within your writing flow
+          </p>
+          <div class="flex flex-wrap gap-4">
+             <div class="px-6 py-3 glass rounded-full text-sm font-google-sans border-accent/20">"A lone cabin in a purple valley..."</div>
+             <div class="ai-btn bg-accent text-white px-6">Generate</div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="aspect-square bg-primary/5 rounded-3xl animate-breathing overflow-hidden border border-primary/10">
+             <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80" class="w-full h-full object-cover opacity-80" alt="Generated Visual">
+          </div>
+          <div class="aspect-square bg-primary/5 rounded-3xl animate-breathing overflow-hidden border border-primary/10 mt-8" style="animation-delay: 1s">
+             <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80" class="w-full h-full object-cover opacity-80" alt="Generated Visual">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 1.5: Adaptive Style -->
+  <section class="py-section-lg px-global" id="style">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid lg:grid-cols-2 gap-24 items-center">
+        <div class="order-2 lg:order-1 relative">
+           <div class="aspect-video bg-white rounded-[2.5rem] overflow-hidden border border-primary/10 relative group">
+              <div class="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+              <div class="absolute inset-0 flex items-center justify-center">
+                 <div class="text-primary/10 font-google-sans uppercase tracking-[0.3em] text-xs">Style Engine View</div>
+              </div>
+           </div>
+           <div class="absolute -top-10 -left-10 h-40 w-40 bg-accent/10 blur-3xl rounded-full animate-breathing"></div>
+        </div>
+        <div class="text-center lg:text-left flex flex-col items-center lg:items-start order-1 lg:order-2">
+          <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block text-xs">ADAPTIVE STYLE</span>
+          <h2 class="text-4xl md:text-5xl font-literata font-light mb-8 leading-tight">Text that grows <br/>with you</h2>
+          <p class="text-lg text-primary/60 font-literata font-light leading-relaxed mb-10">
+            The more you type, the more AI knows about your writing style and making predictions better. It’s not just a tool; it’s a collaborator that evolves alongside your creative journey
+          </p>
+          <div class="flex gap-4">
+            <div class="h-1.5 w-8 bg-primary/10 rounded-full"></div>
+            <div class="h-1.5 w-20 bg-accent rounded-full"></div>
+            <div class="h-1.5 w-8 bg-primary/10 rounded-full"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Project Context -->
+  <section class="py-section-lg px-global relative overflow-hidden" id="context">
+    <div class="max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
+      <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block text-xs">Grounded Intelligence</span>
+      <h2 class="text-4xl md:text-6xl font-literata font-light mb-8 text-primary">Write with Authority</h2>
+      <p class="text-lg text-primary/60 font-literata font-light max-w-2xl mb-16 leading-relaxed">
+        Ground your AI in reality. Simply <strong>Upload PDFs, notes, or data</strong> to your current Valley. Purple Valley uses this context to make suggestions that are accurate to <em>your</em> specific project
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12 w-full text-left">
+        <div class="p-10 glass rounded-[3rem] border border-primary/10 feature-card">
+          <h3 class="text-xl font-google-sans mb-4 text-accent">File-to-Flow</h3>
+          <p class="text-base text-primary/60 font-literata font-light leading-relaxed">Instantly reference your research papers, meeting transcripts, or creative bibles. The AI reads your files so you don't have to keep switching tabs</p>
+        </div>
+        <div class="p-10 glass rounded-[3rem] border border-primary/10 feature-card">
+          <h3 class="text-xl font-google-sans mb-4 text-accent">Personalized Predictions</h3>
+          <p class="text-base text-primary/60 font-literata font-light leading-relaxed">Your uploaded context informs every ghost-text suggestion, adopting the terminology and facts unique to your current workspace</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: The Core Experience -->
+  <section class="py-section-lg px-global" id="flow">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-20">
+        <h2 class="text-4xl font-literata font-light mb-6">Designed for the Zone</h2>
+        <p class="text-primary/50 font-literata italic text-lg">Minimal friction. Maximum expression</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+        <div class="p-8 glass rounded-[2.5rem] feature-card flex flex-col items-center">
+          <div class="h-14 w-14 bg-primary/5 rounded-2xl mb-6 flex items-center justify-center text-2xl text-center">⚡</div>
+          <h3 class="text-lg font-google-sans mb-2">Recursive Flow Engine</h3>
+          <p class="text-primary/60 text-sm font-light text-center">Experience the most addictive writing experience. Tab-to-accept suggestions that feel like your own voice</p>
+        </div>
+        <div class="p-8 glass rounded-[2.5rem] feature-card flex flex-col items-center">
+          <div class="h-14 w-14 bg-primary/5 rounded-2xl mb-6 flex items-center justify-center text-2xl text-center">🔒</div>
+          <h3 class="text-lg font-google-sans mb-2 text-center">Privacy Sovereign</h3>
+          <p class="text-primary/60 text-sm font-light text-center">Your thoughts are encrypted. We provide the intelligence, but you own the keys</p>
+        </div>
+        <div class="p-8 glass rounded-[2.5rem] feature-card flex flex-col items-center">
+          <div class="h-14 w-14 bg-primary/5 rounded-2xl mb-6 flex items-center justify-center text-2xl text-center">⛰️</div>
+          <h3 class="text-lg font-google-sans mb-2 text-center">Project Valleys</h3>
+          <p class="text-primary/60 text-sm font-light text-center">Organize your world into distinct, context-focused environments</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA: Extend your stories -->
+  <section class="relative py-32 px-global flex flex-col items-center text-center border-t border-primary/5">
+    <div class="max-w-4xl">
+      <h2 class="text-4xl md:text-7xl font-literata font-extralight mb-8 leading-[1.1] tracking-tight text-center" id="main-heading">
+        Extend your 
+        <span class="italic text-accent/80 mt-2 rotating-word-container">
+          <span class="rotating-word">stories</span>
+        </span>
+      </h2>
+      <p class="text-lg md:text-xl text-primary/70 mb-12 font-literata font-light max-w-xl mx-auto leading-relaxed">
+        Purple Valley is the extension for your thoughts. Join thousands of writers already in the flow
+      </p>
+      <div class="flex flex-col sm:flex-row gap-6 justify-center">
+        <a href="/login" class="ai-btn btn-variant-1 px-14 py-5 text-xl font-google-sans border-accent/20 border">Join the Valley</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-20 px-global border-t border-primary/5">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12 text-center md:text-left">
+      <div class="flex flex-col gap-6 items-center md:items-start">
+        <img src="/purple-valley-logo.svg" alt="Purple Valley" class="h-8">
+        <p class="text-primary/40 text-sm max-w-xs">
+          The AI extension for your brain. Built for the writers, the dreamers, and the makers.
+        </p>
+      </div>
+      <div class="flex gap-12 text-sm font-google-sans font-medium">
+        <div class="flex flex-col gap-4">
+          <span class="text-primary/30 uppercase text-xs tracking-widest text-primary/40 text-sm">Product</span>
+          <a href="/app" class="hover:text-accent">Editor</a>
+          <a href="#" class="hover:text-accent text-primary/60">Pricing</a>
+        </div>
+        <div class="flex flex-col gap-4">
+          <span class="text-primary/30 uppercase text-xs tracking-widest text-primary/40 text-sm">Company</span>
+          <a href="#" class="hover:text-accent text-primary/60">About</a>
+          <a href="#" class="hover:text-accent text-primary/60">Privacy</a>
+        </div>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto mt-20 pt-8 border-t border-primary/5 text-center text-primary/20 text-xs">
+      © 2026 Purple Valley AI. All rights reserved.
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script>
+    const words = ['stories', 'emails', 'essays', 'notes', 'tweets', 'blogs', 'ideas', 'thoughts'];
+    const wordElement = document.querySelector('.rotating-word');
+    const container = document.querySelector('.rotating-word-container');
+    const mainHeading = document.getElementById('main-heading');
+    let currentIndex = 0;
+
+    function measureWidth(text) {
+      const span = document.createElement('span');
+      const style = window.getComputedStyle(mainHeading);
+      span.style.cssText = `
+        position: absolute;
+        visibility: hidden;
+        white-space: nowrap;
+        font-family: ${style.fontFamily};
+        font-size: ${style.fontSize};
+        font-weight: ${style.fontWeight};
+        font-style: italic;
+        letter-spacing: ${style.letterSpacing};
+        text-transform: ${style.textTransform};
+      `;
+      span.textContent = text;
+      document.body.appendChild(span);
+      const width = span.offsetWidth;
+      span.remove();
+      return width + 20;
+    }
+
+    container.style.width = measureWidth(words[0]) + 'px';
 
     function rotateWord() {
       const nextIndex = (currentIndex + 1) % words.length;
       const nextWidth = measureWidth(words[nextIndex]);
 
-      // Phase 1: Fade out and start sliding to new width
-      wordElement.style.opacity = '0';
-      wordElement.style.width = nextWidth + 'px';
+      const tl = gsap.timeline({ onComplete: () => { currentIndex = nextIndex; } });
 
-      // Phase 2: Change text after fade out, then fade in
-      setTimeout(() => {
-        currentIndex = nextIndex;
-        wordElement.textContent = words[currentIndex];
-        wordElement.style.opacity = '1';
-      }, 500);
+      tl.to(wordElement, { y: -50, opacity: 0, duration: 0.4, ease: "power2.in" })
+      .to(container, { width: nextWidth, duration: 0.4, ease: "power2.inOut" }, "-=0.2")
+      .set(wordElement, { textContent: words[nextIndex], y: 50 })
+      .to(wordElement, { y: 0, opacity: 1, duration: 0.6, ease: "back.out(1.2)" });
     }
 
     setInterval(rotateWord, 3000);
+
+    const staticContent = document.querySelector('.static-text');
+    const dynamicContent = document.querySelector('.dynamic-content');
+    const introText = "AI that writes ";
+    const heroWords = ["with ", "you,", "BR", "not ", "for ", "you."];
+    let heroTl = gsap.timeline({ delay: 1 });
+
+    // 1. Type "AI that writes " letter by letter
+    introText.split('').forEach((char, index) => {
+      heroTl.to({}, {
+        duration: 0.20,
+        onStart: () => {
+          const span = document.createElement('span');
+          span.style.display = 'inline-block';
+          span.textContent = char === ' ' ? '\u00A0' : char;
+          staticContent.appendChild(span);
+        }
+      });
+    });
+
+    // 2. Turn off caret and start words
+    heroTl.set(".caret", { display: "none" }, "+=0.8"); // Increased from 0.3 for a longer pause
+
+    let currentTime = heroTl.duration();
+    heroWords.forEach((word, index) => {
+      if (word === "BR") {
+        heroTl.to({}, {
+          onStart: () => { dynamicContent.appendChild(document.createElement('br')); }
+        }, currentTime);
+        currentTime += 0.1;
+        return;
+      }
+
+      const hasComma = word.includes(',');
+
+      heroTl.to({}, {
+        onStart: () => {
+          const span = document.createElement('span');
+          span.className = "word-fade prediction-remain";
+          span.style.display = 'inline-block';
+          span.textContent = word.replace(/ /g, '\u00A0');
+          dynamicContent.appendChild(span);
+        }
+      }, currentTime);
+      
+      // 0.10s delay generally, but longer after a comma for natural cadence
+      currentTime += hasComma ? 0.6 : 0.1; 
+    });
+
+    // Final hero reveal - show button after typing finishes
+    heroTl.to({}, {
+      duration: 1,
+      onComplete: () => {
+        const btnContainer = document.createElement('div');
+        btnContainer.className = "mt-12 opacity-0 transform translate-y-4";
+        btnContainer.innerHTML = '<a href="/login" class="ai-btn btn-white px-14 py-5 text-xl font-google-sans">Join the Valley</a>';
+        document.querySelector('#hero-typing').parentNode.appendChild(btnContainer);
+        gsap.to(btnContainer, { opacity: 1, y: 0, duration: 1, ease: "power3.out" });
+      }
+    }, "+=0.5");
+
+    // GSAP Scroll Animations
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.utils.toArray('section:not(:first-child)').forEach((section) => {
+      const children = section.querySelectorAll('.max-w-4xl > *, .max-w-5xl > *, .max-w-7xl > *, .max-w-3xl > *');
+      gsap.from(children, {
+        scrollTrigger: { trigger: section, start: "top 90%", toggleActions: "restart none none reset" },
+        y: 30, opacity: 0, duration: 1, stagger: 0.1, ease: "power3.out", clearProps: "all"
+      });
+    });
+
+    gsap.to(".bg-blur", {
+      scrollTrigger: { trigger: "body", start: "top top", end: "bottom bottom", scrub: 1.5 },
+      y: 150, x: 50, scale: 1.3
+    });
   </script>
 </body>
 </html>

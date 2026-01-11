@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Purple Valley</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@100..900&family=Inter:wght@100..900&family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #301935;
+      --lavender: #e5e6fa;
+      --accent: #9246FF;
+      --sunlight: #fdfcf7;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--primary);
+      background-color: var(--lavender);
+    }
+    
+    .font-literata { font-family: 'Literata', serif; }
+    .font-google-sans { font-family: 'Google Sans Flex', sans-serif; }
+    
+    .bg-pattern {
+      background-image: radial-gradient(circle at 1px 1px, rgba(48, 25, 53, 0.05) 1px, transparent 0);
+      background-size: 40px 40px;
+    }
+
+    .bg-blur {
+      position: fixed;
+      top: 10%;
+      left: 20%;
+      width: 60vw;
+      height: 60vw;
+      background: var(--accent);
+      filter: blur(120px);
+      opacity: 0.08;
+      border-radius: 50%;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(48, 25, 53, 0.05);
+    }
+
+    .ai-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    .btn-variant-1 {
+      background-color: var(--primary);
+      color: var(--lavender);
+    }
+    .btn-variant-1:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 14px;
+      background: white;
+      border: 1px solid rgba(48, 25, 53, 0.1);
+      border-radius: 1rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-google:hover { 
+      background: #f9f9f9;
+      border-color: var(--accent);
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 14px;
+      background: white;
+      border: 1px solid rgba(48, 25, 53, 0.1);
+      border-radius: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-field:focus { border-color: var(--accent); }
+
+    .lifestyle-img {
+      width: 100%;
+      height: calc(100vh - 40px);
+      object-fit: cover;
+      border-radius: 3rem;
+      box-shadow: 0 20px 50px rgba(48, 25, 53, 0.1);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-pattern overflow-x-hidden">
+  <div class="bg-blur"></div>
+
+  <!-- Header -->
+  <header class="w-full px-8 py-6 flex justify-between items-center z-10">
+    <a href="/"><img src="/purple-valley-logo.svg" alt="Purple Valley" class="h-7"></a>
+    <div class="flex gap-4 items-center">
+      <a href="/" class="text-sm font-medium hover:text-accent transition-colors">Back</a>
+    </div>
+  </header>
+
+  <main class="flex-1 flex flex-col lg:flex-row px-5 lg:px-10 pb-5 gap-12 lg:gap-20 items-center z-10">
+    <!-- Left Column: Login Content -->
+    <div class="flex-1 flex flex-col items-center text-center max-w-xl mx-auto w-full">
+      <div class="mb-10">
+        <h1 class="text-4xl lg:text-6xl font-literata font-extralight mb-4 leading-tight tracking-tight">
+          Writer's block? <br/>
+          <span class="italic text-accent/80">Gone.</span>
+        </h1>
+        <p class="text-lg text-primary/60 font-literata font-light italic">
+          The AI extension for your thoughts.
+        </p>
+      </div>
+
+      <div class="glass w-full p-8 lg:p-12 space-y-8 rounded-[3rem] shadow-xl border-white/40">
+        <button id="google-login" class="btn-google font-google-sans text-primary/80">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="Google">
+          Continue with Google
+        </button>
+
+        <div class="relative flex items-center py-2">
+          <div class="flex-grow border-t border-primary/5"></div>
+          <span class="flex-shrink mx-4 text-[10px] font-bold text-primary/20 uppercase tracking-[0.2em] font-google-sans">OR</span>
+          <div class="flex-grow border-t border-primary/5"></div>
+        </div>
+
+        <form id="email-login-form" class="space-y-4">
+          <input type="email" id="email-input" placeholder="Personal or work email" class="input-field font-literata font-light" required>
+          <button type="submit" class="ai-btn btn-variant-1 w-full py-4 text-lg font-google-sans shadow-lg shadow-primary/10">
+            Continue with Email
+          </button>
+        </form>
+
+        <p class="text-[11px] leading-relaxed text-primary/30 text-center px-4 font-literata">
+          By continuing, you acknowledge Purple Valley's <a href="#" class="underline hover:text-accent">Privacy Policy</a>.
+        </p>
+      </div>
+    </div>
+
+    <!-- Right Column: Visual -->
+    <div class="hidden lg:block flex-1 w-full relative">
+      <div class="absolute inset-0 bg-accent/5 blur-3xl rounded-full animate-breathing"></div>
+      <img src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=2070&auto=format&fit=crop" 
+           alt="Deep concentration" 
+           class="lifestyle-img relative z-10 border border-white/20">
+    </div>
+  </main>
+
+  <script type="module">
+    import { supabase } from './supabaseClient.js';
+
+    // Google Login
+    document.getElementById('google-login').addEventListener('click', async () => {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/app'
+        }
+      });
+      if (error) alert('Error: ' + error.message);
+    });
+
+    // Email Login (Magic Link)
+    document.getElementById('email-login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email-input').value;
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: window.location.origin + '/app'
+        }
+      });
+      if (error) {
+        alert('Error: ' + error.message);
+      } else {
+        alert('Check your email for the login link!');
+      }
+    });
+  </script>
+</body>
+</html>

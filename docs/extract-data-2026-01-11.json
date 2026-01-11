@@ -1,0 +1,1553 @@
+{
+  "component_hierarchy": [
+    {
+      "component_name": "HeroSection",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "parent_component": null,
+      "parent_component_citation": null,
+      "child_components": [
+        {
+          "value": "HeroH1",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "HeroDescription",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "HeroCTA (2 buttons)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "HeroVisual (48 images)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "Section1",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "parent_component": "Main",
+      "parent_component_citation": "https://www.heidihealth.com/en-us",
+      "child_components": [
+        {
+          "value": "Heading (h1)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Images (2 items)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "Section2",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "parent_component": "Main",
+      "parent_component_citation": "https://www.heidihealth.com/en-us",
+      "child_components": [
+        {
+          "value": "Heading (h2)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Images (5 items)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "TextContent (1 paragraphs)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "CTAButtons (2 items)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "Section3",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "parent_component": "Main",
+      "parent_component_citation": "https://www.heidihealth.com/en-us",
+      "child_components": [
+        {
+          "value": "Heading (h2)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Images (3 items)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "TextContent (3 paragraphs)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "Section4",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "parent_component": "Main",
+      "parent_component_citation": "https://www.heidihealth.com/en-us",
+      "child_components": [
+        {
+          "value": "Heading (h2)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Images (2 items)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "TextContent (10 paragraphs)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "CTAButtons (2 items)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "Section5",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "parent_component": "Main",
+      "parent_component_citation": "https://www.heidihealth.com/en-us",
+      "child_components": [
+        {
+          "value": "Heading (h2)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Images (3 items)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "Section6",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "parent_component": "Main",
+      "parent_component_citation": "https://www.heidihealth.com/en-us",
+      "child_components": [
+        {
+          "value": "Heading (h2)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Images (15 items)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "TextContent (3 paragraphs)",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "Button",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "parent_component": null,
+      "parent_component_citation": null,
+      "child_components": [
+        {
+          "value": "ButtonVariant1: bg-sunlight, text-primary",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "ButtonVariant2: text-primary",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "FlexContainer",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "parent_component": null,
+      "parent_component_citation": null,
+      "child_components": [
+        {
+          "value": "Items arranged vertically with gap spacing",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Supports alignment and justification utilities",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "GridContainer",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "parent_component": null,
+      "parent_component_citation": null,
+      "child_components": [
+        {
+          "value": "Responsive column layout",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Gap utilities for spacing",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    }
+  ],
+  "sizing_styles": [
+    {
+      "component_name": "div.shrink-0",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "h-12",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "img.w-auto",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "w-auto",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "img.w-auto",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "h-full",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "img.w-auto",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "max-width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "max-w-full",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.gap-6",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "gap",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "gap-6",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.gap-6",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "w-full",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "w-full",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.w-full",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "w-full",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "h-12.5",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.w-full",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "h-full",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "button.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "gap",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "gap-2",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "svg.shrink-0",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width/height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "size-5",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.@container",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "w-full",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.@container",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "h-full",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.gap-3",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "gap",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "gap-3",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "gap",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "gap-2",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.max-w-lg",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "max-width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "max-w-lg",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "max-width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "max-w-[1920px]",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "gap",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "gap-3",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "max-width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "max-w-[320px]",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "p.whitespace-pre-line",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "font-size",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "text-xl",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "svg.lucide",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width/height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "size-7",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "p.whitespace-pre-line",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "font-size",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "text-lg",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "p.whitespace-pre-line",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "font-size",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "text-xs",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "max-width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "max-w-full",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "span.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "gap",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "gap-1.5",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.whitespace-pre-line",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "font-size",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "text-xl",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "font-size",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "text-lg",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "svg.shrink-0",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width/height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "size-7",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "button.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width/height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "size-8",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "span.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "max-width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "max-w-fit",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "span.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "font-size",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "text-lg",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-start",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "gap",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "gap-8",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "button.ai-btn",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "gap",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "gap-2",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "button.ai-btn",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "font-size",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "text-sm",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "svg.h-5",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "h-5",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "svg.h-5",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "w-5",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "section.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "w-full",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.whitespace-pre-line",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "max-width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "max-w-sm",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.lg:flex-col",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "gap",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "gap-8",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "span.shrink-0",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width/height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "size-10",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "img.aspect-square",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width/height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "size-full",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.max-w-lg",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "gap",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "gap-4",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "svg.lucide",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width/height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "size-12",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.gap-28",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "gap",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "gap-28",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "p.whitespace-pre-line",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "font-size",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "text-sm",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "section.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "gap",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "gap-16",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "section.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "max-width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "max-w-container-lg",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "svg.shrink-0",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width/height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "size-3",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "svg.shrink-0",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width/height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "size-8",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Container",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "max-width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "max-w-full",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Button",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "h-12",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Icon",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "size",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "size-4",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Icon",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "size",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "size-5",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Icon",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "size",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "size-6",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Logo",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "height",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "h-12.5",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Section",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "width",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "w-full",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Heading.h1",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "font-size",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "text-heading-1",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Heading.h2",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "font-size",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "text-heading-2",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Heading.h2",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "font-size",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "text-heading-6",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Text",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "font-size",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "text-xs",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Text",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "property": "font-size",
+      "property_citation": "https://www.heidihealth.com/en-us",
+      "value": "text-sm",
+      "value_citation": "https://www.heidihealth.com/en-us"
+    }
+  ],
+  "padding_styles": [
+    {
+      "component_name": "div.@container",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "p-0",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-top, padding-bottom",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "py-section-md",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-left, padding-right",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "px-global",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-left, padding-right",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "px-4",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-top, padding-bottom",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "py-4",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "button.ai-btn",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-left, padding-right",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "px-5",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "button.ai-btn",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-top, padding-bottom",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "py-3",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-left, padding-right",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "px-0",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "span.shrink-0",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "p-1.5",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-start",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "p-5",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "a.group",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "p-8",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "button.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-left, padding-right",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "px-2",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "button.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-top, padding-bottom",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "py-1",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.gap-28",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "p-8",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "p-0",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-top, padding-bottom",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "py-0",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "a.bg-sunlight",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-left, padding-right",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "px-10",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "a.bg-sunlight",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-top, padding-bottom",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "py-3",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-top",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "pt-section-lg",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-bottom",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "pb-section-md",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.gap-18",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-left, padding-right",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "px-6",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "section.lg:flex-row",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-left, padding-right",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "px-global",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "section.lg:flex-row",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-top, padding-bottom",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "py-section-md",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-left, padding-right",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "px-2",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-top, padding-bottom",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "py-1",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "section.gap-18",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-left, padding-right",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "px-global",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "section.gap-18",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-top, padding-bottom",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "py-section-md",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-left, padding-right",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "px-6",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.items-center",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-top, padding-bottom",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "py-3",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "div.group",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "p-8",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Button.Variant1",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-left, padding-right",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "px-10",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Button.Variant1",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-top, padding-bottom",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "py-3",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Section",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-top, padding-bottom",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "py-section-md",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Section",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-top, padding-bottom",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "py-section-lg",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Section",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-left, padding-right",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "px-global",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Button",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-left, padding-right",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "px-10",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Button",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-top, padding-bottom",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "py-3",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Button",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-left, padding-right",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "px-5",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Container",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-left, padding-right",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "px-4",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    },
+    {
+      "component_name": "Container",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "padding_property": "padding-top, padding-bottom",
+      "padding_property_citation": "https://www.heidihealth.com/en-us",
+      "padding_value": "py-4",
+      "padding_value_citation": "https://www.heidihealth.com/en-us"
+    }
+  ],
+  "motion_animation_patterns": [
+    {
+      "component_name": "img.top-[-75px]",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "animate-breathing",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": []
+    },
+    {
+      "component_name": "img.top-[-75px]",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "animate-breathing",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": []
+    },
+    {
+      "component_name": "svg.inline-block",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "animate-stars",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": []
+    },
+    {
+      "component_name": "svg.inline-block",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "animate-stars",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": []
+    },
+    {
+      "component_name": "svg.inline-block",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "animate-stars",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": []
+    },
+    {
+      "component_name": "svg.inline-block",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "animate-stars",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": []
+    },
+    {
+      "component_name": "svg.inline-block",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "animate-stars",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": []
+    },
+    {
+      "component_name": "svg.inline-block",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "animate-stars",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": []
+    },
+    {
+      "component_name": "div.inline-flex",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "[&_svg]:animate-sparkle",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": []
+    },
+    {
+      "component_name": "div.inline-flex",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "[&_svg]:animate-sparkle",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": []
+    },
+    {
+      "component_name": "div.inline-flex",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "[&_svg]:animate-sparkle",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": []
+    },
+    {
+      "component_name": "button.ytp-unmute",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "ytp-unmute-animated",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": []
+    },
+    {
+      "component_name": "div.inline-flex",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "[&_svg]:animate-sparkle",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": []
+    },
+    {
+      "component_name": "div.inline-flex",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "transition",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": [
+        {
+          "property": "transition",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "transition-colors",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "property": "animation-duration",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "[&_svg]:duration-300",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "property": "animation-timing-function",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "[&_svg]:ease-out",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "div.inline-flex",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "transition",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": [
+        {
+          "property": "transition",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "transition-colors",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "property": "animation-duration",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "[&_svg]:duration-300",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "property": "animation-timing-function",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "[&_svg]:ease-out",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "div.absolute",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "transition",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": [
+        {
+          "property": "transition",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "transition-all",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "property": "animation-duration",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "duration-300",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "property": "animation-timing-function",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "ease-out",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "div.flex",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "transition",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": [
+        {
+          "property": "transition",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "transition-all",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "property": "animation-duration",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "duration-300",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "div.absolute",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "transition",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": [
+        {
+          "property": "transition",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "transition-all",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "property": "animation-duration",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "duration-300",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "property": "animation-timing-function",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "ease-out",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "div.flex",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "transition",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": [
+        {
+          "property": "transition",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "transition-all",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "property": "animation-duration",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "duration-300",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "div.absolute",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "transition",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": [
+        {
+          "property": "transition",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "transition-all",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "property": "animation-duration",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "duration-300",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "property": "animation-timing-function",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "ease-out",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "div.flex",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "transition",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": [
+        {
+          "property": "transition",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "transition-all",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "property": "animation-duration",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "duration-300",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "div.absolute",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "transition",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": [
+        {
+          "property": "transition",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "transition-all",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "property": "animation-duration",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "duration-300",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "property": "animation-timing-function",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "ease-out",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "div.flex",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "transition",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": [
+        {
+          "property": "transition",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "transition-all",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "property": "animation-duration",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "duration-300",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "InteractiveElement",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "hover-state",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": [
+        {
+          "property": "hover-effect",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "hover:bg-sand-200",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "InteractiveElement",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "hover-state",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": [
+        {
+          "property": "hover-effect",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "hover:shadow-lg",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "InteractiveElement",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "hover-state",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": [
+        {
+          "property": "hover-effect",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "hover:bg-sand-100",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "InteractiveElement",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "hover-state",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": [
+        {
+          "property": "hover-effect",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "hover:bg-bark-800",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "InteractiveElement",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "animation_type": "hover-state",
+      "animation_type_citation": "https://www.heidihealth.com/en-us",
+      "animation_properties": [
+        {
+          "property": "hover-effect",
+          "property_citation": "https://www.heidihealth.com/en-us",
+          "value": "hover:[&_svg]:rotate-90",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    }
+  ],
+  "reusable_ui_components": [
+    {
+      "component_name": "Button",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "layout_relationships": [
+        {
+          "value": "Flex container with centered content",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Uses padding for spacing",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "Card",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "layout_relationships": [
+        {
+          "value": "Flex or grid container",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Rounded corners with shadow/border",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "Container",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "layout_relationships": [
+        {
+          "value": "Centers content with max-width constraint",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Applies horizontal padding",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "Icon",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "layout_relationships": [
+        {
+          "value": "Inline-block with size utilities",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Typically paired with text in flex containers",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "Grid",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "layout_relationships": [
+        {
+          "value": "CSS Grid with responsive columns",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Uses gap for spacing between items",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "TextBlock",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "layout_relationships": [
+        {
+          "value": "Typography utilities for size and color",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Font family classes from design system",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "Image",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "layout_relationships": [
+        {
+          "value": "Responsive width/height with max-width constraints",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Often includes loading and animation classes",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "Link",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "layout_relationships": [
+        {
+          "value": "Inline-flex with gap for icon spacing",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Hover states with transition effects",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "FormInput",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "layout_relationships": [
+        {
+          "value": "Flex container with label and input fields",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        },
+        {
+          "value": "Uses padding and border radius for styling",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    },
+    {
+      "component_name": "Btn",
+      "component_name_citation": "https://www.heidihealth.com/en-us",
+      "layout_relationships": [
+        {
+          "value": "Custom component: ai-btn",
+          "value_citation": "https://www.heidihealth.com/en-us"
+        }
+      ]
+    }
+  ]
+}
