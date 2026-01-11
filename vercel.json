@@ -2,15 +2,11 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/public/landing.html"
+      "destination": "/landing.html"
     },
     {
       "source": "/app",
-      "destination": "/public/index.html"
-    },
-    {
-      "source": "/((?!api).*)",
-      "destination": "/public/$1"
+      "destination": "/editor.html"
     }
   ],
   "functions": {

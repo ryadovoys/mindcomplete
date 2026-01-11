@@ -3728,12 +3728,31 @@ document.addEventListener('DOMContentLoaded', () => {
     window.predictionManager.placeCursorAfterNode(br);
 
     try {
+      if (!window.authManager.isAuthenticated()) {
+        window.authManager.openModal();
+        throw new Error('Please sign in to generate images');
+      }
+
+      const token = await window.authManager.getAccessToken();
       console.log('Image generation started for text:', text.substring(0, 50) + '...');
       const response = await fetch(CONFIG.API_GENERATE_IMAGE, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ text, guidance, style })
       });
+
+      if (response.status === 401) {
+        window.authManager.openModal();
+        throw new Error('Please sign in to generate images');
+      }
+
+      if (response.status === 429) {
+        const data = await response.json();
+        throw new Error(data.error || "You've reached your daily limit of 5 images. Upgrade coming soon!");
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -3743,6 +3762,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const data = await response.json();
       console.log('Image generation response data:', data);
+
+      // Show remaining count if present
+      if (typeof data.remaining === 'number' && data.remaining < 5) {
+        console.log(`Images remaining today: ${data.remaining}`);
+        // Optional: show a small toast or notification
+      }
 
       // Remove placeholder
       placeholder.remove();
@@ -3796,25 +3821,58 @@ document.addEventListener('DOMContentLoaded', () => {
   let pendingImageText = '';
 
   if (createImageButtons.length && imageGuidanceModal) {
+    const authView = document.getElementById('image-guidance-auth-view');
+    const unauthView = document.getElementById('image-guidance-unauth-view');
+    const unauthSignupBtn = document.getElementById('image-unauth-signup-btn');
+    const unauthSigninBtn = document.getElementById('image-unauth-signin-btn');
+
     createImageButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
         const text = window.predictionManager.getEditorText();
         pendingImageText = text || '';
         closeAllMenus();
+
+        // Check authentication state
+        const isAuth = window.authManager.isAuthenticated();
+        if (isAuth) {
+          if (authView) authView.style.display = 'flex';
+          if (unauthView) unauthView.style.display = 'none';
+        } else {
+          if (authView) authView.style.display = 'none';
+          if (unauthView) unauthView.style.display = 'flex';
+        }
+
         imageGuidanceModal.classList.add('visible');
-        if (imageGuidanceTextarea) {
+        
+        if (isAuth && imageGuidanceTextarea) {
           imageGuidanceTextarea.value = '';
           imageGuidanceTextarea.focus();
         }
       });
     });
 
+    if (unauthSignupBtn) {
+      unauthSignupBtn.addEventListener('click', () => {
+        imageGuidanceModal.classList.remove('visible');
+        window.authManager.switchTab('signup');
+        window.authManager.openModal();
+      });
+    }
+
+    if (unauthSigninBtn) {
+      unauthSigninBtn.addEventListener('click', () => {
+        imageGuidanceModal.classList.remove('visible');
+        window.authManager.switchTab('signin');
+        window.authManager.openModal();
+      });
+    }
+
     // Apply guidance button
     if (applyGuidanceBtn) {
       applyGuidanceBtn.addEventListener('click', () => {
         const guidance = imageGuidanceTextarea.value.trim();
         const styleSelect = document.getElementById('image-style-select');
-        const style = styleSelect ? styleSelect.value : 'anime';
+        const style = styleSelect ? styleSelect.value : 'realistic';
         
         if (!pendingImageText && !guidance) {
           imageGuidanceTextarea.placeholder = "Please describe the image first...";

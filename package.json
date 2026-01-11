@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node server/index.js",
-    "start": "node -e 'console.log(\"Production start\")'"
+    "start": "node server/index.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",

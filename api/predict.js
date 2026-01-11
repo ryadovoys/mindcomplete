@@ -22,7 +22,7 @@ export default async function handler(req, res) {
   }
 
   const { text, sessionId, rules, writingStyle } = req.body;
-  const host = req.headers.host || 'purple-valley.vercel.app';
+  const host = req.headers.host || 'purplevalley.co';
 
   console.log(`[PREDICT] Request received. Text length: ${text?.length}, Session: ${sessionId}`);
 

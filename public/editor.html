@@ -361,7 +361,8 @@
   <!-- Image Guidance Modal -->
   <div class="modal" id="image-guidance-modal">
     <div class="modal-content image-guidance-modal-content">
-      <div class="image-guidance-body">
+      <!-- Authorized View -->
+      <div class="image-guidance-body" id="image-guidance-auth-view">
         <div class="image-guidance-field">
           <label for="image-style-select" class="section-description">Style</label>
           <select id="image-style-select" class="image-style-select">
@@ -379,6 +380,22 @@
         <div class="image-guidance-buttons">
           <button class="btn-secondary" id="skip-guidance-btn">Cancel</button>
           <button class="btn-primary" id="apply-guidance-btn">Create image</button>
+        </div>
+      </div>
+
+      <!-- Unauthorized View -->
+      <div class="image-guidance-body unauth-view" id="image-guidance-unauth-view" style="display: none;">
+        <div class="image-guidance-promo">
+          <span class="material-symbols-outlined" style="font-size: 48px; color: var(--accent); margin-bottom: 16px;">auto_awesome</span>
+          <h3 class="side-menu-title">Premium Feature</h3>
+          <p class="section-description" style="margin: 12px 0 24px;">
+            Image generation is available for registered users. 
+            Join Purple Valley to bring your thoughts to life.
+          </p>
+        </div>
+        <div class="image-guidance-buttons" style="flex-direction: column; width: 100%;">
+          <button class="btn-primary" id="image-unauth-signup-btn" style="width: 100%;">Join now</button>
+          <button class="btn-secondary" id="image-unauth-signin-btn" style="width: 100%;">Sign in</button>
         </div>
       </div>
     </div>

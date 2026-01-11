@@ -8,14 +8,14 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 4567;
 
-// Route for landing page (must be before static middleware)
+// Route for landing page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/landing.html'));
 });
 
-// Route for app (must be before static middleware)
+// Route for app
 app.get('/app', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+  res.sendFile(path.join(__dirname, '../public/editor.html'));
 });
 
 // Serve static files from public directory (CSS, JS, images, etc.)

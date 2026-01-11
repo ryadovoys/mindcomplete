@@ -43,6 +43,29 @@ CREATE POLICY "Allow anonymous session access" ON contexts
   FOR ALL USING (user_id IS NULL) WITH CHECK (user_id IS NULL);
 ```
 
+### 4. Create Image Generations Table
+
+Run this SQL to track daily limits:
+
+```sql
+create table image_generations (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  user_email text not null,
+  created_at timestamptz default now()
+);
+
+-- Index for efficient daily count queries
+create index idx_image_generations_user_date
+  on image_generations (user_id, created_at);
+
+-- RLS policy
+alter table image_generations enable row level security;
+create policy "Users can view own generations"
+  on image_generations for select
+  using (auth.uid() = user_id);
+```
+
 ### 2. Enable pg_cron Extension and Schedule Cleanup
 
 Enable pg_cron extension, then run:

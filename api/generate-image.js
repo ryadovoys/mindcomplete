@@ -1,3 +1,6 @@
+import { supabase } from './lib/supabaseClient.js';
+import { ADMIN_EMAILS, DAILY_IMAGE_LIMIT } from './lib/constants.js';
+
 const CONFIG = {
     PROMPT_MODEL: 'xiaomi/mimo-v2-flash:free',
     OPENROUTER_IMAGE_MODEL: 'prunaai/z-image-turbo',
@@ -34,7 +37,16 @@ async function generateImagePrompt(text, apiKey, host, guidance = '', style = 'r
         styleHint = 'POV from storyteller perspective. Storyteller is not visible in the frame. The only thing in the frame is the subject or subjects. Describe visual elements: characters, setting, lighting, colors, atmosphere.';
     }
 
-    let systemPrompt = `You are an image prompt generator. Analyze the given text and create a detailed image prompt in a paragraph format that illustrates latest sentences.  ${styleHint} Output ONLY the image prompt, nothing else. No quotes, no explanations.`;
+    let systemPrompt = `You are an expert image prompt engineer. Your task is to generate a detailed, visually descriptive prompt for an image based on the provided text.
+
+Follow this hierarchy for prompt generation:
+1. OVERALL CONTEXT: Use the entire text to establish the setting, atmosphere, and recurring characters or elements.
+2. RECENT CONTEXT: Focus on the last few sentences to define the specific scene and surrounding details.
+3. CORE ACTION: The very last sentence or phrase describes the immediate action or focal point. Make this the central, most prominent element of the image.
+
+${styleHint}
+
+Output ONLY the final image prompt in a single paragraph. Do not include any meta-talk, quotes, or explanations.`;
 
     if (guidance && guidance.trim()) {
         systemPrompt += `\n\nIMPORTANT - Follow this guidance from the user:\n${guidance}`;
@@ -194,6 +206,22 @@ async function imageUrlToBase64(url) {
     }
 }
 
+async function getUserFromToken(authHeader) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return null;
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        if (error) return null;
+        return user;
+    } catch (e) {
+        return null;
+    }
+}
+
 export default async function handler(req, res) {
     // Handle CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -221,11 +249,47 @@ export default async function handler(req, res) {
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
-    const host = req.headers.host || 'purple-valley.vercel.app';
+    const host = req.headers.host || 'purplevalley.co';
 
     try {
+        // 1. Auth check
+        const user = await getUserFromToken(req.headers.authorization);
+        if (!user) {
+            return res.status(401).json({ error: 'Sign in to generate images' });
+        }
+
+        const isAdmin = ADMIN_EMAILS.includes(user.email);
+        let remaining = DAILY_IMAGE_LIMIT;
+
+        // 2. Limit check (skip for admins)
+        if (!isAdmin) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const { count, error: countError } = await supabase
+                .from('image_generations')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+                .gte('created_at', today.toISOString());
+
+            if (countError) {
+                console.error('[IMAGE] Limit check error:', countError);
+            } else {
+                const currentCount = count || 0;
+                remaining = Math.max(0, DAILY_IMAGE_LIMIT - currentCount);
+                if (remaining <= 0) {
+                    return res.status(429).json({ 
+                        error: "You've reached your daily limit of 5 images. Upgrade coming soon!", 
+                        remaining: 0 
+                    });
+                }
+            }
+        } else {
+            remaining = 999; // Unlimited for admin
+        }
+
         const provider = getImageProvider();
-        console.log(`[IMAGE] Request: provider=${provider}, text_len=${text?.length}, style=${style}`);
+        console.log(`[IMAGE] Request: user=${user.email}, provider=${provider}, text_len=${text?.length}, style=${style}`);
         const basePrompt = await generateImagePrompt(text, apiKey, host, guidance, style);
 
         if (!basePrompt) {
@@ -244,10 +308,23 @@ export default async function handler(req, res) {
         const imageUrl = imageResult.url || (imageResult.data?.[0]?.url) || (imageResult.data?.[0]);
         const base64Image = await imageUrlToBase64(imageUrl);
 
+        // 3. Track generation
+        const { error: trackError } = await supabase
+            .from('image_generations')
+            .insert({
+                user_id: user.id,
+                user_email: user.email
+            });
+
+        if (trackError) {
+            console.error('[IMAGE] Tracking error:', trackError);
+        }
+
         res.status(200).json({
             success: true,
             prompt: finalPrompt,
-            image: base64Image
+            image: base64Image,
+            remaining: isAdmin ? 999 : remaining - 1
         });
 
     } catch (error) {
