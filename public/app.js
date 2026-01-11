@@ -1204,14 +1204,14 @@ class PredictionManager {
 
   confirmSelectSelection() {
     if (!this.selectModeActive) return;
-    
+
     // If we have a valid range, accept it
     if (this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset) {
       const start = Math.min(this.selectStartOffset, this.selectPreviewOffset);
       const end = Math.max(this.selectStartOffset, this.selectPreviewOffset);
       this.acceptSelectModeRange(start, end);
     }
-    
+
     // Always disable mode after "confirming"
     this.disableSelectMode();
   }
@@ -1224,7 +1224,7 @@ class PredictionManager {
     } else {
       document.body.classList.remove('selection-ready');
     }
-    
+
     // Trigger UI update if function exists (it's defined later in app.js)
     if (typeof window.updateSelectButtons === 'function') {
       window.updateSelectButtons();
@@ -1771,13 +1771,13 @@ class ContextManager {
     // Render file items
     this.sideMenuFilesList.innerHTML = this.files.map((file, index) =>
       `<div class="side-menu-file" data-index="${index}">` +
-        `<div class="side-menu-file-icon">` +
-          `<span class="material-symbols-outlined">description</span>` +
-        `</div>` +
-        `<span class="side-menu-file-name">${file.name || file}</span>` +
-        `<button class="side-menu-file-remove" data-index="${index}" aria-label="Remove file">` +
-          `<span class="material-symbols-outlined">close</span>` +
-        `</button>` +
+      `<div class="side-menu-file-icon">` +
+      `<span class="material-symbols-outlined">description</span>` +
+      `</div>` +
+      `<span class="side-menu-file-name">${file.name || file}</span>` +
+      `<button class="side-menu-file-remove" data-index="${index}" aria-label="Remove file">` +
+      `<span class="material-symbols-outlined">close</span>` +
+      `</button>` +
       `</div>`
     ).join('');
 
@@ -2176,7 +2176,7 @@ class ValleysManager {
     if (this.contextMenu) {
       this.contextValleyId = valleyId;
       const content = this.contextMenu.querySelector('.menu-content');
-      
+
       // Position the menu
       content.style.top = `${y}px`;
       content.style.left = `${x}px`;
@@ -2218,8 +2218,8 @@ class ValleysManager {
   }
 
   startRenaming(id) {
-    const row = document.querySelector(`.sidebar-valley-row[data-id="${id}"]`) || 
-                document.querySelector(`.valley-item[data-id="${id}"]`);
+    const row = document.querySelector(`.sidebar-valley-row[data-id="${id}"]`) ||
+      document.querySelector(`.valley-item[data-id="${id}"]`);
     if (!row) return;
 
     const titleSpan = row.querySelector('.valley-title') || row.querySelector('.valley-item-title');
@@ -2227,7 +2227,7 @@ class ValleysManager {
 
     titleSpan.contentEditable = true;
     titleSpan.focus();
-    
+
     // Select all text
     const range = document.createRange();
     range.selectNodeContents(titleSpan);
@@ -2287,7 +2287,7 @@ class ValleysManager {
       });
 
       if (!response.ok) throw new Error('Failed to update title');
-      
+
       const data = await response.json();
       const index = this.valleys.findIndex(v => v.id === id);
       if (index !== -1) {
@@ -2303,12 +2303,18 @@ class ValleysManager {
   }
 
   async newValley() {
-    // If we already have a temp valley, just focus editor
-    if (this.tempValley) {
-      const editor = document.querySelector('.editor');
-      editor.focus();
-      this.closeModal();
-      return;
+    if (this.isLoading) return;
+
+    // If we are currently saving, wait for it
+    if (this.pendingSave) await this.pendingSave;
+
+    // Save current active valley before clearing
+    if (this.activeValleyId) {
+      if (this.autoSaveTimer) {
+        clearTimeout(this.autoSaveTimer);
+        this.autoSaveTimer = null;
+      }
+      await this.saveValley(true);
     }
 
     const editor = document.querySelector('.editor');
@@ -2322,7 +2328,7 @@ class ValleysManager {
       await window.contextManager.clearContext();
     }
 
-    // Create temporary valley
+    // Create temporary valley (requirement #1: visible in UI immediately)
     this.tempValley = {
       id: 'temp-' + Date.now(),
       title: 'New valley',
@@ -2331,12 +2337,13 @@ class ValleysManager {
 
     this.activeValleyId = this.tempValley.id;
     this.renderSidebarList();
+    this.renderList();
     this.closeModal();
   }
 
   handleAutoSave() {
     if (this.autoSaveTimer) clearTimeout(this.autoSaveTimer);
-    
+
     this.autoSaveTimer = setTimeout(() => {
       const editor = document.querySelector('.editor');
       if (editor && editor.textContent.trim().length > 0) {
@@ -2351,16 +2358,22 @@ class ValleysManager {
   }
 
   async saveValley(isAutoSave = false) {
+    // If already saving this specific content/valley, return the existing promise
+    if (this.isSaving) return this.pendingSave;
+
     const editor = document.querySelector('.editor');
-    
-    // Use clone to strip temporary UI elements before saving
+    if (!editor) return { success: false, error: 'Editor not found' };
+
+    // Capture current state synchronously to avoid race conditions with editor clearing/switching
+    const idToSave = this.activeValleyId;
     const clone = editor.cloneNode(true);
     const predictionEl = clone.querySelector('.inline-prediction');
     if (predictionEl) predictionEl.remove();
-    
+
     const text = clone.innerHTML;
     const plainText = editor.textContent.trim();
 
+    // Requirement #3: If empty, it's not saved to DB
     if (!plainText && !text.includes('img')) {
       return { success: false, error: 'Nothing to save' };
     }
@@ -2378,55 +2391,67 @@ class ValleysManager {
     const writingStyle = window.contextManager?.getWritingStyleText() || '';
     const contextSessionId = window.contextManager?.getSessionId() || null;
 
-    try {
-      const token = await window.authManager.getAccessToken();
-      const method = this.activeValleyId ? 'PUT' : 'POST';
-      const url = this.activeValleyId ? `${CONFIG.API_VALLEYS}?id=${this.activeValleyId}` : CONFIG.API_VALLEYS;
+    this.isSaving = true;
+    this.pendingSave = (async () => {
+      try {
+        const token = await window.authManager.getAccessToken();
+        const isRealValley = idToSave && !idToSave.toString().startsWith('temp-');
+        const method = isRealValley ? 'PUT' : 'POST';
+        const url = isRealValley ? `${CONFIG.API_VALLEYS}?id=${idToSave}` : CONFIG.API_VALLEYS;
 
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ title, text, rules, writingStyle, contextSessionId })
-      });
+        const response = await fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ title, text, rules, writingStyle, contextSessionId })
+        });
 
-      if (!response.ok) {
+        if (!response.ok) {
+          const data = await response.json();
+          if (response.status === 403 && data.upgradeRequired) {
+            if (!isAutoSave && confirm(data.error + '\n\nWould you like to upgrade to Pro now?')) {
+              window.authManager.openAccountModal();
+            }
+          }
+          throw new Error(data.error || 'Failed to save valley');
+        }
+
         const data = await response.json();
-        if (response.status === 403 && data.upgradeRequired) {
-          if (!isAutoSave && confirm(data.error + '\n\nWould you like to upgrade to Pro now?')) {
-            window.authManager.openAccountModal();
+
+        // Requirement #2: Promoting temp valley to real one on first save
+        if (idToSave && idToSave.toString().startsWith('temp-')) {
+          this.tempValley = null;
+          // Only update active ID if we are still on the same valley
+          if (this.activeValleyId === idToSave) {
+            this.activeValleyId = data.id;
+          }
+          this.valleys.unshift(data);
+        } else if (!idToSave) {
+          this.activeValleyId = data.id;
+          this.valleys.unshift(data);
+        } else {
+          const index = this.valleys.findIndex(v => v.id === idToSave);
+          if (index !== -1) {
+            this.valleys[index] = { ...this.valleys[index], ...data };
           }
         }
-        throw new Error(data.error || 'Failed to save valley');
-      }
 
-      const data = await response.json();
-      
-      // Update local state
-      if (this.tempValley && this.activeValleyId === this.tempValley.id) {
-        // Promote temp valley to real one
-        this.tempValley = null;
-        this.activeValleyId = data.id;
-        this.valleys.unshift(data);
-      } else if (!this.activeValleyId) {
-        this.activeValleyId = data.id;
-        this.valleys.unshift(data);
-      } else {
-        const index = this.valleys.findIndex(v => v.id === this.activeValleyId);
-        if (index !== -1) {
-          this.valleys[index] = { ...this.valleys[index], ...data };
-        }
+        this.renderSidebarList();
+        this.renderList();
+
+        return { success: true, valley: data };
+      } catch (error) {
+        console.error('Save valley error:', error);
+        return { success: false, error: error.message };
+      } finally {
+        this.isSaving = false;
+        this.pendingSave = null;
       }
-      
-      this.renderSidebarList();
-      
-      return { success: true, valley: data };
-    } catch (error) {
-      console.error('Save valley error:', error);
-      return { success: false, error: error.message };
-    }
+    })();
+
+    return this.pendingSave;
   }
 
   async loadValleys() {
@@ -2440,20 +2465,60 @@ class ValleysManager {
       const data = await response.json();
       this.valleys = data.valleys || [];
       this.renderList();
+
+      // Always start with a new temp valley
+      this.createInitialTempValley();
     } catch (error) {
       console.error('Load valleys error:', error);
       this.valleys = [];
       this.renderList();
+
+      // Still create temp valley even if load fails
+      this.createInitialTempValley();
     }
   }
 
+  createInitialTempValley() {
+    // Create temporary valley visible in sidebar immediately
+    this.tempValley = {
+      id: 'temp-' + Date.now(),
+      title: 'New valley',
+      created_at: new Date().toISOString()
+    };
+
+    this.activeValleyId = this.tempValley.id;
+    this.renderSidebarList();
+  }
+
   async loadValley(id) {
+    if (this.isLoading) return;
+    this.isLoading = true;
+
+    // Requirement #4: Save current valley before switching
+    if (this.activeValleyId && this.activeValleyId !== id) {
+      if (this.autoSaveTimer) {
+        clearTimeout(this.autoSaveTimer);
+        this.autoSaveTimer = null;
+      }
+      // Wait for any pending save OR trigger a new one
+      if (this.pendingSave) {
+        await this.pendingSave;
+      } else {
+        await this.saveValley(true);
+      }
+    }
+
+    // Requirement #5: Clear temp valley if we switch away from it
     if (this.tempValley && id !== this.tempValley.id) {
       this.tempValley = null;
       this.renderSidebarList();
     }
 
     try {
+      // Clear editor immediately so user knows something is happening
+      const editor = document.querySelector('.editor');
+      if (editor) editor.innerHTML = '<div class="loading-editor">Loading valley...</div>';
+
       const token = await window.authManager?.getAccessToken();
       const response = await fetch(`${CONFIG.API_VALLEYS}?id=${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -2463,11 +2528,11 @@ class ValleysManager {
       const valley = await response.json();
 
       // Restore editor content
-      const editor = document.querySelector('.editor');
-      editor.innerHTML = valley.text;
-      
-      // Re-hydrate images
-      editor.querySelectorAll('.editor-image-container').forEach(setupImageContainer);
+      if (editor) {
+        editor.innerHTML = valley.text;
+        // Re-hydrate images
+        editor.querySelectorAll('.editor-image-container').forEach(setupImageContainer);
+      }
 
       // Restore context (rules + files)
       if (window.contextManager) {
@@ -2499,9 +2564,14 @@ class ValleysManager {
       this.activeValleyId = id;
       this.highlightSidebarValleys();
       this.closeModal();
-      editor.focus();
+      if (editor) editor.focus();
     } catch (error) {
       console.error('Load valley error:', error);
+      // Restore empty editor on error
+      const editor = document.querySelector('.editor');
+      if (editor && editor.querySelector('.loading-editor')) editor.innerHTML = '';
+    } finally {
+      this.isLoading = false;
     }
   }
 
@@ -2571,20 +2641,22 @@ class ValleysManager {
     }
 
     if (this.emptyState) {
-      this.emptyState.style.display = this.valleys.length ? 'none' : 'block';
+      this.emptyState.style.display = (this.valleys.length || this.tempValley) ? 'none' : 'block';
     }
 
-    if (this.valleys.length === 0) {
+    const displayValleys = this.tempValley ? [this.tempValley, ...this.valleys] : this.valleys;
+
+    if (displayValleys.length === 0) {
       if (this.listContainer) this.listContainer.innerHTML = '';
       this.renderSidebarList();
       return;
     }
 
     if (this.listContainer) {
-      this.listContainer.innerHTML = this.valleys
+      this.listContainer.innerHTML = displayValleys
         .map(
           (valley) => `
-        <div class="valley-item" data-id="${valley.id}">
+        <div class="valley-item ${valley.id.toString().startsWith('temp-') ? 'temp-item' : ''}" data-id="${valley.id}">
           <div class="valley-item-content">
             <span class="valley-item-title">${this.escapeHtml(valley.title)}</span>
             <span class="valley-item-date">${this.formatDate(valley.created_at)}</span>
@@ -2727,16 +2799,17 @@ function setupImageContainer(container) {
       const scrollTop = scrollElement ? scrollElement.scrollTop : 0;
 
       // Find the trailing BR if it exists
-              const next = container.nextElementSibling;
-              container.remove();
-              if (next && next.tagName === 'BR') next.remove();
-      
-              // Trigger auto-save
-              if (window.valleysManager) {
-                window.valleysManager.handleAutoSave();
-              }
-      
-              requestAnimationFrame(() => {        if (scrollElement?.scrollTo) {
+      const next = container.nextElementSibling;
+      container.remove();
+      if (next && next.tagName === 'BR') next.remove();
+
+      // Trigger auto-save
+      if (window.valleysManager) {
+        window.valleysManager.handleAutoSave();
+      }
+
+      requestAnimationFrame(() => {
+        if (scrollElement?.scrollTo) {
           scrollElement.scrollTo({ left: scrollLeft, top: scrollTop });
         } else {
           scrollElement.scrollLeft = scrollLeft;
@@ -2770,7 +2843,7 @@ class AuthManager {
     this.sidebarAccountName = document.getElementById('sidebar-account-name');
     this.sidebarAccountPlan = document.getElementById('sidebar-account-plan');
     this.sidebarAvatar = document.getElementById('sidebar-avatar');
-    
+
     // User Menu Elements
     this.userMenuName = document.getElementById('user-menu-name');
     this.userMenuEmail = document.getElementById('user-menu-email');
@@ -2792,7 +2865,7 @@ class AuthManager {
     if (session) {
       this.user = session.user;
       this.updateMenuState();
-      
+
       // Load valleys on initial session restore
       if (window.valleysManager) {
         window.valleysManager.loadValleys();
@@ -3042,7 +3115,7 @@ class AuthManager {
       if (profileIcon) profileIcon.textContent = 'account_circle';
       if (this.sidebarAccountName) this.sidebarAccountName.textContent = this.user.email;
       if (this.sidebarAvatar) this.sidebarAvatar.textContent = (this.user.email?.[0] || 'P').toUpperCase();
-      
+
       // Update User Menu
       if (this.userMenuName) this.userMenuName.textContent = this.user.user_metadata?.full_name || this.user.email?.split('@')[0] || 'Account';
       if (this.userMenuEmail) this.userMenuEmail.textContent = this.user.email;
@@ -3055,7 +3128,7 @@ class AuthManager {
       if (profileIcon) profileIcon.textContent = 'person';
       if (this.sidebarAccountName) this.sidebarAccountName.textContent = 'Guest';
       if (this.sidebarAvatar) this.sidebarAvatar.textContent = 'PV';
-      
+
       // Update User Menu (Guest)
       if (this.userMenuName) this.userMenuName.textContent = 'Guest';
       if (this.userMenuEmail) this.userMenuEmail.textContent = 'Tap to sign in';
@@ -3471,7 +3544,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   if (editNameClose) editNameClose.addEventListener('click', closeEditNameModal);
-  
+
   if (editNameModal) {
     editNameModal.addEventListener('click', (e) => {
       if (e.target === editNameModal) closeEditNameModal();
@@ -3482,23 +3555,23 @@ document.addEventListener('DOMContentLoaded', () => {
     saveNameBtn.addEventListener('click', async () => {
       const newName = editNameInput?.value.trim();
       if (!newName) return;
-      
+
       saveNameBtn.disabled = true;
       saveNameBtn.textContent = 'Saving...';
-      
+
       try {
         const { error } = await window.supabase.auth.updateUser({
           data: { full_name: newName }
         });
-        
+
         if (error) throw error;
-        
+
         // Update local state immediately
         if (window.authManager.user) {
-            window.authManager.user.user_metadata = { ...window.authManager.user.user_metadata, full_name: newName };
-            window.authManager.updateMenuState();
+          window.authManager.user.user_metadata = { ...window.authManager.user.user_metadata, full_name: newName };
+          window.authManager.updateMenuState();
         }
-        
+
         closeEditNameModal();
       } catch (error) {
         console.error('Error updating name:', error);
@@ -3762,18 +3835,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const clone = editor.cloneNode(true);
     const predictions = clone.querySelectorAll('.inline-prediction, .prediction-ghost');
     predictions.forEach(p => p.remove());
-    
+
     const text = clone.textContent || '';
-    
+
     try {
       await navigator.clipboard.writeText(text);
-      
+
       // Visual feedback
       const icon = btn.querySelector('.material-symbols-outlined');
       const originalIcon = icon.textContent;
       icon.textContent = 'check';
       btn.classList.add('active');
-      
+
       setTimeout(() => {
         icon.textContent = originalIcon;
         btn.classList.remove('active');
@@ -3781,7 +3854,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
-    
+
     closeAllMenus();
   });
 
@@ -3799,7 +3872,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const isEnabled = window.predictionManager.toggleEnabled();
     const label = btn.querySelector('.menu-label');
     const icon = btn.querySelector('.material-symbols-outlined');
-    
+
     if (isEnabled) {
       if (label) label.textContent = 'Auto-prediction';
       if (icon) icon.textContent = 'auto_fix_high';
@@ -3869,7 +3942,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('Image generation started for text:', text.substring(0, 50) + '...');
       const response = await fetch(CONFIG.API_GENERATE_IMAGE, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -3936,7 +4009,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           finalSrc = imageData.url || imageData.data?.[0]?.url || '';
         }
-        
+
         container.innerHTML = `
           <img class="editor-image" src="${finalSrc}" alt="Generated illustration">
           <button class="editor-image-remove"><span class="material-symbols-outlined">close</span></button>
@@ -3990,7 +4063,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         imageGuidanceModal.classList.add('visible');
-        
+
         if (isAuth && imageGuidanceTextarea) {
           imageGuidanceTextarea.value = '';
           imageGuidanceTextarea.focus();
@@ -4020,7 +4093,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const guidance = imageGuidanceTextarea.value.trim();
         const styleSelect = document.getElementById('image-style-select');
         const style = styleSelect ? styleSelect.value : 'realistic';
-        
+
         if (!pendingImageText && !guidance) {
           imageGuidanceTextarea.placeholder = "Please describe the image first...";
           imageGuidanceTextarea.focus();
