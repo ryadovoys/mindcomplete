@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient.js';
+import { ADMIN_EMAILS } from './constants.js';
 
 export const TIER_LIMITS = {
   free: {
@@ -13,8 +14,13 @@ export const TIER_LIMITS = {
   }
 };
 
-export async function getUserTier(userId) {
+export async function getUserTier(userId, userEmail = null) {
   if (!userId) return { tier: 'free', limits: TIER_LIMITS.free };
+
+  // Admin bypass: grant Pro tier to admin users
+  if (userEmail && ADMIN_EMAILS.includes(userEmail)) {
+    return { tier: 'pro', limits: TIER_LIMITS.pro, isAdmin: true };
+  }
 
   const { data } = await supabase
     .from('user_subscriptions')

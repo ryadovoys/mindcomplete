@@ -87,7 +87,7 @@ export default async function handler(req, res) {
       }
 
       // Check tier limits
-      const { tier, limits } = await getUserTier(user.id);
+      const { tier, limits } = await getUserTier(user.id, user.email);
 
       // Free tier: cannot save valleys
       if (tier === 'free') {

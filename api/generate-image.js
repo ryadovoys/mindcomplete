@@ -118,12 +118,12 @@ async function generateImageOpenRouter(prompt, apiKey, host) {
         if (content && content.trim()) {
             const mdMatch = content.match(/!\[.*?\]\((.*?)\)/);
             if (mdMatch) imageUrl = mdMatch[1];
-            
+
             if (!imageUrl) {
                 const urlMatch = content.match(/(https?:\/\/[^\s\)"']+)/i);
                 if (urlMatch) imageUrl = urlMatch[1];
             }
-            
+
             if (!imageUrl && content.startsWith('data:image')) imageUrl = content;
         }
     }
@@ -265,7 +265,7 @@ export default async function handler(req, res) {
 
         // 2. Tier-based limit check (skip for admins)
         if (!isAdmin) {
-            const { tier, limits } = await getUserTier(user.id);
+            const { tier, limits } = await getUserTier(user.id, user.email);
             const monthlyCount = await getMonthlyImageCount(user.id);
             const monthlyLimit = limits.images_per_month;
 
