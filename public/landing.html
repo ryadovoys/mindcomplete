@@ -20,13 +20,15 @@
     }
     
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Google Sans Flex', 'Inter', sans-serif;
       color: var(--primary);
       background-color: var(--lavender);
     }
     
     .font-literata { font-family: 'Literata', serif; }
     .font-google-sans { font-family: 'Google Sans Flex', sans-serif; }
+    
+    h1, h2, h3 { font-family: 'Literata', serif; }
     
     .text-primary { color: var(--primary); }
     .text-lavender { color: var(--lavender); }
@@ -164,8 +166,8 @@
     }
 
     @keyframes word-fade-in {
-      from { opacity: 0; transform: translateX(-15px); }
-      to { opacity: 1; transform: translateX(0); }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     /* Caret simulation */
@@ -176,9 +178,7 @@
       background: var(--accent);
       margin-left: 2px;
       vertical-align: middle;
-      animation: blink 1s infinite;
     }
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
     .feature-card {
       transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -198,16 +198,16 @@
         <a href="#style" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Style</a>
         <a href="#context" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Context</a>
         <a href="#flow" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Flow</a>
-        <a href="/login" class="ai-btn btn-variant-1 font-google-sans">Join valley</a>
+        <a href="/login" class="ai-btn btn-variant-1 font-google-sans">Sign in</a>
       </div>
     </div>
   </nav>
 
   <!-- HeroSection: Simulated Ghostwriting -->
-  <section class="relative min-h-[90vh] px-global flex flex-col items-center justify-center bg-primary text-lavender" id="hero-typing-section">
+  <section class="relative h-[600px] px-global pt-48 flex flex-col items-center bg-primary text-lavender" id="hero-typing-section">
     <div class="max-w-5xl w-full">
-      <h1 class="text-4xl md:text-7xl font-literata font-extralight mb-6 leading-[1.2] tracking-tight text-left text-lavender" id="hero-typing">
-        <span class="static-text"></span><span class="caret"></span><span class="dynamic-content"></span>
+      <h1 class="text-4xl md:text-7xl font-literata font-extralight mb-10 leading-[1.2] tracking-tight text-left text-lavender" id="hero-typing">
+        <span class="static-text">AI </span><span class="caret"></span><span class="dynamic-content"></span>
       </h1>
     </div>
   </section>
@@ -227,8 +227,8 @@
         </div>
         <div class="text-center lg:text-left flex flex-col items-center lg:items-start order-1 lg:order-2">
           <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block">IDEAS AUTOCOMPLETE</span>
-          <h2 class="text-4xl md:text-5xl font-literata font-light mb-8 leading-tight">An extension for <br/>your thoughts</h2>
-          <p class="text-lg text-primary/60 font-literata font-light leading-relaxed mb-10">
+          <h2 class="text-4xl md:text-5xl font-light mb-8 leading-tight">An extension for <br/>your thoughts</h2>
+          <p class="text-lg text-primary/60 font-light leading-relaxed mb-10">
             Start typing, and when you stop, AI will keep going for you. So you can approve part of the text, or the whole paragraph
           </p>
           <div class="flex gap-4">
@@ -247,8 +247,8 @@
       <div class="grid lg:grid-cols-2 gap-24 items-center">
         <div class="text-center lg:text-left flex flex-col items-center lg:items-start">
           <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block">Visual Ideation</span>
-          <h2 class="text-4xl md:text-5xl font-literata font-light mb-8 leading-tight">From words to worlds</h2>
-          <p class="text-lg text-primary/60 font-literata font-light leading-relaxed mb-10">
+          <h2 class="text-4xl md:text-5xl font-light mb-8 leading-tight">From words to worlds</h2>
+          <p class="text-lg text-primary/60 font-light leading-relaxed mb-10">
             Describe a scene and watch it come to life. Our <strong>Integrated Image Engine</strong> allows you to generate high-fidelity visuals directly within your writing flow
           </p>
           <div class="flex flex-wrap gap-4">
@@ -283,8 +283,8 @@
         </div>
         <div class="text-center lg:text-left flex flex-col items-center lg:items-start order-1 lg:order-2">
           <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block text-xs">ADAPTIVE STYLE</span>
-          <h2 class="text-4xl md:text-5xl font-literata font-light mb-8 leading-tight">Text that grows <br/>with you</h2>
-          <p class="text-lg text-primary/60 font-literata font-light leading-relaxed mb-10">
+          <h2 class="text-4xl md:text-5xl font-light mb-8 leading-tight">Text that grows <br/>with you</h2>
+          <p class="text-lg text-primary/60 font-light leading-relaxed mb-10">
             The more you type, the more AI knows about your writing style and making predictions better. It’s not just a tool; it’s a collaborator that evolves alongside your creative journey
           </p>
           <div class="flex gap-4">
@@ -301,18 +301,18 @@
   <section class="py-section-lg px-global relative overflow-hidden" id="context">
     <div class="max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
       <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block text-xs">Grounded Intelligence</span>
-      <h2 class="text-4xl md:text-6xl font-literata font-light mb-8 text-primary">Write with Authority</h2>
-      <p class="text-lg text-primary/60 font-literata font-light max-w-2xl mb-16 leading-relaxed">
+      <h2 class="text-4xl md:text-6xl font-light mb-8 text-primary">Write with Authority</h2>
+      <p class="text-lg text-primary/60 font-light max-w-2xl mb-16 leading-relaxed">
         Ground your AI in reality. Simply <strong>Upload PDFs, notes, or data</strong> to your current Valley. Purple Valley uses this context to make suggestions that are accurate to <em>your</em> specific project
       </p>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-12 w-full text-left">
         <div class="p-10 glass rounded-[3rem] border border-primary/10 feature-card">
-          <h3 class="text-xl font-google-sans mb-4 text-accent">File-to-Flow</h3>
-          <p class="text-base text-primary/60 font-literata font-light leading-relaxed">Instantly reference your research papers, meeting transcripts, or creative bibles. The AI reads your files so you don't have to keep switching tabs</p>
+          <h3 class="text-xl mb-4 text-accent">File-to-Flow</h3>
+          <p class="text-base text-primary/60 font-light leading-relaxed">Instantly reference your research papers, meeting transcripts, or creative bibles. The AI reads your files so you don't have to keep switching tabs</p>
         </div>
         <div class="p-10 glass rounded-[3rem] border border-primary/10 feature-card">
-          <h3 class="text-xl font-google-sans mb-4 text-accent">Personalized Predictions</h3>
-          <p class="text-base text-primary/60 font-literata font-light leading-relaxed">Your uploaded context informs every ghost-text suggestion, adopting the terminology and facts unique to your current workspace</p>
+          <h3 class="text-xl mb-4 text-accent">Personalized Predictions</h3>
+          <p class="text-base text-primary/60 font-light leading-relaxed">Your uploaded context informs every ghost-text suggestion, adopting the terminology and facts unique to your current workspace</p>
         </div>
       </div>
     </div>
@@ -322,23 +322,23 @@
   <section class="py-section-lg px-global" id="flow">
     <div class="max-w-7xl mx-auto">
       <div class="text-center mb-20">
-        <h2 class="text-4xl font-literata font-light mb-6">Designed for the Zone</h2>
-        <p class="text-primary/50 font-literata italic text-lg">Minimal friction. Maximum expression</p>
+        <h2 class="text-4xl font-light mb-6">Designed for the Zone</h2>
+        <p class="text-primary/50 font-light text-lg">Minimal friction. Maximum expression</p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
         <div class="p-8 glass rounded-[2.5rem] feature-card flex flex-col items-center">
           <div class="h-14 w-14 bg-primary/5 rounded-2xl mb-6 flex items-center justify-center text-2xl text-center">⚡</div>
-          <h3 class="text-lg font-google-sans mb-2">Recursive Flow Engine</h3>
+          <h3 class="text-lg mb-2">Recursive Flow Engine</h3>
           <p class="text-primary/60 text-sm font-light text-center">Experience the most addictive writing experience. Tab-to-accept suggestions that feel like your own voice</p>
         </div>
         <div class="p-8 glass rounded-[2.5rem] feature-card flex flex-col items-center">
           <div class="h-14 w-14 bg-primary/5 rounded-2xl mb-6 flex items-center justify-center text-2xl text-center">🔒</div>
-          <h3 class="text-lg font-google-sans mb-2 text-center">Privacy Sovereign</h3>
+          <h3 class="text-lg mb-2 text-center">Privacy Sovereign</h3>
           <p class="text-primary/60 text-sm font-light text-center">Your thoughts are encrypted. We provide the intelligence, but you own the keys</p>
         </div>
         <div class="p-8 glass rounded-[2.5rem] feature-card flex flex-col items-center">
           <div class="h-14 w-14 bg-primary/5 rounded-2xl mb-6 flex items-center justify-center text-2xl text-center">⛰️</div>
-          <h3 class="text-lg font-google-sans mb-2 text-center">Project Valleys</h3>
+          <h3 class="text-lg mb-2 text-center">Project Valleys</h3>
           <p class="text-primary/60 text-sm font-light text-center">Organize your world into distinct, context-focused environments</p>
         </div>
       </div>
@@ -354,11 +354,11 @@
           <span class="rotating-word">stories</span>
         </span>
       </h2>
-      <p class="text-lg md:text-xl text-primary/70 mb-12 font-literata font-light max-w-xl mx-auto leading-relaxed">
+      <p class="text-lg md:text-xl text-primary/70 mb-12 font-light max-w-xl mx-auto leading-relaxed">
         Purple Valley is the extension for your thoughts. Join thousands of writers already in the flow
       </p>
       <div class="flex flex-col sm:flex-row gap-6 justify-center">
-        <a href="/app" class="ai-btn btn-variant-1 font-google-sans border-accent/20 border">Try for free</a>
+        <a href="/app" class="ai-btn btn-variant-1 font-google-sans border-accent/20 border">Start writing</a>
       </div>
     </div>
   </section>
@@ -438,9 +438,9 @@
 
     const staticContent = document.querySelector('.static-text');
     const dynamicContent = document.querySelector('.dynamic-content');
-    const introText = "AI that writes ";
+    const introText = "that writes ";
     const heroWords = ["with ", "you,", "BR", "not ", "for ", "you."];
-    let heroTl = gsap.timeline({ delay: 1 });
+    let heroTl = gsap.timeline({ delay: 0.1 }); // Start almost immediately
 
     // 1. Type "AI that writes " letter by letter
     introText.split('').forEach((char, index) => {
@@ -449,8 +449,10 @@
         onStart: () => {
           const span = document.createElement('span');
           span.style.display = 'inline-block';
+          span.style.opacity = '0';
           span.textContent = char === ' ' ? '\u00A0' : char;
           staticContent.appendChild(span);
+          gsap.to(span, { opacity: 1, duration: 0.4 });
         }
       });
     });
@@ -482,7 +484,7 @@
           if (index === heroWords.length - 1) {
             const btnContainer = document.createElement('div');
             btnContainer.className = "mt-6 opacity-0 transform translate-y-4";
-            btnContainer.innerHTML = '<a href="/login" class="ai-btn btn-white font-google-sans">Join valley</a>';
+            btnContainer.innerHTML = '<a href="/login" class="ai-btn btn-white font-google-sans">Start writing</a>';
             document.querySelector('#hero-typing').parentNode.appendChild(btnContainer);
             gsap.to(btnContainer, { opacity: 1, y: 0, duration: 1, ease: "power3.out" });
           }
