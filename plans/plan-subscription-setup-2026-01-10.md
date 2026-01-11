@@ -1,17 +1,30 @@
 # Subscription System Setup Tasks
 
 Date: 2026-01-10
+**Status:** Code Complete ✅ | Manual Setup Pending ⏳
 
 ## Overview
 
-Manual setup tasks to complete the subscription system implementation using LemonSqueezy for payments.
+The subscription system code is fully implemented and committed. This document outlines the remaining manual setup tasks to make the system operational using LemonSqueezy for payments.
+
+## ✅ Completed - Code Implementation
+
+- API endpoints: `/api/checkout`, `/api/webhooks/lemon`
+- Tier service with credit management
+- Image generation tier limits (Free: 0, Pro: 30/month + credits)
+- Valley save tier limits (Free: 0, Pro: 20 max)
+- Frontend checkout flows and billing UI
+- Module system consistency (ES6 imports)
 
 ---
 
-## 1. Run Database Schema in Supabase
+## ⏳ Remaining Manual Tasks
+
+### 1. Run Database Schema in Supabase
 
 **Time:** ~5 minutes
 **Tool:** Supabase SQL Editor
+**Status:** Pending
 
 Copy and execute this SQL:
 
@@ -69,10 +82,11 @@ CREATE POLICY "Users read own purchases" ON credit_purchases
 
 ---
 
-## 2. Set Up LemonSqueezy Account
+### 2. Set Up LemonSqueezy Account
 
 **Time:** ~15 minutes
 **URL:** https://lemonsqueezy.com
+**Status:** Pending
 
 ### Steps:
 
@@ -125,10 +139,11 @@ LEMON_CREDITS_VARIANT_ID=67891
 
 ---
 
-## 3. Add Environment Variables to Vercel
+### 3. Add Environment Variables to Vercel
 
 **Time:** ~3 minutes
 **Tool:** Vercel Dashboard
+**Status:** Pending
 
 ### Steps:
 
@@ -144,9 +159,10 @@ LEMON_CREDITS_VARIANT_ID=67891
 
 ---
 
-## 4. Test the System
+### 4. Test the System
 
 **Time:** ~20 minutes
+**Status:** Pending
 
 ### Test Free Tier Limits
 
@@ -229,9 +245,10 @@ LEMON_CREDITS_VARIANT_ID=67891
 
 ---
 
-## 5. Go Live
+### 5. Go Live
 
 **Time:** ~5 minutes
+**Status:** Pending
 
 ### Steps:
 
@@ -282,17 +299,26 @@ LEMON_CREDITS_VARIANT_ID=67891
 
 ---
 
-## Success Criteria
+## Success Checklist
 
-- ✅ All 3 Supabase tables created with RLS enabled
-- ✅ LemonSqueezy products created and webhook configured
-- ✅ All 5 environment variables added to Vercel
-- ✅ Free tier shows upgrade prompts for images/valleys
-- ✅ Pro upgrade flow completes successfully
-- ✅ Webhook updates Supabase subscription data
-- ✅ Pro users can generate images and save valleys
-- ✅ Credits can be purchased and deducted correctly
-- ✅ Settings UI displays correct tier information
+**Code Implementation:**
+- ✅ API endpoints created (`/api/checkout`, `/api/webhooks/lemon`)
+- ✅ Tier service with limits and credit management
+- ✅ Image generation tier enforcement
+- ✅ Valley save tier enforcement
+- ✅ Frontend checkout flows
+- ✅ Module system consistency
+
+**Manual Setup:**
+- ⏳ All 3 Supabase tables created with RLS enabled
+- ⏳ LemonSqueezy products created and webhook configured
+- ⏳ All 5 environment variables added to Vercel
+- ⏳ Free tier shows upgrade prompts for images/valleys
+- ⏳ Pro upgrade flow completes successfully
+- ⏳ Webhook updates Supabase subscription data
+- ⏳ Pro users can generate images and save valleys
+- ⏳ Credits can be purchased and deducted correctly
+- ⏳ Settings UI displays correct tier information
 
 ---
 
