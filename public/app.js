@@ -2394,6 +2394,11 @@ class ValleysManager {
 
       if (!response.ok) {
         const data = await response.json();
+        if (response.status === 403 && data.upgradeRequired) {
+          if (!isAutoSave && confirm(data.error + '\n\nWould you like to upgrade to Pro now?')) {
+            window.authManager.openAccountModal();
+          }
+        }
         throw new Error(data.error || 'Failed to save valley');
       }
 
@@ -2900,6 +2905,17 @@ class AuthManager {
       this.deleteAccountBtn.addEventListener('click', () => this.deleteAccount());
     }
 
+    // Subscription buttons
+    const upgradeBtn = document.getElementById('upgrade-btn');
+    if (upgradeBtn) {
+      upgradeBtn.addEventListener('click', () => this.handleUpgrade());
+    }
+
+    const buyCreditsBtn = document.getElementById('buy-credits-btn');
+    if (buyCreditsBtn) {
+      buyCreditsBtn.addEventListener('click', () => this.handleBuyCredits());
+    }
+
     // Escape key closes modals
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
@@ -3072,6 +3088,7 @@ class AuthManager {
       this.accountEmailEl.textContent = this.user?.email || 'Sign in to manage your account';
     }
     this.accountModal.classList.add('visible');
+    this.loadSubscriptionInfo();
   }
 
   closeAccountModal() {
@@ -3091,6 +3108,121 @@ class AuthManager {
   async getAccessToken() {
     const { data: { session } } = await window.supabase.auth.getSession();
     return session?.access_token || null;
+  }
+
+  async loadSubscriptionInfo() {
+    if (!this.user) return;
+
+    try {
+      const { data: { session } } = await window.supabase.auth.getSession();
+      if (!session) return;
+
+      // Fetch subscription and credits info from Supabase
+      const [subResult, creditsResult] = await Promise.all([
+        window.supabase.from('user_subscriptions').select('*').eq('user_id', this.user.id).single(),
+        window.supabase.from('user_credits').select('*').eq('user_id', this.user.id).single()
+      ]);
+
+      const subscription = subResult.data;
+      const credits = creditsResult.data?.credits || 0;
+      const tier = subscription?.tier === 'pro' && subscription?.status === 'active' ? 'pro' : 'free';
+
+      this.updateSubscriptionUI(tier, credits);
+    } catch (error) {
+      console.error('Failed to load subscription info:', error);
+    }
+  }
+
+  updateSubscriptionUI(tier, credits) {
+    const tierEl = document.getElementById('subscription-tier');
+    const priceEl = document.getElementById('subscription-price');
+    const badgeEl = document.getElementById('subscription-badge');
+    const imagesEl = document.getElementById('feature-images');
+    const valleysEl = document.getElementById('feature-valleys');
+    const creditsEl = document.getElementById('feature-credits');
+    const upgradeRow = document.getElementById('upgrade-row');
+
+    if (tier === 'pro') {
+      if (tierEl) tierEl.textContent = 'Pro Plan';
+      if (priceEl) priceEl.textContent = '$5.99/month';
+      if (badgeEl) {
+        badgeEl.textContent = 'Pro';
+        badgeEl.style.background = 'var(--accent)';
+      }
+      if (imagesEl) imagesEl.textContent = '30/month';
+      if (valleysEl) valleysEl.textContent = '20 max';
+      if (upgradeRow) upgradeRow.style.display = 'none';
+    } else {
+      if (tierEl) tierEl.textContent = 'Free Plan';
+      if (priceEl) priceEl.textContent = '$0/month';
+      if (badgeEl) {
+        badgeEl.textContent = 'Free';
+        badgeEl.style.background = '#666';
+      }
+      if (imagesEl) imagesEl.textContent = '0/month';
+      if (valleysEl) valleysEl.textContent = '0';
+      if (upgradeRow) upgradeRow.style.display = 'flex';
+    }
+
+    if (creditsEl) creditsEl.textContent = credits;
+  }
+
+  async handleUpgrade() {
+    if (!this.user) {
+      alert('Please sign in to upgrade');
+      this.openModal();
+      return;
+    }
+
+    try {
+      const { data: { session } } = await window.supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ product: 'pro' })
+      });
+
+      if (!response.ok) throw new Error('Failed to create checkout');
+
+      const { checkoutUrl } = await response.json();
+      window.location.href = checkoutUrl;
+    } catch (error) {
+      alert('Failed to start checkout: ' + error.message);
+    }
+  }
+
+  async handleBuyCredits() {
+    if (!this.user) {
+      alert('Please sign in to buy credits');
+      this.openModal();
+      return;
+    }
+
+    try {
+      const { data: { session } } = await window.supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ product: 'credits' })
+      });
+
+      if (!response.ok) throw new Error('Failed to create checkout');
+
+      const { checkoutUrl } = await response.json();
+      window.location.href = checkoutUrl;
+    } catch (error) {
+      alert('Failed to start checkout: ' + error.message);
+    }
   }
 }
 
@@ -3749,9 +3881,24 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('Please sign in to generate images');
       }
 
+      if (response.status === 403) {
+        const data = await response.json();
+        if (data.upgradeRequired) {
+          if (confirm(data.error + '\n\nWould you like to upgrade to Pro now?')) {
+            window.authManager.openAccountModal();
+          }
+        }
+        throw new Error(data.error || 'Upgrade required');
+      }
+
       if (response.status === 429) {
         const data = await response.json();
-        throw new Error(data.error || "You've reached your daily limit of 5 images. Upgrade coming soon!");
+        if (data.needsCredits) {
+          if (confirm(data.error + '\n\nWould you like to buy more credits?')) {
+            window.authManager.openAccountModal();
+          }
+        }
+        throw new Error(data.error || "You've reached your limit");
       }
 
       if (!response.ok) {

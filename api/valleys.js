@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from './lib/supabaseClient.js';
+import { getUserTier } from './lib/tierService.js';
 
 // Helper to get user from JWT token
 async function getUserFromToken(authHeader) {
@@ -83,6 +84,34 @@ export default async function handler(req, res) {
 
       if (!text) {
         return res.status(400).json({ error: 'Text is required' });
+      }
+
+      // Check tier limits
+      const { tier, limits } = await getUserTier(user.id);
+
+      // Free tier: cannot save valleys
+      if (tier === 'free') {
+        return res.status(403).json({
+          error: 'Upgrade to Pro to save valleys',
+          tier: 'free',
+          upgradeRequired: true
+        });
+      }
+
+      // Pro tier: check max valleys limit
+      const { count } = await supabase
+        .from('valleys')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      const currentCount = count || 0;
+      if (currentCount >= limits.max_valleys) {
+        return res.status(403).json({
+          error: `You've reached the maximum of ${limits.max_valleys} saved valleys`,
+          tier: 'pro',
+          limit: limits.max_valleys,
+          current: currentCount
+        });
       }
 
       // Fetch file content if contextSessionId provided

@@ -1274,7 +1274,65 @@ body.select-mode-active .inline-prediction {
   }
 }
 
+/* Subscription Styles */
+.subscription-card {
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.05), rgba(var(--accent-rgb), 0.02));
+  border: 1px solid rgba(var(--accent-rgb), 0.2);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
 
+.subscription-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.subscription-header h5 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+}
+
+.subscription-price {
+  color: var(--ghost);
+  font-size: 14px;
+  margin: 0;
+}
+
+.subscription-badge {
+  background: var(--accent);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.subscription-features {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feature-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.feature-row span {
+  color: var(--ghost);
+}
+
+.feature-row strong {
+  color: var(--text);
+  font-weight: 500;
+}
 
 .container {
   display: grid;

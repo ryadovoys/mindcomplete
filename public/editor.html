@@ -508,6 +508,10 @@
             <span class="material-symbols-outlined">shield_lock</span>
             <span>Security</span>
           </button>
+          <button class="settings-nav-btn" data-settings-panel="billing">
+            <span class="material-symbols-outlined">credit_card</span>
+            <span>Billing</span>
+          </button>
           <button class="settings-nav-btn" data-settings-panel="account">
             <span class="material-symbols-outlined">account_circle</span>
             <span>Account</span>
@@ -550,6 +554,54 @@
           <section class="settings-section" data-settings-panel="security">
             <h4>Security</h4>
             <p class="section-description">Use a secure password and enable two-factor authentication.</p>
+          </section>
+          <section class="settings-section" data-settings-panel="billing">
+            <h4>Billing & Subscription</h4>
+            <div class="subscription-card" id="subscription-card">
+              <div class="subscription-header">
+                <div>
+                  <h5 id="subscription-tier">Free Plan</h5>
+                  <p class="subscription-price" id="subscription-price">$0/month</p>
+                </div>
+                <span class="subscription-badge" id="subscription-badge">Free</span>
+              </div>
+              <div class="subscription-features">
+                <div class="feature-row">
+                  <span>Text Predictions</span>
+                  <strong id="feature-predictions">Unlimited</strong>
+                </div>
+                <div class="feature-row">
+                  <span>Image Generations</span>
+                  <strong id="feature-images">0/month</strong>
+                </div>
+                <div class="feature-row">
+                  <span>Saved Valleys</span>
+                  <strong id="feature-valleys">0</strong>
+                </div>
+                <div class="feature-row">
+                  <span>Image Credits</span>
+                  <strong id="feature-credits">0</strong>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" id="upgrade-row">
+              <div>
+                <p>Upgrade to Pro</p>
+                <small>Unlock unlimited text, 30 images/month, and save up to 20 valleys for $5.99/month</small>
+              </div>
+              <div class="settings-control">
+                <button class="btn-primary" id="upgrade-btn">Upgrade to Pro</button>
+              </div>
+            </div>
+            <div class="settings-row" id="credits-row">
+              <div>
+                <p>Buy Image Credits</p>
+                <small>Need more images? Get 50 credits for $2.99</small>
+              </div>
+              <div class="settings-control">
+                <button class="btn-secondary" id="buy-credits-btn">Buy Credits</button>
+              </div>
+            </div>
           </section>
           <section class="settings-section" data-settings-panel="account">
             <h4>Account</h4>

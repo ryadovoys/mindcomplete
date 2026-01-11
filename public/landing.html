@@ -49,8 +49,10 @@
     .ai-btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 0.5rem;
-      padding: 0.75rem 1.25rem;
+      padding: 0 1.5rem;
+      height: 52px;
       border-radius: 9999px;
       font-size: 0.875rem;
       font-weight: 500;
@@ -62,7 +64,6 @@
     }
     .btn-variant-1:hover {
       opacity: 0.9;
-      transform: translateY(-2px);
     }
     .btn-white {
       background-color: white;
@@ -70,7 +71,6 @@
     }
     .btn-white:hover {
       background-color: var(--lavender);
-      transform: translateY(-2px);
     }
 
     .rotating-word-container {
@@ -103,6 +103,35 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(48, 25, 53, 0.05);
+    }
+
+    /* Navigation States */
+    nav {
+      transition: background 0.3s ease, border 0.3s ease;
+    }
+
+    nav.nav-transparent {
+      background: transparent !important;
+      border-bottom-color: transparent !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    nav.nav-transparent .nav-link {
+      color: rgba(229, 230, 250, 0.7) !important;
+    }
+
+    nav.nav-transparent img {
+      filter: brightness(0) invert(1);
+    }
+
+    nav.nav-transparent .ai-btn {
+      background-color: white !important;
+      color: var(--primary) !important;
+    }
+
+    .nav-link {
+      transition: color 0.3s ease;
     }
 
     .bg-blur {
@@ -160,24 +189,24 @@
   <div class="bg-blur"></div>
   
   <!-- Navigation -->
-  <nav class="fixed top-0 w-full z-50 glass border-b border-primary/5 px-global py-4">
+  <nav class="absolute top-0 w-full z-50 glass border-b border-primary/5 px-global py-4 nav-transparent">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
       <a href="/"><img src="/purple-valley-logo.svg" alt="Purple Valley" class="h-7 w-auto block"></a>
       <div class="hidden md:flex gap-8 items-center text-sm font-medium">
-        <a href="#thoughts" class="hover:opacity-70 transition-opacity text-primary/60">Thoughts</a>
-        <a href="#visual" class="hover:opacity-70 transition-opacity text-primary/60">Visual</a>
-        <a href="#style" class="hover:opacity-70 transition-opacity text-primary/60">Style</a>
-        <a href="#context" class="hover:opacity-70 transition-opacity text-primary/60">Context</a>
-        <a href="#flow" class="hover:opacity-70 transition-opacity text-primary/60 text-sm">Flow</a>
-        <a href="/login" class="ai-btn btn-variant-1 font-google-sans">Join</a>
+        <a href="#thoughts" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Thoughts</a>
+        <a href="#visual" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Visual</a>
+        <a href="#style" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Style</a>
+        <a href="#context" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Context</a>
+        <a href="#flow" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Flow</a>
+        <a href="/login" class="ai-btn btn-variant-1 font-google-sans">Join valley</a>
       </div>
     </div>
   </nav>
 
   <!-- HeroSection: Simulated Ghostwriting -->
-  <section class="relative min-h-[80vh] pt-64 pb-32 px-global flex flex-col items-center bg-primary text-lavender" id="hero-typing-section">
+  <section class="relative min-h-[90vh] px-global flex flex-col items-center justify-center bg-primary text-lavender" id="hero-typing-section">
     <div class="max-w-5xl w-full">
-      <h1 class="text-4xl md:text-7xl font-literata font-extralight mb-10 leading-[1.2] tracking-tight text-left text-lavender" id="hero-typing">
+      <h1 class="text-4xl md:text-7xl font-literata font-extralight mb-6 leading-[1.2] tracking-tight text-left text-lavender" id="hero-typing">
         <span class="static-text"></span><span class="caret"></span><span class="dynamic-content"></span>
       </h1>
     </div>
@@ -329,7 +358,7 @@
         Purple Valley is the extension for your thoughts. Join thousands of writers already in the flow
       </p>
       <div class="flex flex-col sm:flex-row gap-6 justify-center">
-        <a href="/login" class="ai-btn btn-variant-1 px-14 py-5 text-xl font-google-sans border-accent/20 border">Join the Valley</a>
+        <a href="/app" class="ai-btn btn-variant-1 font-google-sans border-accent/20 border">Try for free</a>
       </div>
     </div>
   </section>
@@ -448,24 +477,23 @@
           span.style.display = 'inline-block';
           span.textContent = word.replace(/ /g, '\u00A0');
           dynamicContent.appendChild(span);
+
+          // Trigger button reveal exactly with the last word
+          if (index === heroWords.length - 1) {
+            const btnContainer = document.createElement('div');
+            btnContainer.className = "mt-6 opacity-0 transform translate-y-4";
+            btnContainer.innerHTML = '<a href="/login" class="ai-btn btn-white font-google-sans">Join valley</a>';
+            document.querySelector('#hero-typing').parentNode.appendChild(btnContainer);
+            gsap.to(btnContainer, { opacity: 1, y: 0, duration: 1, ease: "power3.out" });
+          }
         }
       }, currentTime);
       
-      // 0.10s delay generally, but longer after a comma for natural cadence
-      currentTime += hasComma ? 0.6 : 0.1; 
+      // 0.20s general delay, but 0.80s after "you," for a deliberate pause
+      currentTime += hasComma ? 0.8 : 0.2; 
     });
 
-    // Final hero reveal - show button after typing finishes
-    heroTl.to({}, {
-      duration: 1,
-      onComplete: () => {
-        const btnContainer = document.createElement('div');
-        btnContainer.className = "mt-12 opacity-0 transform translate-y-4";
-        btnContainer.innerHTML = '<a href="/login" class="ai-btn btn-white px-14 py-5 text-xl font-google-sans">Join the Valley</a>';
-        document.querySelector('#hero-typing').parentNode.appendChild(btnContainer);
-        gsap.to(btnContainer, { opacity: 1, y: 0, duration: 1, ease: "power3.out" });
-      }
-    }, "+=0.5");
+    // Final hero reveal logic removed from here as it's now triggered with last word
 
     // GSAP Scroll Animations
     gsap.registerPlugin(ScrollTrigger);
@@ -480,6 +508,25 @@
     gsap.to(".bg-blur", {
       scrollTrigger: { trigger: "body", start: "top top", end: "bottom bottom", scrub: 1.5 },
       y: 150, x: 50, scale: 1.3
+    });
+
+    // Navigation State Trigger
+    ScrollTrigger.create({
+      trigger: "#hero-typing-section",
+      start: "bottom 100px",
+      onEnter: () => {
+        const nav = document.querySelector('nav');
+        nav.classList.remove('nav-transparent');
+        // Switch to fixed so it follows scroll now
+        gsap.set(nav, { position: "fixed", y: -100 });
+        gsap.to(nav, { y: 0, duration: 0.6, ease: "power3.out" });
+      },
+      onLeaveBack: () => {
+        const nav = document.querySelector('nav');
+        nav.classList.add('nav-transparent');
+        // Switch back to absolute so it stays at the top of the page
+        gsap.set(nav, { position: "absolute", y: 0 });
+      }
     });
   </script>
 </body>
