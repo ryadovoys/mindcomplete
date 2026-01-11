@@ -440,27 +440,15 @@
     const dynamicContent = document.querySelector('.dynamic-content');
     const introText = "that writes ";
     const heroWords = ["with ", "you,", "BR", "not ", "for ", "you."];
-    let heroTl = gsap.timeline({ delay: 0.1 }); // Start almost immediately
 
-    // 1. Type "AI that writes " letter by letter
-    introText.split('').forEach((char, index) => {
-      heroTl.to({}, {
-        duration: 0.20,
-        onStart: () => {
-          const span = document.createElement('span');
-          span.style.display = 'inline-block';
-          span.style.opacity = '0';
-          span.textContent = char === ' ' ? '\u00A0' : char;
-          staticContent.appendChild(span);
-          gsap.to(span, { opacity: 1, duration: 0.4 });
-        }
-      });
-    });
+    // Show static text immediately (no typing animation)
+    document.querySelector('.caret').style.display = 'none';
+    staticContent.innerHTML = 'AI ' + introText;
 
-    // 2. Turn off caret and start words
-    heroTl.set(".caret", { display: "none" }, "+=0.8"); // Increased from 0.3 for a longer pause
+    // Animate the dynamic words
+    let heroTl = gsap.timeline({ delay: 0.3 });
+    let currentTime = 0;
 
-    let currentTime = heroTl.duration();
     heroWords.forEach((word, index) => {
       if (word === "BR") {
         heroTl.to({}, {
@@ -480,7 +468,7 @@
           span.textContent = word.replace(/ /g, '\u00A0');
           dynamicContent.appendChild(span);
 
-          // Trigger button reveal exactly with the last word
+          // Trigger button reveal with the last word
           if (index === heroWords.length - 1) {
             const btnContainer = document.createElement('div');
             btnContainer.className = "mt-6 opacity-0 transform translate-y-4";
@@ -490,12 +478,9 @@
           }
         }
       }, currentTime);
-      
-      // 0.20s general delay, but 0.80s after "you," for a deliberate pause
-      currentTime += hasComma ? 0.8 : 0.2; 
-    });
 
-    // Final hero reveal logic removed from here as it's now triggered with last word
+      currentTime += hasComma ? 0.8 : 0.2;
+    });
 
     // GSAP Scroll Animations
     gsap.registerPlugin(ScrollTrigger);
