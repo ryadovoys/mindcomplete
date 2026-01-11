@@ -844,6 +844,7 @@ class PredictionManager {
         body: JSON.stringify({
           text,
           sessionId: window.contextManager?.getSessionId(),
+          anchorIds: window.brainManager?.getAnchorIds(),
           rules: window.contextManager?.getRulesText(),
           writingStyle: window.contextManager?.getWritingStyleText()
         }),
@@ -1238,6 +1239,425 @@ class PredictionManager {
   acceptSelectModeRange(startOffset, endOffset) {
     if (!this.currentPrediction) return;
     this.commitAcceptance(startOffset, endOffset);
+  }
+}
+
+// ===========================================
+// BRAIN MANAGER - Unified Context Management
+// ===========================================
+class BrainManager {
+  constructor() {
+    this.anchors = [];
+    this.pendingAttachment = null;
+    this.isLoading = false;
+
+    // UI Elements
+    this.brainPanel = document.querySelector('.brain-panel');
+    this.brainContent = document.querySelector('.brain-content');
+    this.brainInputArea = document.querySelector('.brain-input-area');
+
+    // Fallback or specific selectors
+    this.inputText = document.querySelector('.brain-textarea');
+    this.attachBtn = document.querySelector('.brain-attach-btn');
+    this.sendBtn = document.querySelector('.brain-send-btn');
+    this.attachmentPreview = document.querySelector('.brain-attachment-preview');
+    this.fileInput = document.getElementById('context-file-input');
+
+    // Bind methods
+    this.handleFileSelect = this.handleFileSelect.bind(this);
+    this.handleSend = this.handleSend.bind(this);
+    this.removeAnchor = this.removeAnchor.bind(this);
+    this.handleResizeStart = this.handleResizeStart.bind(this);
+    this.handleResizeMove = this.handleResizeMove.bind(this);
+    this.handleResizeEnd = this.handleResizeEnd.bind(this);
+
+    this.init();
+  }
+
+  init() {
+    // Attach global access
+    window.brainManager = this;
+
+    // Initialize Resizer
+    this.initResizer();
+
+    if (!this.brainPanel) return;
+
+    // Listeners
+    this.attachBtn?.addEventListener('click', () => this.fileInput?.click());
+    this.fileInput?.addEventListener('change', (e) => this.handleFileSelect(e.target.files[0]));
+
+    this.sendBtn?.addEventListener('click', this.handleSend);
+    this.inputText?.addEventListener('keydown', (e) => {
+      // Allow Shift+Enter for newline, Enter for send
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        this.handleSend();
+      }
+    });
+
+    // Auto-resize textarea
+    this.inputText?.addEventListener('input', () => {
+      this.inputText.style.height = 'auto';
+      this.inputText.style.height = (this.inputText.scrollHeight) + 'px';
+    });
+
+    // Initial Load
+    this.loadAnchors();
+  }
+
+  async loadAnchors() {
+    try {
+      this.setLoading(true);
+      // Auth handling: try to get session from supabase if available
+      let headers = { 'Content-Type': 'application/json' };
+
+      if (window.supabase) {
+        const { data: { session } } = await window.supabase.auth.getSession();
+        if (session) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+
+      const response = await fetch('/api/context-anchor', { headers });
+      if (response.ok) {
+        const data = await response.json();
+        // API returns array if listing, or single object if ID passed (but we didn't pass ID)
+        this.anchors = Array.isArray(data) ? data : (data ? [data] : []);
+        this.renderAnchors();
+      } else {
+        console.warn('[BrainManager] Failed to load anchors', response.status);
+        // If 401, maybe clear anchors
+        if (response.status === 401) {
+          this.anchors = [];
+          this.renderAnchors();
+        }
+      }
+    } catch (error) {
+      console.error('[BrainManager] Load anchors error:', error);
+    } finally {
+      this.setLoading(false);
+    }
+  }
+
+  renderAnchors() {
+    if (!this.brainContent) return;
+
+    if (this.anchors.length === 0) {
+      this.brainContent.innerHTML = `
+        <div class="brain-empty-state">
+          <span class="material-symbols-outlined">psychology</span>
+          <p>Add context to help the AI understand your project.</p>
+        </div>
+      `;
+      return;
+    }
+
+    this.brainContent.innerHTML = this.anchors.map(anchor => {
+      // items details
+      const items = anchor.items || [];
+      const imageCount = items.filter(i => i.type === 'image' || (i.type === 'text' && i.source === 'image_analysis')).length;
+      const urlCount = items.filter(i => i.type === 'url').length;
+      const fileCount = items.filter(i => i.type === 'file').length;
+
+      let metaText = [];
+      if (imageCount) metaText.push(`${imageCount} Image${imageCount > 1 ? 's' : ''}`);
+      if (urlCount) metaText.push(`${urlCount} URL${urlCount > 1 ? 's' : ''}`);
+      if (fileCount) metaText.push(`${fileCount} File${fileCount > 1 ? 's' : ''}`);
+
+      const metaString = metaText.join(' • ');
+
+      return `
+        <div class="brain-anchor-card" data-id="${anchor.id}">
+          <div class="brain-anchor-header">
+            <div class="brain-anchor-title">
+              <span class="material-symbols-outlined">lightbulb</span>
+              <span>Context Anchor</span>
+            </div>
+            <div class="brain-anchor-actions">
+               <button class="anchor-action-btn delete" onclick="window.brainManager.removeAnchor('${anchor.id}')" title="Delete Anchor">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+            </div>
+          </div>
+          <div class="brain-anchor-summary">${this.escapeHtml(anchor.summary || 'No summary available')}</div>
+          ${metaString ? `<div class="context-item-meta" style="margin-top:8px">${metaString}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  handleFileSelect(file) {
+    if (!file) return;
+    this.pendingAttachment = file;
+    this.renderAttachmentPreview();
+    this.inputText?.focus();
+  }
+
+  renderAttachmentPreview() {
+    if (!this.attachmentPreview) return;
+
+    if (!this.pendingAttachment) {
+      this.attachmentPreview.innerHTML = '';
+      this.attachmentPreview.style.display = 'none';
+      return;
+    }
+
+    const name = this.pendingAttachment.name || 'Attachment';
+    const isImage = this.pendingAttachment.type?.startsWith('image/');
+    const icon = isImage ? 'image' : 'description';
+
+    this.attachmentPreview.style.display = 'flex';
+    this.attachmentPreview.innerHTML = `
+      <div class="attachment-chip">
+        <span class="material-symbols-outlined">${icon}</span>
+        <span class="attachment-name">${name}</span>
+        <button class="btn-icon-small" onclick="window.brainManager.clearAttachment()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+    `;
+  }
+
+  clearAttachment() {
+    this.pendingAttachment = null;
+    this.fileInput.value = '';
+    this.renderAttachmentPreview();
+  }
+
+  async handleSend() {
+    const text = this.inputText?.value.trim();
+    const attachment = this.pendingAttachment;
+
+    if (!text && !attachment) return;
+
+    this.setLoading(true);
+
+    try {
+      let analysisResult = '';
+      let contextItems = [];
+
+      // 1. Process Attachment
+      if (attachment) {
+        if (attachment.type && attachment.type.startsWith('image/')) {
+          // Image Analysis: FORCE description only
+          const result = await this.analyzeImage(attachment, 'Describe this image in detail.');
+          analysisResult = result.description;
+
+          contextItems.push({
+            type: 'text',
+            source: 'image_analysis',
+            content: analysisResult,
+            meta: {
+              imageName: attachment.name
+            }
+          });
+
+          // If there was a user prompt, add it as a separate instructions item
+          if (text) {
+            contextItems.push({
+              type: 'instruction',
+              content: text
+            });
+          }
+        } else if (attachment.type === 'text/plain' || attachment.name.endsWith('.md') || attachment.name.endsWith('.txt')) {
+          // Text File
+          const content = await this.readTextFile(attachment);
+          contextItems.push({
+            type: 'file',
+            name: attachment.name,
+            content: content
+          });
+          if (text) {
+            contextItems.push({
+              type: 'instruction',
+              content: text
+            });
+          }
+        }
+      } else if (text) {
+        // Just request instruction
+        contextItems.push({
+          type: 'instruction',
+          content: text
+        });
+      }
+
+      // 2. Create Anchor via API
+      let headers = { 'Content-Type': 'application/json' };
+      if (window.supabase) {
+        const { data: { session } } = await window.supabase.auth.getSession();
+        if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      const response = await fetch('/api/context-anchor', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          items: contextItems,
+          // We assume 'synthesizeContextAnchor' handles generating the summary from these items
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to create anchor');
+
+      // 3. Reset UI
+      if (this.inputText) {
+        this.inputText.value = '';
+        this.inputText.style.height = 'auto';
+      }
+      this.clearAttachment();
+
+      // 4. Reload anchors
+      await this.loadAnchors();
+
+    } catch (error) {
+      console.error('[BrainManager] Send error:', error);
+      alert('Failed: ' + error.message);
+    } finally {
+      this.setLoading(false);
+    }
+  }
+
+  async analyzeImage(file, prompt) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const base64Data = e.target.result.split(',')[1];
+          const response = await fetch('/api/analyze-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              imageData: base64Data,
+              mimeType: file.type,
+              prompt: prompt
+            })
+          });
+
+          if (!response.ok) throw new Error('Image analysis failed');
+          const data = await response.json();
+          resolve(data);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async readTextFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
+  }
+
+  async removeAnchor(id) {
+    if (!confirm('Delete this context anchor?')) return;
+
+    try {
+      this.setLoading(true);
+      let headers = { 'Content-Type': 'application/json' };
+      if (window.supabase) {
+        const { data: { session } } = await window.supabase.auth.getSession();
+        if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      await fetch(`/api/context-anchor?id=${id}`, {
+        method: 'DELETE',
+        headers
+      });
+
+      // Reload or filter locally
+      this.anchors = this.anchors.filter(a => a.id !== id);
+      this.renderAnchors();
+
+    } catch (error) {
+      console.error('Delete error', error);
+      alert('Failed to delete anchor');
+    } finally {
+      this.setLoading(false);
+    }
+  }
+
+  setLoading(isLoading) {
+    this.isLoading = isLoading;
+    // Show/hide spinner or disable buttons
+    if (this.sendBtn) {
+      this.sendBtn.disabled = isLoading;
+      this.sendBtn.innerHTML = isLoading ?
+        `<span class="material-symbols-outlined" style="animation:spin 1s linear infinite; display:block">refresh</span>` :
+        `<span class="material-symbols-outlined">arrow_upward</span>`;
+    }
+    if (this.brainInputArea) {
+      this.brainInputArea.style.opacity = isLoading ? '0.5' : '1';
+      this.brainInputArea.style.pointerEvents = isLoading ? 'none' : 'auto';
+    }
+  }
+
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  getAnchorIds() {
+    return this.anchors ? this.anchors.map(a => a.id) : [];
+  }
+
+  initResizer() {
+    // 1. Restore width
+    const savedWidth = localStorage.getItem('BRAIN_PANEL_WIDTH');
+    if (savedWidth && this.brainPanel) {
+      // Only restore on desktop (or let CSS media query override on mobile)
+      if (window.innerWidth > 768) {
+        this.brainPanel.style.width = savedWidth + 'px';
+      }
+    }
+
+    // 2. Setup Resizer
+    this.resizer = document.querySelector('.side-menu-resizer');
+    if (this.resizer) {
+      this.resizer.addEventListener('mousedown', this.handleResizeStart);
+    }
+  }
+
+  handleResizeStart(e) {
+    if (window.innerWidth <= 768) return; // Disable on mobile
+    e.preventDefault();
+    document.addEventListener('mousemove', this.handleResizeMove);
+    document.addEventListener('mouseup', this.handleResizeEnd);
+    document.body.style.cursor = 'ew-resize';
+    this.brainPanel.style.transition = 'none'; // Disable transition during drag
+  }
+
+  handleResizeMove(e) {
+    // Width is distance from right edge
+    const newWidth = window.innerWidth - e.clientX;
+
+    // Constraints
+    if (newWidth < 300) return;
+    if (newWidth > 800) return;
+    if (newWidth > window.innerWidth - 50) return;
+
+    this.brainPanel.style.width = newWidth + 'px';
+  }
+
+  handleResizeEnd() {
+    document.removeEventListener('mousemove', this.handleResizeMove);
+    document.removeEventListener('mouseup', this.handleResizeEnd);
+    document.body.style.cursor = '';
+    this.brainPanel.style.transition = ''; // Re-enable transition
+
+    // Save width
+    const width = parseInt(this.brainPanel.style.width);
+    if (width) {
+      localStorage.setItem('BRAIN_PANEL_WIDTH', width);
+    }
   }
 }
 
@@ -3301,6 +3721,7 @@ class AuthManager {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+  window.brainManager = new BrainManager();
   window.contextManager = new ContextManager();
   window.predictionManager = new PredictionManager();
   window.valleysManager = new ValleysManager();

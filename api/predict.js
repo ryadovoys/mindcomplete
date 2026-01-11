@@ -1,10 +1,25 @@
 import { getContext } from './lib/contextService.js';
+import { supabase } from './lib/supabaseClient.js';
 
 const CONFIG = {
   MAX_TOKENS: 400,
   TEMPERATURE: 0.7,
   MODEL: 'xiaomi/mimo-v2-flash:free',
 };
+
+// Helper to get Context Anchors from database
+async function getContextAnchors(anchorIds) {
+  if (!supabase || !anchorIds || !anchorIds.length) return [];
+
+  const { data, error } = await supabase
+    .from('context_anchors')
+    .select('summary, items, rules, writing_style')
+    .in('id', anchorIds);
+
+  if (error || !data) return [];
+  return data;
+}
+
 
 export default async function handler(req, res) {
   // Handle CORS
@@ -21,10 +36,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { text, sessionId, rules, writingStyle } = req.body;
+  const { text, sessionId, anchorIds, anchorId, rules, writingStyle } = req.body;
   const host = req.headers.host || 'purplevalley.co';
 
-  console.log(`[PREDICT] Request received. Text length: ${text?.length}, Session: ${sessionId}`);
+  // Support both array and legacy single ID
+  const idsToFetch = anchorIds || (anchorId ? [anchorId] : []);
+
+  console.log(`[PREDICT] Request received. Text length: ${text?.length}, Session: ${sessionId}, Anchors: ${idsToFetch.length}`);
 
   if (!text) {
     console.error('[PREDICT] Error: No text provided');
@@ -39,33 +57,56 @@ export default async function handler(req, res) {
   // Build system prompt with context if available
   let systemPrompt = `Continue the user's thought from where they stopped. Write 1 paragraph that naturally extends their idea, matching their tone and style. Do not repeat their text or add meta commentary. Just provide the seamless continuation.`;
 
-  // Add rules if provided
-  if (rules && rules.trim()) {
-    systemPrompt = `Follow these rules when writing:
+  // Check for Context Anchors (new unified context system)
+  if (idsToFetch.length > 0) {
+    const anchors = await getContextAnchors(idsToFetch);
+
+    if (anchors && anchors.length > 0) {
+      let combinedContext = '';
+
+      anchors.forEach((anchor, index) => {
+        combinedContext += `<context_anchor_${index + 1}>\n${anchor.summary}\n`;
+        if (anchor.rules) combinedContext += `Rules: ${anchor.rules}\n`;
+        if (anchor.writing_style) combinedContext += `Style: ${anchor.writing_style}\n`;
+        combinedContext += `</context_anchor_${index + 1}>\n\n`;
+      });
+
+      systemPrompt = `You are helping the user write content. Here is your context brief from multiple sources:
+
+${combinedContext}
+
+${rules ? `<global_rules>\n${rules}\n</global_rules>\n\n` : ''}${writingStyle && writingStyle !== 'none' ? `<global_writing_style>\n${writingStyle}\n</global_writing_style>\n\n` : ''}Based on this context, continue the user's thought from where they stopped. Write 1 paragraph that naturally extends their idea, incorporating relevant information from the context when appropriate. Match their tone and style. Do not repeat their text or add meta commentary. Just provide the seamless continuation.`;
+    }
+  }
+  // Fall back to legacy context system if no anchor
+  else {
+    // Add rules if provided
+    if (rules && rules.trim()) {
+      systemPrompt = `Follow these rules when writing:
 
 <rules>
 ${rules}
 </rules>
 
 ${systemPrompt}`;
-  }
+    }
 
-  // Add writing style if provided
-  if (writingStyle && writingStyle.trim()) {
-    systemPrompt = `Follow this writing style:
+    // Add writing style if provided
+    if (writingStyle && writingStyle.trim()) {
+      systemPrompt = `Follow this writing style:
 
 <writing_style>
 ${writingStyle}
 </writing_style>
 
 ${systemPrompt}`;
-  }
+    }
 
-  // Add file context if available
-  if (sessionId) {
-    const context = await getContext(sessionId);
-    if (context) {
-      systemPrompt = `You are helping the user write content related to the following reference material:
+    // Add file context if available
+    if (sessionId) {
+      const context = await getContext(sessionId);
+      if (context) {
+        systemPrompt = `You are helping the user write content related to the following reference material:
 
 <reference_context>
 ${context.text}
@@ -84,6 +125,7 @@ ${writingStyle}
 </writing_style>
 
 ` : ''}Based on this context, continue the user's thought from where they stopped. Write 1 paragraph that naturally extends their idea, incorporating relevant information from the reference material when appropriate. Match their tone and style. Do not repeat their text or add meta commentary. Just provide the seamless continuation.`;
+      }
     }
   }
 
