@@ -17,7 +17,7 @@
     }
     
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Google Sans Flex', 'Inter', sans-serif;
       color: var(--primary);
       background-color: var(--lavender);
     }
@@ -25,6 +25,8 @@
     .font-literata { font-family: 'Literata', serif; }
     .font-google-sans { font-family: 'Google Sans Flex', sans-serif; }
     
+    h1, h2, h3 { font-family: 'Literata', serif; }
+
     .bg-pattern {
       background-image: radial-gradient(circle at 1px 1px, rgba(48, 25, 53, 0.05) 1px, transparent 0);
       background-size: 40px 40px;
@@ -69,25 +71,6 @@
     }
     .btn-variant-1:hover {
       opacity: 0.9;
-      transform: translateY(-2px);
-    }
-
-    .btn-google {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      width: 100%;
-      padding: 14px;
-      background: white;
-      border: 1px solid rgba(48, 25, 53, 0.1);
-      border-radius: 1rem;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-    .btn-google:hover { 
-      background: #f9f9f9;
-      border-color: var(--accent);
     }
 
     .input-field {
@@ -100,14 +83,6 @@
       transition: border-color 0.2s;
     }
     .input-field:focus { border-color: var(--accent); }
-
-    .lifestyle-img {
-      width: 100%;
-      height: calc(100vh - 40px);
-      object-fit: cover;
-      border-radius: 3rem;
-      box-shadow: 0 20px 50px rgba(48, 25, 53, 0.1);
-    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col bg-pattern overflow-x-hidden">
@@ -121,66 +96,33 @@
     </div>
   </header>
 
-  <main class="flex-1 flex flex-col lg:flex-row px-5 lg:px-10 pb-5 gap-12 lg:gap-20 items-center z-10">
-    <!-- Left Column: Login Content -->
-    <div class="flex-1 flex flex-col items-center text-center max-w-xl mx-auto w-full">
-      <div class="mb-10">
+  <main class="flex-1 flex flex-col justify-center items-center px-5 py-10 z-10">
+    <!-- Centered Content -->
+    <div class="flex flex-col items-center text-center w-full" style="max-width: 420px;">
+      <div class="mb-12">
         <h1 class="text-4xl lg:text-6xl font-literata font-extralight mb-4 leading-tight tracking-tight">
           Writer's block? <br/>
           <span class="italic text-accent/80">Gone.</span>
         </h1>
-        <p class="text-lg text-primary/60 font-literata font-light italic">
-          The AI extension for your thoughts.
-        </p>
       </div>
 
-      <div class="glass w-full p-8 lg:p-12 space-y-8 rounded-[3rem] shadow-xl border-white/40">
-        <button id="google-login" class="btn-google font-google-sans text-primary/80">
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="Google">
-          Continue with Google
-        </button>
-
-        <div class="relative flex items-center py-2">
-          <div class="flex-grow border-t border-primary/5"></div>
-          <span class="flex-shrink mx-4 text-[10px] font-bold text-primary/20 uppercase tracking-[0.2em] font-google-sans">OR</span>
-          <div class="flex-grow border-t border-primary/5"></div>
-        </div>
-
+      <div class="glass w-full p-8 lg:p-12 space-y-6 rounded-[3rem] border-white/40">
         <form id="email-login-form" class="space-y-4">
-          <input type="email" id="email-input" placeholder="Personal or work email" class="input-field font-literata font-light" required>
-          <button type="submit" class="ai-btn btn-variant-1 w-full py-4 text-lg font-google-sans shadow-lg shadow-primary/10">
+          <input type="email" id="email-input" placeholder="Personal or work email" class="input-field font-light" required>
+          <button type="submit" class="ai-btn btn-variant-1 w-full py-4 text-lg font-google-sans shadow-primary/10">
             Continue with Email
           </button>
         </form>
 
-        <p class="text-[11px] leading-relaxed text-primary/30 text-center px-4 font-literata">
+        <p class="text-[11px] leading-relaxed text-primary/30 text-center px-4">
           By continuing, you acknowledge Purple Valley's <a href="#" class="underline hover:text-accent">Privacy Policy</a>.
         </p>
       </div>
-    </div>
-
-    <!-- Right Column: Visual -->
-    <div class="hidden lg:block flex-1 w-full relative">
-      <div class="absolute inset-0 bg-accent/5 blur-3xl rounded-full animate-breathing"></div>
-      <img src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=2070&auto=format&fit=crop" 
-           alt="Deep concentration" 
-           class="lifestyle-img relative z-10 border border-white/20">
     </div>
   </main>
 
   <script type="module">
     import { supabase } from './supabaseClient.js';
-
-    // Google Login
-    document.getElementById('google-login').addEventListener('click', async () => {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin + '/app'
-        }
-      });
-      if (error) alert('Error: ' + error.message);
-    });
 
     // Email Login (Magic Link)
     document.getElementById('email-login-form').addEventListener('submit', async (e) => {
