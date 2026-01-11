@@ -219,20 +219,26 @@
   
   <!-- Navigation -->
   <nav class="absolute top-0 w-full z-50 glass border-b border-primary/5 px-global py-4 nav-transparent">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <a href="/"><img src="/purple-valley-logo.svg" alt="Purple Valley" class="h-7 w-auto block"></a>
-      <div class="hidden md:flex gap-8 items-center text-sm font-medium">
+    <div class="max-w-7xl mx-auto flex justify-between items-center relative">
+      <div class="flex-1 hidden md:flex gap-8 items-center text-sm font-medium">
         <a href="#thoughts" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Thoughts</a>
         <a href="#visual" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Visual</a>
         <a href="#style" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Style</a>
         <a href="#context" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Context</a>
+      </div>
+      
+      <div class="absolute left-1/2 -translate-x-1/2">
+        <a href="/"><img src="/purple-valley-logo.svg" alt="Purple Valley" class="h-7 w-auto block"></a>
+      </div>
+
+      <div class="flex-1 flex justify-end">
         <a href="/login" class="ai-btn btn-variant-1 font-google-sans">Sign in</a>
       </div>
     </div>
   </nav>
 
   <!-- HeroSection: Simulated Ghostwriting -->
-  <section class="relative h-[600px] px-global pt-48 flex flex-col items-center bg-primary text-lavender" id="hero-typing-section">
+  <section class="relative h-[400px] md:h-[600px] px-global pt-32 md:pt-48 flex flex-col items-center bg-primary text-lavender" id="hero-typing-section">
     <div class="max-w-5xl w-full">
       <h1 class="text-4xl md:text-7xl font-literata font-extralight mb-6 leading-[0.95] tracking-tight text-left text-lavender" id="hero-typing">
         <span class="hero-first-line"><span class="caret-container"><span class="static-text">AI that writes</span><span class="caret"></span></span><span class="dynamic-first-line"></span></span><span class="dynamic-content"></span>
