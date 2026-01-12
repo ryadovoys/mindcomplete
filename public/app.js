@@ -1440,7 +1440,7 @@ class BrainManager {
       // 1. Process Attachment
       if (attachment) {
         if (attachment.type && attachment.type.startsWith('image/')) {
-          // Image Analysis: FORCE description only
+          // Image Analysis (Unified Endpoint)
           const result = await this.analyzeImage(attachment, 'Describe this image in detail.');
           analysisResult = result.description;
 
@@ -1525,10 +1525,11 @@ class BrainManager {
       reader.onload = async (e) => {
         try {
           const base64Data = e.target.result.split(',')[1];
-          const response = await fetch('/api/analyze-image', {
+          const response = await fetch('/api/process-input', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              type: 'image',
               imageData: base64Data,
               mimeType: file.type,
               prompt: prompt
