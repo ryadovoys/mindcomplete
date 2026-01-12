@@ -268,50 +268,120 @@ async function synthesizeWithLLM(items, fullDigest, options) {
         throw new Error('OPENROUTER_API_KEY not configured');
     }
 
-    // Construct a rich prompt
-    const systemPrompt = `You are an expert Content Strategist and AI Instruction Architect.
-Your goal is to create a "Context Anchor" - a structured, persistent set of INSTRUCTIONS for another AI to follow.
-Your output must be a GUIDE for writing, NOT the writing itself.
+    // --- Detect Flow Type ---
+    const hasImage = items.some(i => i.source === 'image_analysis' || i.type === 'image');
+    const hasFile = items.some(i => i.type === 'file');
+    const hasUrl = items.some(i => i.type === 'url' || i.source === 'scraped_url');
+    const hasInstruction = items.some(i => i.type === 'instruction');
 
-CRITICAL INSTRUCTION:
-DO NOT WRITE THE REQUESTED CONTENT.
-If the user says "Write a blog post", do NOT write the blog post.
-Instead, write the RULES that another AI should use to write that blog post.
+    const userInstruction = items.find(i => i.type === 'instruction')?.content || '';
+    const contentItem = items.find(i => i.type !== 'instruction');
 
-INPUTS:
-1. User's Context Items (images, files, URLs).
-2. User's specific Instructions/Intent (what they want to DO with this content).
+    let systemPrompt;
+    let maxTokens = 500;
 
-YOUR TASK:
-Analyze the provided items and instructions to create a structured output.
-Extract the INTENT and generate Rules/Guidelines for THAT intent.
+    // --- FLOW 1: Image Only ---
+    if (hasImage && !hasInstruction) {
+        systemPrompt = `You are analyzing an image for a writing assistant.
+Your task is to provide a DETAILED VISUAL DESCRIPTION of the image.
 
-OUTPUT FORMAT:
-[Start directly with the Detailed Context Summary. Do not use a header like "CONTEXT ANCHOR".]
-[Detailed summary of the content provided. CRITICAL: If an image is provided, you MUST DESCRIBE IT visually (e.g., "A digital artwork showing a surreal moonlit landscape with purple hues..."). Do NOT reference filenames.]
+OUTPUT:
+Describe what you see in the image. Include:
+- Main subjects (people, objects, scenes)
+- Colors, lighting, and atmosphere
+- Setting and environment
+- Mood and emotional tone
+- Any text visible in the image
+- Notable details that could inspire creative writing
 
-Writing Rules:
-- [Extracted Rule 1. E.g. "Use engaging, social-media friendly tone."]
-- [Extracted Rule 2. E.g. "Incorporate specific keywords: #Art, #Design."]
-- [Do NOT generate the actual post here. Just rules.]
+Be thorough and vivid. This description will help a writer understand the visual context.
+Output ONLY the description. No headers, no commentary.`;
+    }
 
-Focus Points:
-- [Point 1. E.g. "Highlight the color contrast in the image based on the user's input."]
-- [Point 2. E.g. "Connect the visual to digital creativity themes."]
+    // --- FLOW 2: Image + Comment ---
+    else if (hasImage && hasInstruction) {
+        systemPrompt = `You are analyzing an image for a writing assistant.
+The user has provided specific guidance on what to focus on.
 
-(Keep the total output under 200 words. Focus on CLARITY and UTILITY for the writer AI).
-`;
+USER'S GUIDANCE: "${userInstruction}"
 
-    const userPrompt = `Here are the items the user provided:
-${JSON.stringify(items.map(i => ({ type: i.type, source: i.source, content: i.content, meta: i.meta })), null, 2)}
+Based on this guidance, analyze the image and extract the relevant details.
+Focus specifically on what the user asked for.
 
-User Preferences/Style: ${JSON.stringify(options)}
+OUTPUT:
+Provide a focused analysis based on the user's guidance.
+Only include details relevant to their request.
+Output ONLY the analysis. No headers, no meta-commentary.`;
+    }
 
-Generate the Context Anchor now. Remember: Do NOT write the content. Write the INSTRUCTIONS for it.`;
+    // --- FLOW 3: File/URL Only ---
+    else if ((hasFile || hasUrl) && !hasInstruction) {
+        systemPrompt = `You are a document analyst for a writing assistant.
+Your task is to create a COMPREHENSIVE SUMMARY of the provided document/content.
 
+This summary will be used to help an AI assist the user with writing.
+Make the summary rich and detailed so the AI understands the full context.
+
+OUTPUT GUIDELINES:
+- Capture the main themes, arguments, or narrative
+- Note key characters, places, or concepts if applicable
+- Preserve important details, quotes, or data points
+- Identify the tone and style of the original content
+- Include anything that would be helpful for continued writing
+
+Be generous with detail. Up to 2000 characters is acceptable.
+Output ONLY the summary. No headers like "Summary:" - just the content.`;
+        maxTokens = 800; // Allow more tokens for detailed summaries
+    }
+
+    // --- FLOW 4: File/URL + Comment ---
+    else if ((hasFile || hasUrl) && hasInstruction) {
+        systemPrompt = `You are a document analyst for a writing assistant.
+The user has provided specific guidance on what to extract from this document.
+
+USER'S GUIDANCE: "${userInstruction}"
+
+Based on this guidance, analyze the document and extract the relevant information.
+Focus specifically on what the user asked for.
+
+Examples:
+- If they mention "characters", list all characters with descriptions
+- If they mention "plot", summarize the main storyline
+- If they mention "style", analyze the writing style and tone
+
+OUTPUT:
+Provide a focused extraction based on the user's guidance.
+Be thorough for the specific aspects they requested.
+Up to 2000 characters is acceptable.
+Output ONLY the analysis. No headers, no meta-commentary.`;
+        maxTokens = 800;
+    }
+
+    // --- FALLBACK: Mixed or Text-only ---
+    else {
+        systemPrompt = `You are a context analyzer for a writing assistant.
+Summarize the provided content in a way that helps with writing tasks.
+Be clear and concise. Focus on information useful for creative or professional writing.
+Output ONLY the summary.`;
+    }
+
+    // --- Build User Prompt ---
+    const contentDescription = items.map(i => {
+        if (i.type === 'instruction') return null;
+        if (i.source === 'image_analysis') return `[IMAGE DESCRIPTION]: ${i.content}`;
+        if (i.type === 'file') return `[FILE: ${i.name}]: ${i.content}`;
+        if (i.type === 'url' || i.source === 'scraped_url') {
+            return `[URL: ${i.meta?.url || 'unknown'}]\nTitle: ${i.meta?.title || ''}\n${i.content}`;
+        }
+        return `[CONTENT]: ${i.content}`;
+    }).filter(Boolean).join('\n\n');
+
+    const userPrompt = contentDescription;
+
+    // --- Call LLM ---
     for (const model of MODELS) {
         try {
-            console.log(`[CONTEXT-ANCHOR] Synthesizing with model: ${model}`);
+            console.log(`[CONTEXT-ANCHOR] Synthesizing with model: ${model} (Flow: ${hasImage ? 'image' : hasFile ? 'file' : hasUrl ? 'url' : 'other'}${hasInstruction ? '+comment' : ''})`);
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
@@ -326,8 +396,8 @@ Generate the Context Anchor now. Remember: Do NOT write the content. Write the I
                         { role: 'system', content: systemPrompt },
                         { role: 'user', content: userPrompt }
                     ],
-                    temperature: 0.7,
-                    max_tokens: 500 // Limit output length
+                    temperature: 0.5,
+                    max_tokens: maxTokens
                 })
             });
 
@@ -347,3 +417,4 @@ Generate the Context Anchor now. Remember: Do NOT write the content. Write the I
 
     throw new Error('All models failed to synthesize anchor');
 }
+
