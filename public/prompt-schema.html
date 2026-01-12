@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Prompt Architecture</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8AB4F8;
+            --bg: #FFFFFF;
+            --surface: #F8F9FA;
+            --border: #E5E7EB;
+            --text: #1F2937;
+            --text-secondary: #6B7280;
+            --line-color: #CBD5E1;
+        }
+
+        [data-theme="dark"] {
+            --primary: #8AB4F8;
+            --bg: #111827;
+            --surface: #1F2937;
+            --border: #374151;
+            --text: #F9FAFB;
+            --text-secondary: #9CA3AF;
+            --line-color: #4B5563;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .flow-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            max-width: 1000px;
+            width: 100%;
+            position: relative;
+        }
+
+        .level {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            width: 100%;
+            position: relative;
+        }
+
+        .node {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            width: 280px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .node:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .node-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .icon-box {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(138, 180, 248, 0.1);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .node-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .node-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Connecting Lines */
+        .arrow-down {
+            width: 2px;
+            height: 40px;
+            background: var(--line-color);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg);
+            width: 800px;
+            max-width: 90vw;
+            max-height: 85vh;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .modal-close:hover {
+            background: var(--surface);
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .prompt-block {
+            background: #1E1E1E;
+            color: #D4D4D4;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .tag-system {
+            background: rgba(138, 180, 248, 0.2);
+            color: #8AB4F8;
+        }
+
+        .tag-input {
+            background: rgba(52, 211, 153, 0.2);
+            color: #34D399;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>System Prompt Architecture</h1>
+
+    <div class="flow-container">
+
+        <!-- Level 1: Inputs -->
+        <div class="level">
+            <div class="node" onclick="openModal('inputs')">
+                <div class="node-header">
+                    <div class="icon-box"><span class="material-symbols-outlined">input</span></div>
+                    <div class="node-title">User Inputs</div>
+                </div>
+                <div class="node-desc">Files, URLs, Images, and Text instructions provided by the user in the Brain
+                    panel.</div>
+            </div>
+        </div>
+
+        <div class="arrow-down"></div>
+
+        <!-- Level 2: Processing -->
+        <div class="level">
+            <div class="node" onclick="openModal('image-analysis')">
+                <div class="node-header">
+                    <div class="icon-box"><span class="material-symbols-outlined">image_search</span></div>
+                    <div class="node-title">Image Analysis (Gemini)</div>
+                </div>
+                <div class="node-desc">Converts visual data into text descriptions using a specific "Describe detail"
+                    prompt.</div>
+            </div>
+        </div>
+
+        <div class="arrow-down"></div>
+
+        <!-- Level 3: Synthesis -->
+        <div class="level">
+            <div class="node" onclick="openModal('context-anchor')">
+                <div class="node-header">
+                    <div class="icon-box"><span class="material-symbols-outlined">psychology</span></div>
+                    <div class="node-title">Context Architect</div>
+                </div>
+                <div class="node-desc">Synthesizes all inputs into a structured "Context Anchor" with Rules and
+                    Instructions.</div>
+            </div>
+        </div>
+
+        <div class="arrow-down"></div>
+
+        <!-- Level 4: Prediction -->
+        <div class="level">
+            <div class="node" onclick="openModal('prediction')">
+                <div class="node-header">
+                    <div class="icon-box"><span class="material-symbols-outlined">edit_note</span></div>
+                    <div class="node-title">Prediction Engine</div>
+                </div>
+                <div class="node-desc">Generates inline text completions based on the Context Anchors and user's current
+                    writing.</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title">System Prompt</div>
+                <button class="modal-close" onclick="closeModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PROMPTS = {
+            'inputs': {
+                title: 'User Inputs & Processing',
+                content: `
+<div class="node-desc" style="margin-bottom: 20px;">
+  Raw inputs are first processed before reaching the LLM. 
+  <br>• <strong>URLs</strong> are scraped for main content text.
+  <br>• <strong>Files</strong> (.txt, .md) are read directly.
+  <br>• <strong>Images</strong> are sent to the Vision Model (see next node).
+</div>`
+            },
+            'image-analysis': {
+                title: 'Image Analysis Prompt (Gemini 2.0 Flash)',
+                content: `
+<div class="tag tag-input">Input</div>
+<p>User provided image (Base64 or URL)</p>
+
+<div class="tag tag-system">System Prompt</div>
+<div class="prompt-block">Analyze this image and provide a concise description for use as writing context. Include:
+1. Main subjects/objects in the image
+2. Setting/environment
+3. Mood/atmosphere
+4. Any text visible in the image
+5. Key details that might be relevant for creative writing
+
+Keep your response under 300 words and focus on details useful for a writer.</div>`
+            },
+            'context-anchor': {
+                title: 'Context Architect Prompt',
+                content: `
+<div class="tag tag-input">Input</div>
+<p>Combined text from all files, URLs, and image descriptions.</p>
+
+<div class="tag tag-system">System Prompt</div>
+<div class="prompt-block">You are an expert Content Strategist and AI Instruction Architect.
+Your goal is to create a "Context Anchor" - a structured, persistent set of INSTRUCTIONS for another AI to follow.
+Your output must be a GUIDE for writing, NOT the writing itself.
+
+CRITICAL INSTRUCTION:
+DO NOT WRITE THE REQUESTED CONTENT.
+If the user says "Write a blog post", do NOT write the blog post.
+Instead, write the RULES that another AI should use to write that blog post.
+
+INPUTS:
+1. User's Context Items (images, files, URLs).
+2. User's specific Instructions/Intent (what they want to DO with this content).
+
+YOUR TASK:
+Analyze the provided items and instructions to create a structured output.
+Extract the INTENT and generate Rules/Guidelines for THAT intent.
+
+OUTPUT FORMAT:
+[Start directly with the Detailed Context Summary. Do not use a header like "CONTEXT ANCHOR".]
+[Detailed summary of the content provided. CRITICAL: If an image is provided, you MUST DESCRIBE IT visually (e.g., "A digital artwork showing a surreal moonlit landscape with purple hues..."). Do NOT reference filenames.]
+
+Writing Rules:
+- [Extracted Rule 1. E.g. "Use engaging, social-media friendly tone."]
+- [Extracted Rule 2. E.g. "Incorporate specific keywords: #Art, #Design."]
+- [Do NOT generate the actual post here. Just rules.]
+
+Focus Points:
+- [Point 1. E.g. "Highlight the color contrast in the image based on the user's input."]
+- [Point 2. E.g. "Connect the visual to digital creativity themes."]
+
+(Keep the total output under 200 words. Focus on CLARITY and UTILITY for the writer AI).</div>`
+            },
+            'prediction': {
+                title: 'Prediction Engine Prompt',
+                content: `
+<div class="tag tag-input">Input</div>
+<p>Context Anchors + Current Cursor Context (Preceding text)</p>
+
+<div class="tag tag-system">System Prompt</div>
+<div class="prompt-block">You are helping the user write content. Here is your context brief from multiple sources:
+
+ &lt;context_anchor_1&gt;
+ [Summary from Context Architect]
+ Rules: [Extracted Rules]
+ Style: [Extracted Style]
+ &lt;/context_anchor_1&gt;
+
+ &lt;global_rules&gt;
+ [User defined global rules]
+ &lt;/global_rules&gt;
+
+Based on this context, continue the user's thought from where they stopped. Write 1 paragraph that naturally extends their idea, incorporating relevant information from the context when appropriate. Match their tone and style. Do not repeat their text or add meta commentary. Just provide the seamless continuation.</div>`
+            }
+        };
+
+        function openModal(id) {
+            const data = PROMPTS[id];
+            if (!data) return;
+
+            document.getElementById('modal-title').textContent = data.title;
+            document.getElementById('modal-body').innerHTML = data.content;
+            document.getElementById('modal-overlay').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('active');
+        }
+
+        // Close on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Close on overlay click
+        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-overlay') closeModal();
+        });
+    </script>
+</body>
+
+</html>
