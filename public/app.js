@@ -1476,11 +1476,44 @@ class BrainManager {
           }
         }
       } else if (text) {
-        // Just request instruction
-        contextItems.push({
-          type: 'instruction',
-          content: text
-        });
+        // Check if text contains a URL
+        const urlMatch = text.match(/https?:\/\/[^\s]+/);
+
+        if (urlMatch) {
+          const url = urlMatch[0];
+          const userComment = text.replace(url, '').trim();
+
+          // Scrape the URL
+          console.log('[BrainManager] Detected URL, scraping:', url);
+          const scrapeResult = await this.scrapeUrl(url);
+
+          if (scrapeResult) {
+            contextItems.push({
+              type: 'url',
+              source: 'scraped_url',
+              content: scrapeResult.content,
+              meta: {
+                title: scrapeResult.title,
+                description: scrapeResult.description,
+                url: url
+              }
+            });
+
+            // If user added comments alongside the URL, add as instruction
+            if (userComment) {
+              contextItems.push({
+                type: 'instruction',
+                content: userComment
+              });
+            }
+          }
+        } else {
+          // Plain text instruction (no URL)
+          contextItems.push({
+            type: 'instruction',
+            content: text
+          });
+        }
       }
 
       // 2. Create Anchor via API
@@ -1555,6 +1588,29 @@ class BrainManager {
       reader.onerror = reject;
       reader.readAsText(file);
     });
+  }
+
+  async scrapeUrl(url) {
+    try {
+      const response = await fetch('/api/process-input', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'url',
+          url: url
+        })
+      });
+
+      if (!response.ok) {
+        console.warn('[BrainManager] URL scrape failed:', response.status);
+        return null;
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('[BrainManager] URL scrape error:', error);
+      return null;
+    }
   }
 
   async removeAnchor(id) {
