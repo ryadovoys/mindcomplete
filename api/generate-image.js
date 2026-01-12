@@ -1,6 +1,6 @@
-import { supabase } from './lib/supabaseClient.js';
-import { ADMIN_EMAILS } from './lib/constants.js';
-import { getUserTier, getUserCredits, deductCredit, getMonthlyImageCount } from './lib/tierService.js';
+import { supabase } from './_lib/supabaseClient.js';
+import { ADMIN_EMAILS } from './_lib/constants.js';
+import { getUserTier, getUserCredits, deductCredit, getMonthlyImageCount } from './_lib/tierService.js';
 
 const CONFIG = {
     PROMPT_MODEL: 'xiaomi/mimo-v2-flash:free',

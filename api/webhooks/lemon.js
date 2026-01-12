@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { supabase } from '../lib/supabaseClient.js';
+import { supabase } from '../_lib/supabaseClient.js';
 
 export default async (req, res) => {
   // Only allow POST

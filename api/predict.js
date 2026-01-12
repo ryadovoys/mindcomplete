@@ -1,5 +1,5 @@
-import { getContext } from './lib/contextService.js';
-import { supabase } from './lib/supabaseClient.js';
+import { getContext } from './_lib/contextService.js';
+import { supabase } from './_lib/supabaseClient.js';
 
 const CONFIG = {
   MAX_TOKENS: 400,

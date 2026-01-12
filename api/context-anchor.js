@@ -1,12 +1,12 @@
 // Context Anchor API endpoint
 // Generates and manages the unified Context Anchor for a session
 
-import { supabase } from './lib/supabaseClient.js';
+import { supabase } from './_lib/supabaseClient.js';
 import {
     combineContextItems,
     generateClarifications,
     synthesizeContextAnchor as fallbackSynthesis
-} from './lib/contextDigest.js';
+} from './_lib/contextDigest.js';
 
 const MODELS = [
     'google/gemini-2.0-flash-exp:free',

@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { supabase } from './lib/supabaseClient.js';
-import { CONTEXT_TTL_MS, MAX_CONTEXT_CHARS } from './lib/constants.js';
+import { supabase } from './_lib/supabaseClient.js';
+import { CONTEXT_TTL_MS, MAX_CONTEXT_CHARS } from './_lib/constants.js';
 
 // Dynamic imports for modules that may have issues in serverless
 let Busboy = null;
@@ -26,9 +26,9 @@ async function parseFile(buffer, mimeType, filename) {
     // PDF parsing not available in serverless (requires browser APIs)
     throw new Error('PDF files are not supported in production. Please use .txt or .md files.');
   } else if (ext === '.txt' || ext === '.md' ||
-             mimeType === 'text/plain' ||
-             mimeType === 'text/markdown' ||
-             mimeType === 'application/octet-stream') {
+    mimeType === 'text/plain' ||
+    mimeType === 'text/markdown' ||
+    mimeType === 'application/octet-stream') {
     text = buffer.toString('utf-8');
   } else {
     throw new Error(`Unsupported file type: ${filename}`);

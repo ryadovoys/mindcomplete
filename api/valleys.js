@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { supabase } from './lib/supabaseClient.js';
-import { getUserTier } from './lib/tierService.js';
+import { supabase } from './_lib/supabaseClient.js';
+import { getUserTier } from './_lib/tierService.js';
 
 // Helper to get user from JWT token
 async function getUserFromToken(authHeader) {
