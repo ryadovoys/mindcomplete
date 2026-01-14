@@ -1,0 +1,29 @@
+{
+    "name": "MindComplete",
+    "id": "mindcomplete-ai-autocomplete",
+    "api": "1.0.0",
+    "main": "code.js",
+    "ui": "ui.html",
+    "editorType": [
+        "figma"
+    ],
+    "networkAccess": {
+        "allowedDomains": [
+            "https://purplevalley.co",
+            "https://*.vercel.app"
+        ]
+    },
+    "menu": [
+        {
+            "name": "Open Panel",
+            "command": "open-panel"
+        },
+        {
+            "separator": true
+        },
+        {
+            "name": "Continue Text (Quick)",
+            "command": "continue-quick"
+        }
+    ]
+}

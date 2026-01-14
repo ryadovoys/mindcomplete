@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --background: #301935;
+            --text: #e5e6fa;
+            --text-prediction: rgba(229, 230, 250, 0.5);
+            --btn-background: #e5e6fa;
+            --text-btn: #301935;
+
+            --radius-btn: 52px;
+            --radius-container: 16px;
+
+            --spacing-gap: 12px;
+            --spacing-padding: 24px;
+
+            --font-size-text: 18px;
+            --font-size-btn: 14px;
+            --font-size-small: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text);
+            background: var(--background);
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+        }
+
+        .context-bar {
+            padding: 12px var(--spacing-padding);
+            border-bottom: 1px solid rgba(229, 230, 250, 0.1);
+            font-size: var(--font-size-small);
+            color: var(--text-prediction);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .context-bar.has-context {
+            color: var(--text);
+        }
+
+        .editor-container {
+            flex: 1;
+            padding: var(--spacing-padding);
+            overflow-y: auto;
+        }
+
+        .editor {
+            min-height: 100%;
+            outline: none;
+            font-family: inherit;
+            font-size: var(--font-size-text);
+            line-height: 1.5;
+            color: var(--text);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .editor:empty::before {
+            content: attr(data-placeholder);
+            color: var(--text-prediction);
+            pointer-events: none;
+        }
+
+        /* Inline prediction */
+        .inline-prediction {
+            color: var(--text-prediction);
+        }
+
+        .inline-prediction .word {
+            cursor: pointer;
+        }
+
+        /* Highlighted text (from start up to hovered word) */
+        .inline-prediction .word.highlighted {
+            color: var(--text);
+        }
+
+        .bottom-bar {
+            padding: 12px var(--spacing-padding);
+            border-top: 1px solid rgba(229, 230, 250, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--spacing-gap);
+            flex-shrink: 0;
+        }
+
+        .hint {
+            font-size: var(--font-size-small);
+            color: var(--text-prediction);
+        }
+
+        .hint kbd {
+            background: rgba(229, 230, 250, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 32px;
+            border: none;
+            border-radius: var(--radius-btn);
+            font-family: inherit;
+            font-size: var(--font-size-btn);
+            font-weight: 400;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+            padding: 0 16px;
+        }
+
+        .btn:hover {
+            opacity: 0.85;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--btn-background);
+            color: var(--text-btn);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text);
+            padding: 0 8px;
+        }
+
+        .status {
+            font-size: var(--font-size-small);
+            color: var(--text-prediction);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-prediction);
+        }
+
+        .status-dot.generating {
+            background: var(--text);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        .resize-handle {
+            position: fixed;
+            bottom: 2px;
+            right: 2px;
+            width: 16px;
+            height: 16px;
+            cursor: nwse-resize;
+            opacity: 0.5;
+        }
+
+        .resize-handle:hover {
+            opacity: 0.8;
+        }
+
+        .resize-handle svg {
+            width: 100%;
+            height: 100%;
+            stroke: var(--text);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="context-bar" id="contextBar">
+        <span>📁</span>
+        <span id="contextText">Select a Section for context</span>
+    </div>
+
+    <div class="editor-container">
+        <div class="editor" id="editor" contenteditable="true"
+            data-placeholder="Start typing... AI will suggest continuations as you pause." spellcheck="false"></div>
+    </div>
+
+    <div class="bottom-bar">
+        <div class="status" id="status">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Ready</span>
+        </div>
+        <div class="hint"><kbd>Tab</kbd> to accept</div>
+        <div class="button-group">
+            <button class="btn btn-ghost" id="clearBtn">Clear</button>
+            <button class="btn btn-primary" id="exportBtn" disabled>Export to canvas</button>
+        </div>
+    </div>
+
+    <div class="resize-handle" id="resizeHandle">
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 2L2 14" stroke-width="1.5" stroke-linecap="round" />
+            <path d="M14 8L8 14" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+    </div>
+
+    <script>
+        // State
+        var context = '';
+        var currentPrediction = '';
+        var isGenerating = false;
+        var debounceTimer = null;
+        var inlinePredictionEl = null;
+        var justAccepted = false; // Flag to prevent immediate regeneration after partial accept
+        var DEBOUNCE_MS = 500;
+
+        var API_URL = 'https://purplevalley.co/api/predict';
+
+        // DOM
+        var contextBar = document.getElementById('contextBar');
+        var contextText = document.getElementById('contextText');
+        var editor = document.getElementById('editor');
+        var statusDot = document.getElementById('statusDot');
+        var statusTextEl = document.getElementById('statusText');
+        var clearBtn = document.getElementById('clearBtn');
+        var exportBtn = document.getElementById('exportBtn');
+        var resizeHandle = document.getElementById('resizeHandle');
+
+        // Resize
+        var isResizing = false;
+        resizeHandle.addEventListener('mousedown', function (e) { isResizing = true; e.preventDefault(); });
+        document.addEventListener('mousemove', function (e) {
+            if (!isResizing) return;
+            parent.postMessage({ pluginMessage: { type: 'resize', width: Math.max(300, e.clientX + 10), height: Math.max(300, e.clientY + 10) } }, '*');
+        });
+        document.addEventListener('mouseup', function () { isResizing = false; });
+
+        // Messages from plugin
+        window.onmessage = function (event) {
+            var msg = event.data.pluginMessage;
+            if (!msg) return;
+
+            if (msg.type === 'context-result' || msg.type === 'selection-changed') {
+                if (msg.success && msg.context) {
+                    context = msg.context;
+                    contextBar.classList.add('has-context');
+                    contextText.textContent = msg.name + ' (' + msg.items.length + ' items)';
+                } else {
+                    context = '';
+                    contextBar.classList.remove('has-context');
+                    contextText.textContent = msg.error || 'Select a Section for context';
+                }
+            }
+        };
+
+        // Get text without prediction element
+        function getEditorText() {
+            var text = '';
+            function walk(node) {
+                if (node === inlinePredictionEl) return;
+                if (node.nodeType === Node.TEXT_NODE) {
+                    text += node.textContent;
+                } else if (node.nodeName === 'BR') {
+                    text += '\n';
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                    for (var i = 0; i < node.childNodes.length; i++) {
+                        walk(node.childNodes[i]);
+                    }
+                }
+            }
+            for (var i = 0; i < editor.childNodes.length; i++) {
+                walk(editor.childNodes[i]);
+            }
+            return text;
+        }
+
+        // Create prediction element
+        function createInlinePrediction() {
+            if (!inlinePredictionEl) {
+                inlinePredictionEl = document.createElement('span');
+                inlinePredictionEl.className = 'inline-prediction';
+                inlinePredictionEl.contentEditable = 'false';
+
+                // Hover to highlight all words up to hovered word
+                inlinePredictionEl.addEventListener('mouseover', function (e) {
+                    var wordEl = e.target.closest('.word');
+                    if (!wordEl) return;
+                    highlightUpTo(wordEl);
+                });
+
+                inlinePredictionEl.addEventListener('mouseout', function (e) {
+                    clearHighlights();
+                });
+
+                // Click to accept up to that word (without trailing space)
+                inlinePredictionEl.addEventListener('click', function (e) {
+                    var wordEl = e.target.closest('.word');
+                    if (!wordEl) return;
+                    var endIndex = parseInt(wordEl.getAttribute('data-end'), 10);
+                    if (!isNaN(endIndex) && endIndex > 0) {
+                        acceptPartialPrediction(endIndex);
+                    }
+                });
+            }
+            return inlinePredictionEl;
+        }
+
+        // Highlight all words from start up to (and including) the given word
+        function highlightUpTo(targetWord) {
+            if (!inlinePredictionEl) return;
+            var words = inlinePredictionEl.querySelectorAll('.word');
+            var found = false;
+            for (var i = 0; i < words.length; i++) {
+                if (!found) {
+                    words[i].classList.add('highlighted');
+                } else {
+                    words[i].classList.remove('highlighted');
+                }
+                if (words[i] === targetWord) {
+                    found = true;
+                }
+            }
+        }
+
+        function clearHighlights() {
+            if (!inlinePredictionEl) return;
+            var words = inlinePredictionEl.querySelectorAll('.word');
+            for (var i = 0; i < words.length; i++) {
+                words[i].classList.remove('highlighted');
+            }
+        }
+
+        // Insert prediction at end
+        function insertInlinePrediction() {
+            var prediction = createInlinePrediction();
+            if (editor.contains(prediction)) return;
+            editor.appendChild(prediction);
+        }
+
+        // Remove prediction
+        function removeInlinePrediction() {
+            if (inlinePredictionEl && editor.contains(inlinePredictionEl)) {
+                inlinePredictionEl.remove();
+            }
+            currentPrediction = '';
+        }
+
+        // Update display - render words with end positions including trailing space
+        function updatePredictionDisplay(text) {
+            if (!inlinePredictionEl) return;
+
+            var parts = text.split(/(\s+)/);
+            var html = '';
+            var charIndex = 0;
+
+            for (var i = 0; i < parts.length; i++) {
+                var part = parts[i];
+                if (!part) continue;
+
+                var partEnd = charIndex + part.length;
+
+                if (/^\s+$/.test(part)) {
+                    // Whitespace
+                    html += escapeHtml(part);
+                } else {
+                    // Word - find end position including any following space
+                    var endWithSpace = partEnd;
+                    if (i + 1 < parts.length && /^\s+$/.test(parts[i + 1])) {
+                        endWithSpace = partEnd + parts[i + 1].length;
+                    }
+                    html += '<span class="word" data-end="' + partEnd + '" data-end-with-space="' + endWithSpace + '">' + escapeHtml(part) + '</span>';
+                }
+                charIndex = partEnd;
+            }
+
+            inlinePredictionEl.innerHTML = html;
+        }
+
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Accept partial prediction
+        function acceptPartialPrediction(endIndex) {
+            if (!currentPrediction || !inlinePredictionEl) return;
+
+            var textToAccept = currentPrediction.substring(0, endIndex);
+            var remaining = currentPrediction.substring(endIndex);
+
+            // Set flag to prevent immediate regeneration
+            justAccepted = true;
+
+            // Add accepted text to editor
+            var textNode = document.createTextNode(textToAccept);
+            inlinePredictionEl.parentNode.insertBefore(textNode, inlinePredictionEl);
+
+            // Keep remaining prediction visible (including leading space)
+            currentPrediction = remaining;
+
+            if (currentPrediction) {
+                updatePredictionDisplay(currentPrediction);
+                setStatus('Tab to accept', false);
+            } else {
+                removeInlinePrediction();
+                setStatus('Ready', false);
+            }
+
+            exportBtn.disabled = false;
+
+            // Move cursor after inserted text
+            var range = document.createRange();
+            range.setStartAfter(textNode);
+            range.collapse(true);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+
+            // Reset flag after delay
+            setTimeout(function () {
+                justAccepted = false;
+            }, 200);
+        }
+
+        function setStatus(text, generating) {
+            statusTextEl.textContent = text;
+            statusDot.classList.toggle('generating', generating);
+        }
+
+        // Input handler
+        editor.addEventListener('input', function (e) {
+            // If just accepted, reset flag but still process input normally
+            if (justAccepted) {
+                justAccepted = false;
+            }
+
+            removeInlinePrediction();
+
+            var text = getEditorText();
+            exportBtn.disabled = text.trim().length === 0;
+
+            if (debounceTimer) clearTimeout(debounceTimer);
+
+            if (text.trim().length < 10) return;
+
+            debounceTimer = setTimeout(function () {
+                generatePrediction();
+            }, DEBOUNCE_MS);
+        });
+
+        // Tab to accept all, Space after accept triggers generation
+        editor.addEventListener('keydown', function (e) {
+            if (e.key === 'Tab' && currentPrediction) {
+                e.preventDefault();
+                acceptPrediction();
+            }
+            if (e.key === 'Escape') {
+                removeInlinePrediction();
+                setStatus('Ready', false);
+            }
+            // Prevent double space after accepting prediction
+            if (e.key === ' ' && justAccepted) {
+                e.preventDefault();
+                justAccepted = false;
+                // Trigger generation immediately
+                if (debounceTimer) clearTimeout(debounceTimer);
+                var text = getEditorText();
+                if (text.trim().length >= 10) {
+                    generatePrediction();
+                }
+            }
+        });
+
+        // Generate
+        function generatePrediction() {
+            if (isGenerating) return;
+
+            var text = getEditorText();
+            if (!text.trim()) return;
+
+            isGenerating = true;
+            currentPrediction = '';
+            setStatus('Generating...', true);
+
+            var textToSend = text;
+            if (context) {
+                textToSend = '[Context]\n' + context + '\n\n[Continue this text]\n' + text;
+            }
+
+            // Clear any existing prediction content before inserting
+            if (inlinePredictionEl) {
+                inlinePredictionEl.innerHTML = '';
+            }
+            insertInlinePrediction();
+
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: textToSend })
+            })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('API error');
+
+                    if (!response.body || !response.body.getReader) {
+                        return response.text().then(function (text) {
+                            parseSSE(text);
+                            finishGeneration();
+                        });
+                    }
+
+                    return response.body.getReader();
+                })
+                .then(function (reader) {
+                    if (!reader || !reader.read) return;
+
+                    var decoder = new TextDecoder();
+
+                    function read() {
+                        return reader.read().then(function (data) {
+                            if (data.done) {
+                                finishGeneration();
+                                return;
+                            }
+
+                            var chunk = decoder.decode(data.value, { stream: true });
+                            parseSSE(chunk);
+                            return read();
+                        });
+                    }
+                    return read();
+                })
+                .catch(function (err) {
+                    isGenerating = false;
+                    removeInlinePrediction();
+                    setStatus('Error', false);
+                });
+        }
+
+        function parseSSE(text) {
+            var lines = text.split('\n');
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i];
+                if (line.indexOf('data: ') === 0) {
+                    var jsonStr = line.slice(6);
+                    if (jsonStr === '[DONE]') continue;
+                    try {
+                        var parsed = JSON.parse(jsonStr);
+                        var content = parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content;
+                        if (content) {
+                            currentPrediction += content;
+                            updatePredictionDisplay(currentPrediction);
+                        }
+                    } catch (e) { }
+                }
+            }
+        }
+
+        function finishGeneration() {
+            isGenerating = false;
+            setStatus(currentPrediction ? 'Tab to accept' : 'Ready', false);
+        }
+
+        // Accept full prediction
+        function acceptPrediction() {
+            if (!currentPrediction || !inlinePredictionEl) return;
+
+            justAccepted = true;
+
+            // No trailing space - user adds it manually
+            var textNode = document.createTextNode(currentPrediction);
+            inlinePredictionEl.parentNode.insertBefore(textNode, inlinePredictionEl);
+            removeInlinePrediction();
+
+            setStatus('Ready', false);
+            exportBtn.disabled = false;
+
+            var range = document.createRange();
+            range.setStartAfter(textNode);
+            range.collapse(true);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            editor.focus();
+
+            setTimeout(function () { justAccepted = false; }, 100);
+        }
+
+        // Clear
+        clearBtn.addEventListener('click', function () {
+            editor.innerHTML = '';
+            removeInlinePrediction();
+            exportBtn.disabled = true;
+            setStatus('Ready', false);
+            editor.focus();
+        });
+
+        // Export
+        exportBtn.addEventListener('click', function () {
+            var text = getEditorText();
+            if (!text.trim()) return;
+            parent.postMessage({ pluginMessage: { type: 'export-to-canvas', text: text } }, '*');
+        });
+
+        // Init
+        parent.postMessage({ pluginMessage: { type: 'get-context' } }, '*');
+        editor.focus();
+    </script>
+</body>
+
+</html>
