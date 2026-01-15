@@ -12,11 +12,5 @@
             "https://purplevalley.co",
             "https://*.vercel.app"
         ]
-    },
-    "menu": [
-        {
-            "name": "Open Editor",
-            "command": "open-editor"
-        }
-    ]
+    }
 }

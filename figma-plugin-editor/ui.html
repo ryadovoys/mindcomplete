@@ -5,21 +5,22 @@
     <meta charset="UTF-8">
     <style>
         :root {
-            --background: #301935;
-            --text: #e5e6fa;
-            --text-prediction: rgba(229, 230, 250, 0.5);
-            --btn-background: #e5e6fa;
-            --text-btn: #301935;
+            --background: #141319;
+            --text: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --text-prediction: #c3fb50;
+            --accent: #c3fb50;
+            --border: rgba(255, 255, 255, 0.1);
 
             --radius-btn: 52px;
-            --radius-container: 16px;
+            --radius-container: 12px;
 
             --spacing-gap: 12px;
             --spacing-padding: 24px;
 
             --font-size-text: 18px;
             --font-size-btn: 14px;
-            --font-size-small: 12px;
+            --font-size-small: 14px;
         }
 
         * {
@@ -45,17 +46,18 @@
 
         .context-bar {
             padding: 12px var(--spacing-padding);
-            border-bottom: 1px solid rgba(229, 230, 250, 0.1);
+            border-bottom: 1px solid var(--border);
             font-size: var(--font-size-small);
-            color: var(--text-prediction);
+            color: var(--text);
             display: flex;
             align-items: center;
             gap: 8px;
             flex-shrink: 0;
+            height: 48px;
         }
 
-        .context-bar.has-context {
-            color: var(--text);
+        .context-bar:not(.has-context) {
+            color: var(--text-muted);
         }
 
         .editor-container {
@@ -77,7 +79,7 @@
 
         .editor:empty::before {
             content: attr(data-placeholder);
-            color: var(--text-prediction);
+            color: var(--text-muted);
             pointer-events: none;
         }
 
@@ -96,8 +98,8 @@
         }
 
         .bottom-bar {
-            padding: 12px var(--spacing-padding);
-            border-top: 1px solid rgba(229, 230, 250, 0.1);
+            padding: 16px var(--spacing-padding) var(--spacing-padding);
+            border-top: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -107,11 +109,11 @@
 
         .hint {
             font-size: var(--font-size-small);
-            color: var(--text-prediction);
+            color: var(--text-muted);
         }
 
         .hint kbd {
-            background: rgba(229, 230, 250, 0.1);
+            background: rgba(255, 255, 255, 0.1);
             padding: 2px 6px;
             border-radius: 4px;
             font-family: inherit;
@@ -126,7 +128,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 32px;
+            height: 36px;
             border: none;
             border-radius: var(--radius-btn);
             font-family: inherit;
@@ -147,19 +149,20 @@
         }
 
         .btn-primary {
-            background: var(--btn-background);
-            color: var(--text-btn);
+            background: var(--accent);
+            color: #000000;
         }
 
         .btn-ghost {
             background: transparent;
             color: var(--text);
-            padding: 0 8px;
+            border: 1px solid var(--border);
+            padding: 0 12px;
         }
 
         .status {
             font-size: var(--font-size-small);
-            color: var(--text-prediction);
+            color: var(--text);
             display: flex;
             align-items: center;
             gap: 6px;
@@ -218,8 +221,8 @@
     </div>
 
     <div class="editor-container">
-        <div class="editor" id="editor" contenteditable="true"
-            data-placeholder="Start typing... AI will suggest continuations as you pause." spellcheck="false"></div>
+        <div class="editor" id="editor" contenteditable="true" data-placeholder="What's on your mind?"
+            spellcheck="false"></div>
     </div>
 
     <div class="bottom-bar">
@@ -227,10 +230,9 @@
             <div class="status-dot" id="statusDot"></div>
             <span id="statusText">Ready</span>
         </div>
-        <div class="hint"><kbd>Tab</kbd> to accept</div>
         <div class="button-group">
             <button class="btn btn-ghost" id="clearBtn">Clear</button>
-            <button class="btn btn-primary" id="exportBtn" disabled>Export to canvas</button>
+            <button class="btn btn-primary" id="exportBtn">Export to canvas</button>
         </div>
     </div>
 
@@ -627,12 +629,12 @@
         clearBtn.addEventListener('click', function () {
             editor.innerHTML = '';
             removeInlinePrediction();
-            exportBtn.disabled = true;
             setStatus('Ready', false);
             editor.focus();
         });
 
-        // Export
+        // Export to canvas
+        var exportBtn = document.getElementById('exportBtn');
         exportBtn.addEventListener('click', function () {
             var text = getEditorText();
             if (!text.trim()) return;

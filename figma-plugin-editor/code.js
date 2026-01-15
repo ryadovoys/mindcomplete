@@ -97,43 +97,61 @@ figma.ui.onmessage = function (msg) {
         });
     }
 
-    // Create new text layer with content
+    // Insert text into selected TextNode or create new
     if (msg.type === 'export-to-canvas') {
         var text = msg.text;
-
-        // Find where to place the text
         var selection = figma.currentPage.selection;
-        var parent = selection.length > 0 ? selection[0].parent : figma.currentPage;
 
-        // Create text node
-        var textNode = figma.createText();
+        // If a TextNode is selected, append text to it
+        if (selection.length > 0 && selection[0].type === 'TEXT') {
+            var textNode = selection[0];
 
-        // Load default font
-        figma.loadFontAsync({ family: "Inter", style: "Regular" }).then(function () {
-            textNode.characters = text;
-            textNode.fontSize = 16;
-            textNode.fills = [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.98 } }];
-
-            // Position it
-            if (selection.length > 0) {
-                var sel = selection[0];
-                textNode.x = sel.x;
-                textNode.y = sel.y + sel.height + 20;
+            // Load the font used in the text node
+            var fontName = textNode.fontName;
+            if (fontName === figma.mixed) {
+                fontName = { family: "Inter", style: "Regular" };
             }
 
-            // Add to parent
-            if (parent.type === 'SECTION' || parent.type === 'FRAME' || parent.type === 'GROUP') {
-                parent.appendChild(textNode);
-            }
+            figma.loadFontAsync(fontName).then(function () {
+                // Append text to existing content
+                var existingText = textNode.characters;
+                var newText = existingText ? existingText + ' ' + text : text;
+                textNode.characters = newText;
 
-            figma.currentPage.selection = [textNode];
-            figma.viewport.scrollAndZoomIntoView([textNode]);
+                figma.ui.postMessage({ type: 'export-result', success: true });
+                figma.notify('✨ Text inserted!', { timeout: 2000 });
+            }).catch(function () {
+                figma.ui.postMessage({ type: 'export-result', success: false, error: 'Failed to load font' });
+            });
+        } else {
+            // No text selected - create new text node
+            var parent = selection.length > 0 ? selection[0].parent : figma.currentPage;
+            var textNode = figma.createText();
 
-            figma.ui.postMessage({ type: 'export-result', success: true });
-            figma.notify('✨ Text added to canvas!', { timeout: 2000 });
-        }).catch(function () {
-            figma.ui.postMessage({ type: 'export-result', success: false, error: 'Failed to load font' });
-        });
+            figma.loadFontAsync({ family: "Inter", style: "Regular" }).then(function () {
+                textNode.characters = text;
+                textNode.fontSize = 16;
+                textNode.fills = [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.98 } }];
+
+                if (selection.length > 0) {
+                    var sel = selection[0];
+                    textNode.x = sel.x;
+                    textNode.y = sel.y + sel.height + 20;
+                }
+
+                if (parent.type === 'SECTION' || parent.type === 'FRAME' || parent.type === 'GROUP') {
+                    parent.appendChild(textNode);
+                }
+
+                figma.currentPage.selection = [textNode];
+                figma.viewport.scrollAndZoomIntoView([textNode]);
+
+                figma.ui.postMessage({ type: 'export-result', success: true });
+                figma.notify('✨ New text created!', { timeout: 2000 });
+            }).catch(function () {
+                figma.ui.postMessage({ type: 'export-result', success: false, error: 'Failed to load font' });
+            });
+        }
     }
 
     // Resize
