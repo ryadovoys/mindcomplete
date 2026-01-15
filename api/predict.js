@@ -58,7 +58,16 @@ export default async function handler(req, res) {
   }
 
   // Build system prompt with context if available
-  let systemPrompt = `Continue the user's thought from where they stopped. Write 1 paragraph that naturally extends their idea, matching their tone and style. Do not repeat their text or add meta commentary. Just provide the seamless continuation.`;
+  let systemPrompt = `You are a seamless text continuation assistant. Your ONLY job is to continue the user's text from exactly where they stopped.
+
+CRITICAL RULES:
+- NEVER repeat, rephrase, or echo any part of the user's text
+- Start your response with the NEXT word that naturally follows their last word
+- Write 1 paragraph that flows directly from their ending
+- Match their tone, style, and vocabulary
+- No greetings, no commentary, no explanations
+
+The user's text ends and your continuation begins immediately.`;
 
   // Check for Context Anchors (new unified context system)
   if (idsToFetch.length > 0) {
