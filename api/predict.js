@@ -4,7 +4,7 @@ import { supabase } from './_lib/supabaseClient.js';
 const CONFIG = {
   MAX_TOKENS: 400,
   TEMPERATURE: 0.7,
-  MODEL: 'xiaomi/mimo-v2-flash:free',
+  MODEL: 'gemini-2.0-flash',
 };
 
 // Helper to get Context Anchors from database
@@ -37,7 +37,6 @@ export default async function handler(req, res) {
   }
 
   const { text, sessionId, anchorIds, anchorId, rules, writingStyle } = req.body;
-  const host = req.headers.host || 'purplevalley.co';
 
   // Support both array and legacy single ID
   const idsToFetch = anchorIds || (anchorId ? [anchorId] : []);
@@ -49,9 +48,13 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Text is required' });
   }
 
-  if (!process.env.OPENROUTER_API_KEY) {
-    console.error('[PREDICT] Error: OPENROUTER_API_KEY missing');
-    return res.status(500).json({ error: 'OPENROUTER_API_KEY not configured' });
+  // Check for API key - prefer Google AI, fallback to OpenRouter
+  const useGoogleAI = !!process.env.GOOGLE_AI_API_KEY;
+  const apiKey = process.env.GOOGLE_AI_API_KEY || process.env.OPENROUTER_API_KEY;
+
+  if (!apiKey) {
+    console.error('[PREDICT] Error: No API key configured');
+    return res.status(500).json({ error: 'API key not configured' });
   }
 
   // Build system prompt with context if available
@@ -130,41 +133,62 @@ ${writingStyle}
   }
 
   try {
-    console.log(`[PREDICT] Calling OpenRouter with model: ${CONFIG.MODEL}`);
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': `https://${host}`,
-        'X-Title': 'Purple Valley'
-      },
-      body: JSON.stringify({
-        model: CONFIG.MODEL,
-        stream: true,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: text
+    let response;
+
+    if (useGoogleAI) {
+      // Use Google AI API directly
+      console.log(`[PREDICT] Calling Google AI with model: ${CONFIG.MODEL}`);
+      response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: systemPrompt + '\n\n' + text }]
+            }
+          ],
+          generationConfig: {
+            maxOutputTokens: CONFIG.MAX_TOKENS,
+            temperature: CONFIG.TEMPERATURE
           }
-        ],
-        max_tokens: CONFIG.MAX_TOKENS,
-        temperature: CONFIG.TEMPERATURE
-      })
-    });
+        })
+      });
+    } else {
+      // Fallback to OpenRouter
+      console.log(`[PREDICT] Calling OpenRouter with model: xiaomi/mimo-v2-flash:free`);
+      const host = req.headers.host || 'purplevalley.co';
+      response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': `https://${host}`,
+          'X-Title': 'Purple Valley'
+        },
+        body: JSON.stringify({
+          model: 'xiaomi/mimo-v2-flash:free',
+          stream: true,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: text }
+          ],
+          max_tokens: CONFIG.MAX_TOKENS,
+          temperature: CONFIG.TEMPERATURE
+        })
+      });
+    }
 
     if (!response.ok) {
       const errorStatus = response.status;
       const errorText = await response.text();
-      console.error(`[PREDICT] OpenRouter API error (${errorStatus}):`, errorText);
+      console.error(`[PREDICT] API error (${errorStatus}):`, errorText);
       return res.status(errorStatus).json({ error: `API request failed: ${errorText}` });
     }
 
-    console.log('[PREDICT] OpenRouter stream started');
+    console.log(`[PREDICT] Stream started (${useGoogleAI ? 'Google AI' : 'OpenRouter'})`);
 
     // Set SSE headers
     res.setHeader('Content-Type', 'text/event-stream');
@@ -181,12 +205,37 @@ ${writingStyle}
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        res.write(chunk);
+
+        if (useGoogleAI) {
+          // Convert Google AI SSE format to OpenRouter-compatible format
+          const lines = chunk.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                if (text) {
+                  // Convert to OpenRouter format for client compatibility
+                  const openRouterFormat = {
+                    choices: [{ delta: { content: text } }]
+                  };
+                  res.write(`data: ${JSON.stringify(openRouterFormat)}\n\n`);
+                }
+              } catch (e) {
+                // Skip unparseable lines
+              }
+            }
+          }
+        } else {
+          // Pass through OpenRouter format as-is
+          res.write(chunk);
+        }
       }
     } catch (streamError) {
       console.log('[PREDICT] Stream ended or interrupted');
     }
 
+    res.write('data: [DONE]\n\n');
     res.end();
   } catch (error) {
     console.error('[PREDICT] Server error:', error);

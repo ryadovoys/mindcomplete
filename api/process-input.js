@@ -2,12 +2,10 @@
 // Handles Image Analysis (Gemini) and URL Scraping
 // Consolidates previous api/analyze-image.js and api/scrape-url.js
 
-const MODELS = [
+const OPENROUTER_MODELS = [
     'google/gemini-2.0-flash-exp:free',    // Primary free model
     'allenai/molmo-2-8b:free',             // Fallback 1 (Open Source)
     'nvidia/nemotron-nano-12b-v2-vl:free', // Fallback 2 (Open Source)
-    'google/gemini-flash-1.5',             // Fallback 3 (Standard Flash)
-    'openai/gpt-4o-mini',                  // Fallback 4
 ];
 
 export default async function handler(req, res) {
@@ -49,26 +47,44 @@ async function handleImageAnalysis(req, res) {
         return res.status(400).json({ error: 'Either imageData (base64) or imageUrl is required' });
     }
 
-    if (!process.env.OPENROUTER_API_KEY) {
-        return res.status(500).json({ error: 'OPENROUTER_API_KEY not configured' });
+    // Check for API key - prefer Google AI, fallback to OpenRouter
+    const useGoogleAI = !!process.env.GOOGLE_AI_API_KEY;
+    const apiKey = process.env.GOOGLE_AI_API_KEY || process.env.OPENROUTER_API_KEY;
+
+    if (!apiKey) {
+        return res.status(500).json({ error: 'No API key configured' });
     }
 
-    console.log(`[PROCESS] Analyzing image...`);
+    console.log(`[PROCESS] Analyzing image with ${useGoogleAI ? 'Google AI' : 'OpenRouter'}...`);
+
+    if (useGoogleAI) {
+        // Use Google AI directly
+        try {
+            const result = await analyzeWithGoogleAI(apiKey, { imageData, mimeType, imageUrl, prompt });
+            console.log(`[PROCESS] Success with Google AI: ${result.description.length} chars`);
+            return res.status(200).json({
+                ...result,
+                modelUsed: 'gemini-2.0-flash'
+            });
+        } catch (error) {
+            console.error('[PROCESS] Google AI failed:', error.message);
+            return res.status(500).json({ error: `Image analysis failed: ${error.message}` });
+        }
+    }
+
+    // Fallback to OpenRouter with model chain
     const host = req.headers.host || 'purplevalley.co';
     let lastError = null;
 
-    // Try models in sequence
-    for (const model of MODELS) {
+    for (const model of OPENROUTER_MODELS) {
         try {
             console.log(`[PROCESS] Trying model: ${model}`);
-            const result = await analyzeWithModel(model, { imageData, mimeType, imageUrl, prompt }, host);
-
+            const result = await analyzeWithOpenRouter(model, { imageData, mimeType, imageUrl, prompt }, host, apiKey);
             console.log(`[PROCESS] Success with ${model}: ${result.description.length} chars`);
             return res.status(200).json({
                 ...result,
                 modelUsed: model
             });
-
         } catch (error) {
             console.warn(`[PROCESS] Failed with ${model}:`, error.message);
             lastError = error;
@@ -82,7 +98,60 @@ async function handleImageAnalysis(req, res) {
     });
 }
 
-async function analyzeWithModel(modelId, content, host) {
+async function analyzeWithGoogleAI(apiKey, content) {
+    const detectedMimeType = content.mimeType || detectMimeType(content.imageData);
+
+    const parts = [
+        { text: content.prompt || 'Analyze this image and describe it briefly.' }
+    ];
+
+    if (content.imageData) {
+        parts.push({
+            inlineData: {
+                mimeType: detectedMimeType,
+                data: content.imageData
+            }
+        });
+    } else if (content.imageUrl) {
+        // For URL, we need to fetch and convert to base64
+        const imgResponse = await fetch(content.imageUrl);
+        const buffer = await imgResponse.arrayBuffer();
+        const base64 = Buffer.from(buffer).toString('base64');
+        parts.push({
+            inlineData: {
+                mimeType: imgResponse.headers.get('content-type') || 'image/jpeg',
+                data: base64
+            }
+        });
+    }
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts }],
+            generationConfig: {
+                maxOutputTokens: 500,
+                temperature: 0.5
+            }
+        })
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API error (${response.status}): ${errorText}`);
+    }
+
+    const data = await response.json();
+    const description = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Unable to analyze image';
+
+    return {
+        description: description.trim(),
+        estimatedTokens: Math.ceil(description.length / 4)
+    };
+}
+
+async function analyzeWithOpenRouter(modelId, content, host, apiKey) {
     // Build the image content for the API
     let imageContent;
     if (content.imageData) {
@@ -107,7 +176,7 @@ async function analyzeWithModel(modelId, content, host) {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
             'HTTP-Referer': `https://${host}`,
             'X-Title': 'Purple Valley',

@@ -297,22 +297,307 @@
             height: 100%;
             stroke: var(--text);
         }
+
+        /* Settings icon */
+        .settings-icon {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.15s ease;
+        }
+
+        .settings-icon:hover {
+            opacity: 1;
+        }
+
+        .settings-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: var(--text);
+        }
+
+        /* Footer */
+        .footer {
+            padding: 16px var(--spacing-padding);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: var(--font-size-small);
+            color: rgba(255, 255, 255, 0.4);
+            background: #19181E;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .footer a {
+            color: rgba(255, 255, 255, 0.4);
+            text-decoration: underline;
+            transition: color 0.15s ease;
+        }
+
+        .footer a:hover {
+            color: var(--text);
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--background);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+        }
+
+        .settings-panel.visible {
+            display: flex;
+        }
+
+        .settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--spacing-padding);
+            height: 60px;
+            background: #19181E;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .settings-header-icon {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.15s ease;
+        }
+
+        .settings-header-icon:hover {
+            opacity: 1;
+        }
+
+        .settings-header-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: var(--text);
+        }
+
+        .settings-title {
+            font-size: 18px;
+            color: var(--text);
+            text-align: left;
+        }
+
+        .settings-content {
+            flex: 1;
+            padding: var(--spacing-padding);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .settings-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .settings-section-title {
+            font-size: 16px;
+            color: var(--text);
+        }
+
+        .settings-section-desc {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.4);
+            line-height: 1.4;
+        }
+
+        .settings-dropdown {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            max-width: 240px;
+        }
+
+        .settings-dropdown:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-dropdown-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text);
+        }
+
+        .settings-dropdown-text {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .settings-dropdown-arrow svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text);
+            opacity: 0.5;
+        }
+
+        .settings-checkbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .settings-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .settings-checkbox {
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .settings-checkbox.checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .settings-checkbox svg {
+            width: 14px;
+            height: 14px;
+            stroke: #000;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .settings-checkbox.checked svg {
+            opacity: 1;
+        }
+
+        .settings-checkbox-label {
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        /* Style dropdown menu */
+        .style-menu {
+            display: none;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .style-menu.visible {
+            display: flex;
+        }
+
+        .style-menu-item {
+            padding: 12px 16px;
+            font-size: 14px;
+            color: var(--text);
+            cursor: pointer;
+            transition: background 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .style-menu-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .style-menu-item.selected {
+            color: var(--accent);
+        }
+
+        .style-menu-item svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            opacity: 0;
+        }
+
+        .style-menu-item.selected svg {
+            opacity: 1;
+        }
+
+        /* Writing style input modal */
+        .style-input-container {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .style-input-container.visible {
+            display: flex;
+        }
+
+        .style-input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .style-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .style-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
     </style>
 </head>
 
 <body>
+    <!-- Main View -->
     <div class="context-bar" id="contextBar">
         <div class="context-info">
-            <span>📁</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
             <span id="contextText">No selection</span>
         </div>
-        <div class="toggle-container" id="imageToggle">
-            <div class="checkbox checked" id="imageCheckbox">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-            </div>
-            <span>Images</span>
+        <div class="settings-icon" id="settingsBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"
+                stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                </path>
+            </svg>
         </div>
     </div>
 
@@ -332,6 +617,128 @@
         </div>
     </div>
 
+    <div class="footer">
+        <span>Made by <a href="https://ryadovoy.com" target="_blank">Sergey Ryadovoy</a></span>
+        <a href="https://buymeacoffee.com/ryadovoys" target="_blank">Buy me a coffee</a>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <span class="settings-title" style="flex: 1;">Settings</span>
+            <div class="settings-header-icon" id="settingsClose">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </div>
+        </div>
+        <div class="settings-content">
+            <!-- Writing Style Section -->
+            <div class="settings-section">
+                <div class="settings-section-title">Writing style</div>
+                <div class="settings-section-desc">Pick the writing style you like to make it write closer to your goal.
+                </div>
+                <div class="settings-dropdown" id="styleDropdown">
+                    <div class="settings-dropdown-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                    </div>
+                    <span class="settings-dropdown-text" id="styleDropdownText">No style selected</span>
+                    <div class="settings-dropdown-arrow">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                </div>
+                <div class="style-menu" id="styleMenu">
+                    <div class="style-menu-item" data-style="none">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        No style
+                    </div>
+                    <div class="style-menu-item" data-style="storytelling">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Storytelling
+                    </div>
+                    <div class="style-menu-item" data-style="social">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Social media post
+                    </div>
+                    <div class="style-menu-item" data-style="professional">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Professional
+                    </div>
+                    <div class="style-menu-item" data-style="custom">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Custom...
+                    </div>
+                </div>
+                <div class="style-input-container" id="styleInputContainer">
+                    <textarea class="style-input" id="styleInput"
+                        placeholder="Describe your writing style..."></textarea>
+                    <button class="btn btn-primary" id="saveStyleBtn" style="align-self: flex-start;">Save
+                        style</button>
+                </div>
+            </div>
+
+            <!-- Context Recognition Section -->
+            <div class="settings-section">
+                <div class="settings-section-title">Context recognition</div>
+                <div class="settings-section-desc">Choose what types of content to analyze from your Figma selection.
+                </div>
+                <div class="settings-checkbox-list">
+                    <div class="settings-checkbox-item" id="imagesToggle">
+                        <div class="settings-checkbox checked" id="imagesCheckbox">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <span class="settings-checkbox-label">Images</span>
+                    </div>
+                    <div class="settings-checkbox-item" id="textToggle">
+                        <div class="settings-checkbox checked" id="textCheckbox">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <span class="settings-checkbox-label">Text</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Section -->
+            <div class="settings-section">
+                <div class="settings-section-title">About</div>
+                <div class="settings-section-desc">MindComplete uses AI to generate text continuations based on your
+                    writing context. It analyzes selected content in Figma to provide relevant suggestions.</div>
+            </div>
+        </div>
+    </div>
+
     <div class="resize-handle" id="resizeHandle">
         <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M14 2L2 14" stroke-width="1.5" stroke-linecap="round" />
@@ -347,6 +754,8 @@
         var isGenerating = false;
         var isAnalyzingImages = false;
         var analyzeImagesEnabled = true;
+        var analyzeTextEnabled = true;
+        var writingStyle = '';
         var debounceTimer = null;
         var inlinePredictionEl = null;
         var justAccepted = false;
@@ -355,10 +764,20 @@
         var API_URL = 'https://purplevalley.co/api/predict';
         var IMAGE_API_URL = 'https://purplevalley.co/api/process-input';
 
+        // Load saved settings
+        try {
+            var savedSettings = localStorage.getItem('mindcomplete_settings');
+            if (savedSettings) {
+                var settings = JSON.parse(savedSettings);
+                analyzeImagesEnabled = settings.images !== false;
+                analyzeTextEnabled = settings.text !== false;
+                writingStyle = settings.writingStyle || '';
+            }
+        } catch (e) { }
+
         // DOM
         var contextBar = document.getElementById('contextBar');
         var contextText = document.getElementById('contextText');
-        var imageToggle = document.getElementById('imageToggle');
         var editor = document.getElementById('editor');
         var statusDot = document.getElementById('statusDot');
         var statusTextEl = document.getElementById('statusText');
@@ -366,14 +785,137 @@
         var exportBtn = document.getElementById('exportBtn');
         var resizeHandle = document.getElementById('resizeHandle');
 
-        // Image checkbox
-        var imageCheckbox = document.getElementById('imageCheckbox');
-        imageToggle.addEventListener('click', function () {
+        // Settings DOM
+        var settingsBtn = document.getElementById('settingsBtn');
+        var settingsPanel = document.getElementById('settingsPanel');
+        var settingsClose = document.getElementById('settingsClose');
+        var imagesToggle = document.getElementById('imagesToggle');
+        var imagesCheckbox = document.getElementById('imagesCheckbox');
+        var textToggle = document.getElementById('textToggle');
+        var textCheckbox = document.getElementById('textCheckbox');
+        var styleDropdown = document.getElementById('styleDropdown');
+        var styleDropdownText = document.getElementById('styleDropdownText');
+        var styleInputContainer = document.getElementById('styleInputContainer');
+        var styleInput = document.getElementById('styleInput');
+        var saveStyleBtn = document.getElementById('saveStyleBtn');
+
+        // Initialize checkboxes
+        imagesCheckbox.classList.toggle('checked', analyzeImagesEnabled);
+        textCheckbox.classList.toggle('checked', analyzeTextEnabled);
+        styleInput.value = writingStyle;
+        styleDropdownText.textContent = writingStyle ? 'Custom style' : 'No style selected';
+
+        // Save settings
+        function saveSettings() {
+            try {
+                localStorage.setItem('mindcomplete_settings', JSON.stringify({
+                    images: analyzeImagesEnabled,
+                    text: analyzeTextEnabled,
+                    writingStyle: writingStyle,
+                    styleType: currentStyleType
+                }));
+            } catch (e) { }
+        }
+
+        // Settings panel toggle
+        settingsBtn.addEventListener('click', function () {
+            settingsPanel.classList.add('visible');
+        });
+
+        settingsClose.addEventListener('click', function () {
+            settingsPanel.classList.remove('visible');
+        });
+
+        // Images checkbox
+        imagesToggle.addEventListener('click', function () {
             analyzeImagesEnabled = !analyzeImagesEnabled;
-            imageCheckbox.classList.toggle('checked', analyzeImagesEnabled);
+            imagesCheckbox.classList.toggle('checked', analyzeImagesEnabled);
             if (!analyzeImagesEnabled) {
                 imageDescriptions = [];
             }
+            saveSettings();
+        });
+
+        // Text checkbox
+        textToggle.addEventListener('click', function () {
+            analyzeTextEnabled = !analyzeTextEnabled;
+            textCheckbox.classList.toggle('checked', analyzeTextEnabled);
+            saveSettings();
+        });
+
+        // Style presets
+        var stylePresets = {
+            none: '',
+            storytelling: 'Write in a narrative storytelling style. Use vivid descriptions, engaging hooks, and create emotional connections. Build tension and resolution like a story arc.',
+            social: 'Write for social media: punchy, attention-grabbing, casual but professional. Use short sentences, emojis sparingly, and include calls-to-action. Keep it concise and shareable.',
+            professional: 'Write in a professional, business-appropriate tone. Be clear, concise, and authoritative. Avoid slang and casual language. Focus on facts and value.',
+            custom: ''
+        };
+
+        var currentStyleType = 'none';
+        var styleMenu = document.getElementById('styleMenu');
+        var styleMenuItems = styleMenu.querySelectorAll('.style-menu-item');
+
+        // Update dropdown text based on style type
+        function updateStyleDropdownText() {
+            var labels = { none: 'No style', storytelling: 'Storytelling', social: 'Social media post', professional: 'Professional', custom: 'Custom style' };
+            styleDropdownText.textContent = labels[currentStyleType] || 'No style';
+        }
+
+        // Update selected state in menu
+        function updateMenuSelection() {
+            styleMenuItems.forEach(function (item) {
+                item.classList.toggle('selected', item.dataset.style === currentStyleType);
+            });
+        }
+
+        // Load saved style type
+        try {
+            var savedSettings = localStorage.getItem('mindcomplete_settings');
+            if (savedSettings) {
+                var s = JSON.parse(savedSettings);
+                if (s.styleType) currentStyleType = s.styleType;
+            }
+        } catch (e) { }
+        updateStyleDropdownText();
+        updateMenuSelection();
+
+        // Toggle menu visibility
+        styleDropdown.addEventListener('click', function () {
+            styleMenu.classList.toggle('visible');
+            styleInputContainer.classList.remove('visible');
+        });
+
+        // Handle menu item click
+        styleMenuItems.forEach(function (item) {
+            item.addEventListener('click', function () {
+                currentStyleType = item.dataset.style;
+
+                if (currentStyleType === 'custom') {
+                    // Show custom input
+                    styleMenu.classList.remove('visible');
+                    styleInputContainer.classList.add('visible');
+                } else {
+                    // Apply preset
+                    writingStyle = stylePresets[currentStyleType];
+                    styleMenu.classList.remove('visible');
+                    styleInputContainer.classList.remove('visible');
+                    saveSettings();
+                }
+
+                updateStyleDropdownText();
+                updateMenuSelection();
+            });
+        });
+
+        // Save custom style button
+        saveStyleBtn.addEventListener('click', function () {
+            writingStyle = styleInput.value.trim();
+            currentStyleType = 'custom';
+            updateStyleDropdownText();
+            updateMenuSelection();
+            styleInputContainer.classList.remove('visible');
+            saveSettings();
         });
 
         // Resize
@@ -429,20 +971,25 @@
             return results;
         }
 
-        // Build full context with image descriptions
+        // Build full context with image descriptions and writing style
         function getFullContext() {
             var parts = [];
 
-            // Add image descriptions first
+            // Add writing style first if set
+            if (writingStyle) {
+                parts.push('[Writing Style]\n' + writingStyle);
+            }
+
+            // Add image descriptions
             if (imageDescriptions.length > 0) {
                 for (var i = 0; i < imageDescriptions.length; i++) {
                     parts.push('[Image: ' + imageDescriptions[i].name + ']\n' + imageDescriptions[i].description);
                 }
             }
 
-            // Add text context
-            if (context) {
-                parts.push(context);
+            // Add text context only if enabled
+            if (context && analyzeTextEnabled) {
+                parts.push('[Context]\n' + context);
             }
 
             return parts.join('\n\n');
@@ -800,7 +1347,7 @@
             if (currentPrediction && inlinePredictionEl) {
                 var regenIcon = document.createElement('span');
                 regenIcon.className = 'inline-regenerate';
-                regenIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>';
+                regenIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>';
                 regenIcon.addEventListener('click', function (e) {
                     e.stopPropagation();
                     removeInlinePrediction();
