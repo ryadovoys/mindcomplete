@@ -8,9 +8,34 @@ figma.showUI(__html__, {
     themeColors: true
 });
 
-// Collect all text from a Section
-function collectSectionText(section) {
+// Convert Uint8Array to base64 string
+function uint8ArrayToBase64(bytes) {
+    var binary = '';
+    for (var i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    // Use figma's built-in btoa equivalent
+    return figma.base64Encode(bytes);
+}
+
+// Check if a node has image fills
+function hasImageFill(node) {
+    if (!('fills' in node)) return false;
+    var fills = node.fills;
+    if (!fills || fills === figma.mixed) return false;
+    for (var i = 0; i < fills.length; i++) {
+        if (fills[i].type === 'IMAGE' && fills[i].visible !== false) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Collect all text and images from a Section (async)
+async function collectSectionContent(section) {
     var texts = [];
+    var images = [];
+    var nodesToProcess = [];
 
     function traverse(node) {
         if (node.type === 'TEXT') {
@@ -21,6 +46,21 @@ function collectSectionText(section) {
                 });
             }
         }
+
+        // Check for nodes with image fills
+        if (hasImageFill(node)) {
+            console.log('[MindComplete] Found image fill in:', node.name, node.type);
+            nodesToProcess.push(node);
+        }
+
+        // Also check for RECTANGLE, ELLIPSE, FRAME that might have image fills
+        // or any node that can be exported as an image
+        if (node.type === 'RECTANGLE' || node.type === 'ELLIPSE' || node.type === 'POLYGON') {
+            if (!hasImageFill(node) && node.fills && node.fills !== figma.mixed && node.fills.length > 0) {
+                // Has some fill, might be useful as visual context
+            }
+        }
+
         if ('children' in node) {
             for (var i = 0; i < node.children.length; i++) {
                 traverse(node.children[i]);
@@ -29,23 +69,48 @@ function collectSectionText(section) {
     }
 
     traverse(section);
-    return texts;
+
+    console.log('[MindComplete] Found', texts.length, 'texts and', nodesToProcess.length, 'images');
+
+    // Export images as base64 (limit to 5 images to avoid slowness)
+    var maxImages = 5;
+    for (var i = 0; i < Math.min(nodesToProcess.length, maxImages); i++) {
+        try {
+            var node = nodesToProcess[i];
+            console.log('[MindComplete] Exporting image:', node.name);
+            var bytes = await node.exportAsync({
+                format: 'PNG',
+                constraint: { type: 'SCALE', value: 0.5 }
+            });
+            var base64 = figma.base64Encode(bytes);
+            console.log('[MindComplete] Exported', node.name, '- base64 length:', base64.length);
+            images.push({
+                name: node.name,
+                base64: base64,
+                mimeType: 'image/png'
+            });
+        } catch (e) {
+            console.log('[MindComplete] Failed to export image:', node.name, e);
+        }
+    }
+
+    return { texts: texts, images: images };
 }
 
-// Get context from selected Section
-function getContextFromSelection() {
+// Get context from selected Section (async)
+async function getContextFromSelection() {
     var selection = figma.currentPage.selection;
 
     if (selection.length === 0) {
-        return { success: false, error: 'No selection. Select a Section for context.' };
+        return { success: false, error: 'No selection' };
     }
 
     var node = selection[0];
 
-    // If it's a Section, collect all text as context
+    // If it's a Section, collect all content as context
     if (node.type === 'SECTION') {
-        var texts = collectSectionText(node);
-        var contextText = texts.map(function (t) {
+        var content = await collectSectionContent(node);
+        var contextText = content.texts.map(function (t) {
             return t.text;
         }).join('\n\n');
 
@@ -54,14 +119,15 @@ function getContextFromSelection() {
             type: 'section',
             name: node.name,
             context: contextText,
-            items: texts
+            items: content.texts,
+            images: content.images
         };
     }
 
-    // If it's a Frame or Group, also collect text
+    // If it's a Frame or Group, also collect content
     if (node.type === 'FRAME' || node.type === 'GROUP') {
-        var texts = collectSectionText(node);
-        var contextText = texts.map(function (t) {
+        var content = await collectSectionContent(node);
+        var contextText = content.texts.map(function (t) {
             return t.text;
         }).join('\n\n');
 
@@ -70,7 +136,8 @@ function getContextFromSelection() {
             type: 'frame',
             name: node.name,
             context: contextText,
-            items: texts
+            items: content.texts,
+            images: content.images
         };
     }
 
@@ -81,11 +148,11 @@ function getContextFromSelection() {
 }
 
 // Listen for messages from the UI
-figma.ui.onmessage = function (msg) {
+figma.ui.onmessage = async function (msg) {
 
     // Get context from selection
     if (msg.type === 'get-context') {
-        var result = getContextFromSelection();
+        var result = await getContextFromSelection();
         figma.ui.postMessage({
             type: 'context-result',
             success: result.success,
@@ -93,11 +160,12 @@ figma.ui.onmessage = function (msg) {
             contextType: result.type,
             name: result.name,
             context: result.context,
-            items: result.items
+            items: result.items,
+            images: result.images || []
         });
     }
 
-    // Insert text into selected TextNode or create new
+    // Insert text into selected TextNode or copy to clipboard
     if (msg.type === 'export-to-canvas') {
         var text = msg.text;
         var selection = figma.currentPage.selection;
@@ -118,39 +186,14 @@ figma.ui.onmessage = function (msg) {
                 var newText = existingText ? existingText + ' ' + text : text;
                 textNode.characters = newText;
 
-                figma.ui.postMessage({ type: 'export-result', success: true });
+                figma.ui.postMessage({ type: 'export-result', success: true, action: 'inserted' });
                 figma.notify('✨ Text inserted!', { timeout: 2000 });
             }).catch(function () {
                 figma.ui.postMessage({ type: 'export-result', success: false, error: 'Failed to load font' });
             });
         } else {
-            // No text selected - create new text node
-            var parent = selection.length > 0 ? selection[0].parent : figma.currentPage;
-            var textNode = figma.createText();
-
-            figma.loadFontAsync({ family: "Inter", style: "Regular" }).then(function () {
-                textNode.characters = text;
-                textNode.fontSize = 16;
-                textNode.fills = [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.98 } }];
-
-                if (selection.length > 0) {
-                    var sel = selection[0];
-                    textNode.x = sel.x;
-                    textNode.y = sel.y + sel.height + 20;
-                }
-
-                if (parent.type === 'SECTION' || parent.type === 'FRAME' || parent.type === 'GROUP') {
-                    parent.appendChild(textNode);
-                }
-
-                figma.currentPage.selection = [textNode];
-                figma.viewport.scrollAndZoomIntoView([textNode]);
-
-                figma.ui.postMessage({ type: 'export-result', success: true });
-                figma.notify('✨ New text created!', { timeout: 2000 });
-            }).catch(function () {
-                figma.ui.postMessage({ type: 'export-result', success: false, error: 'Failed to load font' });
-            });
+            // No text selected - tell UI to copy to clipboard
+            figma.ui.postMessage({ type: 'export-result', success: true, action: 'clipboard' });
         }
     }
 
@@ -166,8 +209,8 @@ figma.ui.onmessage = function (msg) {
 };
 
 // Listen for selection changes
-figma.on('selectionchange', function () {
-    var result = getContextFromSelection();
+figma.on('selectionchange', async function () {
+    var result = await getContextFromSelection();
     figma.ui.postMessage({
         type: 'selection-changed',
         success: result.success,
@@ -175,6 +218,7 @@ figma.on('selectionchange', function () {
         contextType: result.type,
         name: result.name,
         context: result.context,
-        items: result.items
+        items: result.items,
+        images: result.images || []
     });
 });

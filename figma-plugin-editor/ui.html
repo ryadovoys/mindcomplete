@@ -52,13 +52,58 @@
             background: #19181E;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 8px;
             flex-shrink: 0;
-            height: 48px;
+            height: 60px;
         }
 
-        .context-bar:not(.has-context) {
+        .context-bar:not(.has-context) .context-info {
             color: var(--text-muted);
+        }
+
+        .context-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: var(--font-size-small);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .checkbox.checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .checkbox svg {
+            width: 12px;
+            height: 12px;
+            stroke: #000;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .checkbox.checked svg {
+            opacity: 1;
         }
 
         .editor-container {
@@ -124,8 +169,7 @@
 
         .bottom-bar {
             padding: 16px var(--spacing-padding) var(--spacing-padding);
-            border-top: 1px solid var(--border);
-            background: #19181E;
+            background: #141319;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -258,8 +302,18 @@
 
 <body>
     <div class="context-bar" id="contextBar">
-        <span>📁</span>
-        <span id="contextText">Select a Section for context</span>
+        <div class="context-info">
+            <span>📁</span>
+            <span id="contextText">No selection</span>
+        </div>
+        <div class="toggle-container" id="imageToggle">
+            <div class="checkbox checked" id="imageCheckbox">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            <span>Images</span>
+        </div>
     </div>
 
     <div class="editor-container">
@@ -274,7 +328,7 @@
         </div>
         <div class="button-group">
             <button class="btn btn-ghost" id="clearBtn">Clear</button>
-            <button class="btn btn-primary" id="exportBtn">Export to canvas</button>
+            <button class="btn btn-primary" id="exportBtn">Paste to Figma</button>
         </div>
     </div>
 
@@ -288,24 +342,39 @@
     <script>
         // State
         var context = '';
+        var imageDescriptions = [];
         var currentPrediction = '';
         var isGenerating = false;
+        var isAnalyzingImages = false;
+        var analyzeImagesEnabled = true;
         var debounceTimer = null;
         var inlinePredictionEl = null;
-        var justAccepted = false; // Flag to prevent immediate regeneration after partial accept
+        var justAccepted = false;
         var DEBOUNCE_MS = 500;
 
         var API_URL = 'https://purplevalley.co/api/predict';
+        var IMAGE_API_URL = 'https://purplevalley.co/api/process-input';
 
         // DOM
         var contextBar = document.getElementById('contextBar');
         var contextText = document.getElementById('contextText');
+        var imageToggle = document.getElementById('imageToggle');
         var editor = document.getElementById('editor');
         var statusDot = document.getElementById('statusDot');
         var statusTextEl = document.getElementById('statusText');
         var clearBtn = document.getElementById('clearBtn');
         var exportBtn = document.getElementById('exportBtn');
         var resizeHandle = document.getElementById('resizeHandle');
+
+        // Image checkbox
+        var imageCheckbox = document.getElementById('imageCheckbox');
+        imageToggle.addEventListener('click', function () {
+            analyzeImagesEnabled = !analyzeImagesEnabled;
+            imageCheckbox.classList.toggle('checked', analyzeImagesEnabled);
+            if (!analyzeImagesEnabled) {
+                imageDescriptions = [];
+            }
+        });
 
         // Resize
         var isResizing = false;
@@ -316,20 +385,105 @@
         });
         document.addEventListener('mouseup', function () { isResizing = false; });
 
+        // Analyze a single image
+        async function analyzeImage(image) {
+            console.log('[UI] Analyzing image:', image.name, 'base64 length:', image.base64 ? image.base64.length : 0);
+            try {
+                var response = await fetch(IMAGE_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'image',
+                        imageData: image.base64,
+                        mimeType: image.mimeType,
+                        prompt: 'Describe this image briefly for use as writing context. Focus on key visual elements, text content, and overall purpose. Keep under 100 words.'
+                    })
+                });
+                console.log('[UI] API response status:', response.status);
+                if (!response.ok) throw new Error('API error: ' + response.status);
+                var data = await response.json();
+                console.log('[UI] Got description:', data.description ? data.description.substring(0, 50) + '...' : 'none');
+                return { name: image.name, description: data.description };
+            } catch (e) {
+                console.error('[UI] Image analysis failed:', e);
+                return { name: image.name, description: '[Could not analyze image]' };
+            }
+        }
+
+        // Analyze all images
+        async function analyzeImages(images) {
+            console.log('[UI] analyzeImages called with', images ? images.length : 0, 'images');
+            if (!images || images.length === 0) return [];
+
+            isAnalyzingImages = true;
+            setStatus('Analyzing ' + images.length + ' image(s)...', true);
+
+            var results = [];
+            for (var i = 0; i < images.length; i++) {
+                var result = await analyzeImage(images[i]);
+                results.push(result);
+            }
+
+            isAnalyzingImages = false;
+            setStatus('Ready', false);
+            return results;
+        }
+
+        // Build full context with image descriptions
+        function getFullContext() {
+            var parts = [];
+
+            // Add image descriptions first
+            if (imageDescriptions.length > 0) {
+                for (var i = 0; i < imageDescriptions.length; i++) {
+                    parts.push('[Image: ' + imageDescriptions[i].name + ']\n' + imageDescriptions[i].description);
+                }
+            }
+
+            // Add text context
+            if (context) {
+                parts.push(context);
+            }
+
+            return parts.join('\n\n');
+        }
+
         // Messages from plugin
-        window.onmessage = function (event) {
+        window.onmessage = async function (event) {
             var msg = event.data.pluginMessage;
             if (!msg) return;
 
             if (msg.type === 'context-result' || msg.type === 'selection-changed') {
-                if (msg.success && msg.context) {
-                    context = msg.context;
+                console.log('[UI] Received message:', msg.type, 'images:', msg.images ? msg.images.length : 0);
+
+                // Check if we have any content (text OR images)
+                var hasImages = msg.images && msg.images.length > 0;
+                var hasText = msg.context && msg.context.length > 0;
+
+                if (msg.success && (hasText || hasImages)) {
+                    context = msg.context || '';
                     contextBar.classList.add('has-context');
-                    contextText.textContent = msg.name + ' (' + msg.items.length + ' items)';
+
+                    // Update context bar text
+                    var textCount = msg.items ? msg.items.length : 0;
+                    var imageCount = msg.images ? msg.images.length : 0;
+                    var parts = [];
+                    if (textCount > 0) parts.push(textCount + ' text' + (textCount !== 1 ? 's' : ''));
+                    if (imageCount > 0) parts.push(imageCount + ' image' + (imageCount !== 1 ? 's' : ''));
+                    contextText.textContent = msg.name + ' (' + parts.join(', ') + ')';
+
+                    // Analyze images if present and enabled
+                    if (hasImages && analyzeImagesEnabled) {
+                        imageDescriptions = await analyzeImages(msg.images);
+                        console.log('[MindComplete] Image descriptions:', imageDescriptions);
+                    } else {
+                        imageDescriptions = [];
+                    }
                 } else {
                     context = '';
+                    imageDescriptions = [];
                     contextBar.classList.remove('has-context');
-                    contextText.textContent = msg.error || 'Select a Section for context';
+                    contextText.textContent = msg.error || 'No selection';
                 }
             }
         };
@@ -565,8 +719,9 @@
             setStatus('Generating...', true);
 
             var textToSend = text;
-            if (context) {
-                textToSend = '[Context]\n' + context + '\n\n[Continue this text]\n' + text;
+            var fullContext = getFullContext();
+            if (fullContext) {
+                textToSend = '[Context]\n' + fullContext + '\n\n[Continue this text]\n' + text;
             }
 
             // Clear any existing prediction content before inserting
@@ -688,12 +843,63 @@
             editor.focus();
         });
 
-        // Export to canvas
+        // Export to Figma or clipboard
         var exportBtn = document.getElementById('exportBtn');
+        var pendingExportText = '';
+        var originalBtnText = 'Paste to Figma';
+
+        function copyToClipboard(text) {
+            // Try modern API first
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                return navigator.clipboard.writeText(text);
+            }
+            // Fallback for older browsers/iframes
+            return new Promise(function (resolve, reject) {
+                var textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    resolve();
+                } catch (e) {
+                    reject(e);
+                }
+                document.body.removeChild(textarea);
+            });
+        }
+
         exportBtn.addEventListener('click', function () {
             var text = getEditorText();
             if (!text.trim()) return;
+            pendingExportText = text;
             parent.postMessage({ pluginMessage: { type: 'export-to-canvas', text: text } }, '*');
+        });
+
+        // Handle export result
+        window.addEventListener('message', function (event) {
+            var msg = event.data.pluginMessage;
+            if (!msg || msg.type !== 'export-result') return;
+
+            if (msg.success && msg.action === 'clipboard') {
+                // Copy to clipboard
+                copyToClipboard(pendingExportText).then(function () {
+                    exportBtn.textContent = 'Copied!';
+                    setTimeout(function () {
+                        exportBtn.textContent = originalBtnText;
+                    }, 2000);
+                }).catch(function () {
+                    setStatus('Copy failed', false);
+                });
+            } else if (msg.success && msg.action === 'inserted') {
+                exportBtn.textContent = 'Inserted!';
+                setTimeout(function () {
+                    exportBtn.textContent = originalBtnText;
+                }, 2000);
+            }
+            pendingExportText = '';
         });
 
         // Init
