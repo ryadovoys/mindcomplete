@@ -386,8 +386,8 @@ Output ONLY the summary.`;
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                    'HTTP-Referer': 'https://purplevalley.co',
-                    'X-Title': 'Purple Valley',
+                    'HTTP-Referer': 'https://mindcomplete.vercel.app',
+                    'X-Title': 'Mindcomplete',
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({

@@ -168,14 +168,14 @@ ${writingStyle}
     } else {
       // Fallback to OpenRouter
       console.log(`[PREDICT] Calling OpenRouter with model: xiaomi/mimo-v2-flash:free`);
-      const host = req.headers.host || 'purplevalley.co';
+      const host = req.headers.host || 'mindcomplete.vercel.app';
       response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
           'HTTP-Referer': `https://${host}`,
-          'X-Title': 'Purple Valley'
+          'X-Title': 'Mindcomplete'
         },
         body: JSON.stringify({
           model: 'xiaomi/mimo-v2-flash:free',

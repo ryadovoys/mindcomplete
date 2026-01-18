@@ -1,23 +1,71 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
-Purple Valley ships a static client in `public/` served by the slim Express stub in `server/index.js`. API logic (predict, context, Valleys, auth, images) lives in `api/` so Vercel can deploy it verbatim, while persistence helpers (`contextStore.js`, `valleysStore.js`, `supabaseClient.js`) fall back to in-memory Maps when Supabase keys are missing. Reference notes stay in `docs/`; `SUPABASE_SETUP.md` and `VALLEYS_STATUS.md` describe outstanding database chores.
+## Project Structure
 
-## Build, Test, and Development Commands
-- `npm install` — install Express, Supabase, and browser dependencies.
-- `npm run dev` / `npm start` — serve `/public` at `http://localhost:3000`. **Note**: Restart this whenever you touch `server/index.js` or `vercel.json`.
-- `vercel dev` — run when you need the Vercel function environment locally.
-- **CRITICAL**: Routing changes must be applied to both `server/index.js` and `vercel.json` to avoid 404s.
-- `curl -N http://localhost:3000/api/health` or the CRUD snippets in `VALLEYS_STATUS.md` — low-friction API smoke tests.
+```
+mindcomplete/
+├── api/                    # Vercel serverless functions
+│   ├── _lib/               # Shared utilities (stores, Supabase client)
+│   ├── auth/               # Authentication endpoints
+│   ├── webhooks/           # Stripe webhooks
+│   ├── predict.js          # AI prediction endpoint
+│   ├── context.js          # Context management
+│   ├── context-anchor.js   # Persistent context anchors
+│   ├── valleys.js          # Document storage (Valleys)
+│   ├── generate-image.js   # AI image generation
+│   ├── checkout.js         # Stripe checkout
+│   └── process-input.js    # Input processing
+├── public/                 # Frontend application
+│   ├── app.js              # Main application logic
+│   ├── editor.html         # Editor page
+│   ├── landing.html        # Landing page
+│   ├── login.html          # Auth page
+│   └── styles.css          # Global styles
+├── docs/                   # Documentation & references
+│   ├── screenshots/        # Debug/test screenshots
+│   ├── CLAUDE.md           # Claude AI instructions
+│   ├── SUPABASE_SETUP.md   # Database setup guide
+│   └── VALLEYS_STATUS.md   # Feature status tracking
+├── figma-plugin/           # Mindcomplete Figma plugin
+├── plans/                  # Implementation plans (archived)
+├── sandbox/                # One-off projects (animations, demos, experiments)
+├── supabase/               # Database migrations
+├── archive/                # Old code backups
+├── AGENTS.md               # This file
+├── README.md               # Project overview
+└── vercel.json             # Vercel deployment config
+```
 
-## Coding Style & Naming Conventions
-Use ES modules, 2-space indentation, single quotes, and trailing semicolons (see `public/app.js`, `api/predict.js`). Stick with descriptive filenames (`*-store.js`, `*-manager.js`) and keep CSS class names in sync with their JS selectors. Prefer classes or tight modules over globals, favor `const`, and stash tunable values inside top-level `CONFIG` objects. Run Prettier with default settings before opening a PR if your editor supports it.
+## Development Commands
 
-## Testing Guidelines
-Automated tests are pending, so rely on the manual loop: exercise the editor, inline prediction flow, and Valleys save/load UI in the browser after each edit; ping `/health` (Express) and `/api/health` (serverless); replay the curl matrix in `VALLEYS_STATUS.md`; and walk through the Supabase checklist at the end of `SUPABASE_SETUP.md` when persistence changes. Capture what you verified in your PR description.
+| Command | Purpose |
+|---------|---------|
+| `npm install` | Install dependencies |
+| `vercel dev` | Run local dev server with Vercel functions |
+| `curl http://localhost:3000/api/health` | API health check |
 
-## Commit & Pull Request Guidelines
-Follow the existing short, present-tense commit style (`image gen fixed`, `prompt updated`). Keep each commit scoped, and only add context if it clarifies the diff. Pull requests should mention the issue or goal, summarize the change, list new env vars or migrations, and include the manual validation you performed (commands, screenshots, or GIFs). When touching endpoints, paste sample requests/responses so reviewers can replay them.
+## Coding Style
 
-## Security & Configuration Tips
-Keep `.env` out of version control; reference `.env.example` for required keys (`OPENROUTER_API_KEY`, Supabase pair, optional Replicate settings). Use disposable Supabase users when invoking `api/auth/delete-account.js`, and confirm the policies outlined in `SUPABASE_SETUP.md` before altering production data. Recheck Vercel env vars whenever you change models or providers so OpenRouter calls keep valid headers.
+- ES modules, 2-space indent, single quotes, trailing semicolons
+- Descriptive filenames (`*-store.js`, `*-manager.js`)
+- Keep CSS selectors in sync with JS
+- Favor `const`, use `CONFIG` objects for tunable values
+- Run Prettier before commits
+
+## Testing
+
+Manual testing loop:
+1. Exercise editor and inline prediction in browser
+2. Test Valleys save/load
+3. Ping `/api/health`
+4. Replay curl commands from `docs/VALLEYS_STATUS.md`
+
+## Commits
+
+Short, present-tense style: `image gen fixed`, `prompt updated`. Keep scope tight. PRs should include sample requests/responses for API changes.
+
+## Security
+
+- Keep `.env` out of git (see `.env.example`)
+- Required: `OPENROUTER_API_KEY`, Supabase credentials
+- Optional: Replicate settings for image gen

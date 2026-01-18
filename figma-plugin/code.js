@@ -1,88 +1,66 @@
-// MindComplete Figma Plugin - Main Code
+// MindComplete Editor - Figma Plugin
+// Text editor with inline AI suggestions
 
-var pluginMode = 'panel'; // 'panel' or 'quick'
-
-// Handle different run commands
-figma.on('run', function (event) {
-    if (event.command === 'continue-quick') {
-        // Quick mode - generate and insert without UI
-        pluginMode = 'quick';
-        runQuickContinue();
-    } else {
-        // Default - open panel
-        pluginMode = 'panel';
-        figma.showUI(__html__, {
-            width: 300,
-            height: 320,
-            title: 'MindComplete',
-            themeColors: true
-        });
-    }
+figma.showUI(__html__, {
+    width: 500,
+    height: 600,
+    title: 'MindComplete Editor',
+    themeColors: true
 });
 
-// Quick continue without UI
-function runQuickContinue() {
-    var selection = figma.currentPage.selection;
-
-    if (selection.length === 0 || selection[0].type !== 'TEXT') {
-        figma.notify('⚠️ Please select a text layer first', { timeout: 2000 });
-        figma.closePlugin();
-        return;
+// Convert Uint8Array to base64 string
+function uint8ArrayToBase64(bytes) {
+    var binary = '';
+    for (var i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
     }
-
-    var node = selection[0];
-    var text = node.characters;
-
-    // Find section context
-    var section = findParentSection(node);
-    var sectionContext = '';
-    if (section) {
-        sectionContext = collectSectionText(section, node.id);
-    }
-
-    // Build text with context
-    var textToSend = text;
-    if (sectionContext) {
-        textToSend = '[Context from section]\n' + sectionContext + '\n\n[Continue this text]\n' + text;
-    }
-
-    figma.notify('✨ Generating...', { timeout: 10000 });
-
-    // Make API request
-    figma.showUI(__html__, { visible: false, width: 1, height: 1 });
-
-    // Send request to UI for network access
-    setTimeout(function () {
-        figma.ui.postMessage({
-            type: 'quick-generate',
-            text: textToSend,
-            nodeId: node.id
-        });
-    }, 100);
+    // Use figma's built-in btoa equivalent
+    return figma.base64Encode(bytes);
 }
 
-// Find parent Section of a node
-function findParentSection(node) {
-    var current = node.parent;
-    while (current) {
-        if (current.type === 'SECTION') {
-            return current;
+// Check if a node has image fills
+function hasImageFill(node) {
+    if (!('fills' in node)) return false;
+    var fills = node.fills;
+    if (!fills || fills === figma.mixed) return false;
+    for (var i = 0; i < fills.length; i++) {
+        if (fills[i].type === 'IMAGE' && fills[i].visible !== false) {
+            return true;
         }
-        current = current.parent;
     }
-    return null;
+    return false;
 }
 
-// Collect all text from a Section (excluding the selected node)
-function collectSectionText(section, excludeNodeId) {
+// Collect all text and images from a Section (async)
+async function collectSectionContent(section) {
     var texts = [];
+    var images = [];
+    var nodesToProcess = [];
 
     function traverse(node) {
-        if (node.type === 'TEXT' && node.id !== excludeNodeId) {
+        if (node.type === 'TEXT') {
             if (node.characters && node.characters.trim()) {
-                texts.push(node.characters.trim());
+                texts.push({
+                    name: node.name,
+                    text: node.characters.trim()
+                });
             }
         }
+
+        // Check for nodes with image fills
+        if (hasImageFill(node)) {
+            console.log('[MindComplete] Found image fill in:', node.name, node.type);
+            nodesToProcess.push(node);
+        }
+
+        // Also check for RECTANGLE, ELLIPSE, FRAME that might have image fills
+        // or any node that can be exported as an image
+        if (node.type === 'RECTANGLE' || node.type === 'ELLIPSE' || node.type === 'POLYGON') {
+            if (!hasImageFill(node) && node.fills && node.fills !== figma.mixed && node.fills.length > 0) {
+                // Has some fill, might be useful as visual context
+            }
+        }
+
         if ('children' in node) {
             for (var i = 0; i < node.children.length; i++) {
                 traverse(node.children[i]);
@@ -91,119 +69,132 @@ function collectSectionText(section, excludeNodeId) {
     }
 
     traverse(section);
-    return texts.join('\n\n');
+
+    console.log('[MindComplete] Found', texts.length, 'texts and', nodesToProcess.length, 'images');
+
+    // Export images as base64 (limit to 5 images to avoid slowness)
+    var maxImages = 5;
+    for (var i = 0; i < Math.min(nodesToProcess.length, maxImages); i++) {
+        try {
+            var node = nodesToProcess[i];
+            console.log('[MindComplete] Exporting image:', node.name);
+            var bytes = await node.exportAsync({
+                format: 'PNG',
+                constraint: { type: 'SCALE', value: 0.5 }
+            });
+            var base64 = figma.base64Encode(bytes);
+            console.log('[MindComplete] Exported', node.name, '- base64 length:', base64.length);
+            images.push({
+                name: node.name,
+                base64: base64,
+                mimeType: 'image/png'
+            });
+        } catch (e) {
+            console.log('[MindComplete] Failed to export image:', node.name, e);
+        }
+    }
+
+    return { texts: texts, images: images };
 }
 
-// Get selection info with section context
-function getSelectionWithContext() {
+// Get context from selected Section (async)
+async function getContextFromSelection() {
     var selection = figma.currentPage.selection;
 
     if (selection.length === 0) {
-        return { success: false, error: 'No layer selected. Please select a text layer.' };
+        return { success: false, error: 'No selection' };
     }
 
     var node = selection[0];
 
-    if (node.type !== 'TEXT') {
-        return { success: false, error: 'Selected layer is not a text layer.' };
+    // If it's a Section, collect all content as context
+    if (node.type === 'SECTION') {
+        var content = await collectSectionContent(node);
+        var contextText = content.texts.map(function (t) {
+            return t.text;
+        }).join('\n\n');
+
+        return {
+            success: true,
+            type: 'section',
+            name: node.name,
+            context: contextText,
+            items: content.texts,
+            images: content.images
+        };
     }
 
-    var section = findParentSection(node);
-    var sectionContext = '';
-    var sectionName = '';
+    // If it's a Frame or Group, also collect content
+    if (node.type === 'FRAME' || node.type === 'GROUP') {
+        var content = await collectSectionContent(node);
+        var contextText = content.texts.map(function (t) {
+            return t.text;
+        }).join('\n\n');
 
-    if (section) {
-        sectionContext = collectSectionText(section, node.id);
-        sectionName = section.name;
+        return {
+            success: true,
+            type: 'frame',
+            name: node.name,
+            context: contextText,
+            items: content.texts,
+            images: content.images
+        };
     }
 
     return {
-        success: true,
-        text: node.characters,
-        nodeId: node.id,
-        nodeName: node.name,
-        sectionContext: sectionContext,
-        sectionName: sectionName
+        success: false,
+        error: 'Please select a Section or Frame for context.'
     };
 }
 
 // Listen for messages from the UI
-figma.ui.onmessage = function (msg) {
+figma.ui.onmessage = async function (msg) {
 
-    // Get text from selected layer
-    if (msg.type === 'get-selected-text') {
-        var result = getSelectionWithContext();
+    // Get context from selection
+    if (msg.type === 'get-context') {
+        var result = await getContextFromSelection();
         figma.ui.postMessage({
-            type: 'selection-result',
+            type: 'context-result',
             success: result.success,
             error: result.error,
-            text: result.text,
-            nodeId: result.nodeId,
-            nodeName: result.nodeName,
-            sectionContext: result.sectionContext,
-            sectionName: result.sectionName
+            contextType: result.type,
+            name: result.name,
+            context: result.context,
+            items: result.items,
+            images: result.images || []
         });
     }
 
-    // Quick generate result
-    if (msg.type === 'quick-result') {
-        if (msg.success && msg.suggestion) {
-            var node = figma.getNodeById(msg.nodeId);
-            if (node && node.type === 'TEXT') {
-                var fonts = node.getRangeAllFontNames(0, node.characters.length);
-                var fontPromises = [];
-                for (var i = 0; i < fonts.length; i++) {
-                    fontPromises.push(figma.loadFontAsync(fonts[i]));
-                }
+    // Insert text into selected TextNode or copy to clipboard
+    if (msg.type === 'export-to-canvas') {
+        var text = msg.text;
+        var selection = figma.currentPage.selection;
 
-                Promise.all(fontPromises).then(function () {
-                    node.characters = node.characters + ' ' + msg.suggestion;
-                    figma.notify('✨ Text added!', { timeout: 1500 });
-                    figma.closePlugin();
-                }).catch(function () {
-                    figma.notify('⚠️ Failed to load fonts', { timeout: 2000 });
-                    figma.closePlugin();
-                });
+        // If a TextNode is selected, append text to it
+        if (selection.length > 0 && selection[0].type === 'TEXT') {
+            var textNode = selection[0];
+
+            // Load the font used in the text node
+            var fontName = textNode.fontName;
+            if (fontName === figma.mixed) {
+                fontName = { family: "Inter", style: "Regular" };
             }
+
+            figma.loadFontAsync(fontName).then(function () {
+                // Append text to existing content
+                var existingText = textNode.characters;
+                var newText = existingText ? existingText + ' ' + text : text;
+                textNode.characters = newText;
+
+                figma.ui.postMessage({ type: 'export-result', success: true, action: 'inserted' });
+                figma.notify('✨ Text inserted!', { timeout: 2000 });
+            }).catch(function () {
+                figma.ui.postMessage({ type: 'export-result', success: false, error: 'Failed to load font' });
+            });
         } else {
-            figma.notify('⚠️ Generation failed', { timeout: 2000 });
-            figma.closePlugin();
+            // No text selected - tell UI to copy to clipboard
+            figma.ui.postMessage({ type: 'export-result', success: true, action: 'clipboard' });
         }
-    }
-
-    // Accept suggestion and update text
-    if (msg.type === 'accept-suggestion') {
-        var nodeId = msg.nodeId;
-        var newText = msg.newText;
-
-        var node = figma.getNodeById(nodeId);
-
-        if (!node || node.type !== 'TEXT') {
-            figma.ui.postMessage({
-                type: 'accept-result',
-                success: false,
-                error: 'Text layer not found.'
-            });
-            return;
-        }
-
-        var fonts = node.getRangeAllFontNames(0, node.characters.length);
-        var fontPromises = [];
-        for (var i = 0; i < fonts.length; i++) {
-            fontPromises.push(figma.loadFontAsync(fonts[i]));
-        }
-
-        Promise.all(fontPromises).then(function () {
-            node.characters = newText;
-            figma.ui.postMessage({ type: 'accept-result', success: true });
-            figma.notify('✨ Text updated!', { timeout: 1500 });
-        }).catch(function (error) {
-            figma.ui.postMessage({
-                type: 'accept-result',
-                success: false,
-                error: 'Failed to load fonts'
-            });
-        });
     }
 
     // Resize
@@ -217,26 +208,17 @@ figma.ui.onmessage = function (msg) {
     }
 };
 
-// Listen for selection changes (only in panel mode)
-figma.on('selectionchange', function () {
-    if (pluginMode !== 'panel') return;
-
-    var result = getSelectionWithContext();
-    if (result.success) {
-        figma.ui.postMessage({
-            type: 'selection-changed',
-            hasTextSelected: true,
-            success: result.success,
-            text: result.text,
-            nodeId: result.nodeId,
-            nodeName: result.nodeName,
-            sectionContext: result.sectionContext,
-            sectionName: result.sectionName
-        });
-    } else {
-        figma.ui.postMessage({
-            type: 'selection-changed',
-            hasTextSelected: false
-        });
-    }
+// Listen for selection changes
+figma.on('selectionchange', async function () {
+    var result = await getContextFromSelection();
+    figma.ui.postMessage({
+        type: 'selection-changed',
+        success: result.success,
+        error: result.error,
+        contextType: result.type,
+        name: result.name,
+        context: result.context,
+        items: result.items,
+        images: result.images || []
+    });
 });

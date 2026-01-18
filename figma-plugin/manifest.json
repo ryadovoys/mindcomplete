@@ -1,6 +1,6 @@
 {
-    "name": "MindComplete",
-    "id": "mindcomplete-ai-autocomplete",
+    "name": "Mindcomplete",
+    "id": "1593731353807484611",
     "api": "1.0.0",
     "main": "code.js",
     "ui": "ui.html",
@@ -9,21 +9,8 @@
     ],
     "networkAccess": {
         "allowedDomains": [
-            "https://purplevalley.co",
-            "https://*.vercel.app"
+            "https://mindcomplete.vercel.app"
         ]
     },
-    "menu": [
-        {
-            "name": "Open Panel",
-            "command": "open-panel"
-        },
-        {
-            "separator": true
-        },
-        {
-            "name": "Continue Text (Quick)",
-            "command": "continue-quick"
-        }
-    ]
+    "documentAccess": "dynamic-page"
 }

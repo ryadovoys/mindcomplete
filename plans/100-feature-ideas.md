@@ -1,4 +1,4 @@
-# 100 Short Feature Ideas for Purple Valley
+# 100 Short Feature Ideas for Mindcomplete
 
 1. Real-time sentence completion
 2. Predictive thought finish

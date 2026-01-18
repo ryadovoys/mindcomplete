@@ -1,4 +1,4 @@
-# 50 Best Feature Ideas for Purple Valley
+# 50 Best Feature Ideas for Mindcomplete
 
 1. **The Flow Engine:** Real-time completion that learns your specific cadence.
 2. **Infinite Context:** Using your entire library to inform the current sentence.

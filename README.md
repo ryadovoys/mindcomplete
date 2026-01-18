@@ -1,10 +1,10 @@
-# Purple Valley
+# Mindcomplete
 
 **AI-powered writing assistant that completes your thoughts in real-time.**
 
-Purple Valley helps you write faster and more fluidly by predicting and suggesting how to continue your paragraphs. Simply pause while typing, and AI will suggest a natural continuation matching your tone and style.
+Mindcomplete helps you write faster and more fluidly by predicting and suggesting how to continue your paragraphs. Simply pause while typing, and AI will suggest a natural continuation matching your tone and style.
 
-![Purple Valley Demo](https://via.placeholder.com/800x400?text=Purple Valley+Demo)
+![Mindcomplete Demo](https://via.placeholder.com/800x400?text=Mindcomplete+Demo)
 
 ## Features
 

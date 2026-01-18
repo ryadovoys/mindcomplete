@@ -1,520 +1,247 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Purple Valley - Extension for your thoughts</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@100..900&family=Inter:wght@100..900&family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary: #301935;
-      --lavender: #e5e6fa;
-      --accent: #9246FF;
-      --sunlight: #fdfcf7;
-      --section-md: 5rem;
-      --section-lg: 4rem;
-      --text-prediction: rgba(48, 25, 53, 0.5);
-    }
-    
-    body {
-      font-family: 'Google Sans Flex', 'Inter', sans-serif;
-      color: var(--primary);
-      background-color: var(--lavender);
-    }
-    
-    .font-literata { font-family: 'Literata', serif; }
-    .font-google-sans { font-family: 'Google Sans Flex', sans-serif; }
-    
-    h1, h2, h3 { font-family: 'Literata', serif; }
-    
-    .text-primary { color: var(--primary); }
-    .text-lavender { color: var(--lavender); }
-    .bg-primary { background-color: var(--primary); }
-    .bg-lavender { background-color: var(--lavender); }
-    
-    .py-section-md { padding-top: var(--section-md); padding-bottom: var(--section-md); }
-    .py-section-lg { padding-top: var(--section-lg); padding-bottom: var(--section-lg); }
-    .px-global { padding-left: 1.5rem; padding-right: 1.5rem; }
-    @media (min-width: 1024px) {
-      .px-global { padding-left: 4rem; padding-right: 4rem; }
-    }
-
-    @keyframes breathing {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
-    .animate-breathing { animation: breathing 4s ease-in-out infinite; }
-
-    .ai-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 0 1.5rem;
-      height: 52px;
-      border-radius: 9999px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .btn-variant-1 {
-      background-color: var(--accent);
-      color: white;
-    }
-    .btn-variant-1:hover {
-      opacity: 0.9;
-    }
-    .btn-white {
-      background-color: white;
-      color: var(--primary);
-    }
-    .btn-white:hover {
-      background-color: var(--lavender);
-    }
-
-    .rotating-word-container {
-      display: inline-flex;
-      flex-direction: column;
-      vertical-align: middle;
-      height: 1.3em;
-      overflow: hidden;
-      position: relative;
-      text-align: center;
-      justify-content: center;
-      align-items: center;
-      min-width: 50px;
-      transform: translateY(-0.15em);
-      margin-left: -10px;
-    }
-
-    .rotating-word {
-      display: block;
-      white-space: nowrap;
-      position: relative;
-      width: 100%;
-    }
-
-    .bg-pattern {
-      background-image: radial-gradient(circle at 1px 1px, rgba(48, 25, 53, 0.05) 1px, transparent 0);
-      background-size: 40px 40px;
-    }
-
-    .glass {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(48, 25, 53, 0.05);
-    }
-
-    /* Navigation States */
-    nav {
-      transition: background 0.3s ease, border 0.3s ease;
-    }
-
-    nav.nav-transparent {
-      background: transparent !important;
-      border-bottom-color: transparent !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-    }
-
-    nav.nav-transparent .nav-link {
-      color: rgba(229, 230, 250, 0.7) !important;
-    }
-
-    nav.nav-transparent img {
-      filter: brightness(0) invert(1);
-    }
-
-    nav.nav-transparent .ai-btn {
-      background-color: var(--accent) !important;
-      color: white !important;
-    }
-
-    .nav-link {
-      transition: color 0.3s ease;
-    }
-
-    .bg-blur {
-      position: fixed;
-      top: 10%;
-      left: 20%;
-      width: 60vw;
-      height: 60vw;
-      background: var(--accent);
-      filter: blur(120px);
-      opacity: 0.08;
-      border-radius: 50%;
-      z-index: -1;
-      pointer-events: none;
-    }
-
-    #hero-typing-section {
-      --text-prediction: rgba(229, 230, 250, 0.5);
-    }
-
-    /* MATCHING APP GHOST TEXT */
-    .prediction-remain {
-      color: var(--text-prediction);
-    }
-
-    .word-fade {
-      display: inline-block;
-      opacity: 0;
-      animation: word-fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    }
-
-    @keyframes word-fade-in {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    /* Caret simulation */
-    .caret {
-      position: absolute;
-      right: -8px;
-      bottom: -0.2em;
-      width: 2px;
-      height: 1.2em;
-      background: var(--accent);
-      animation: blink 2s step-end infinite;
-      animation-delay: 1s;
-    }
-
-    .caret-container {
-      display: inline-block;
-      position: relative;
-      padding-right: 4px;
-      margin-right: 0.8rem;
-    }
-    @media (min-width: 768px) {
-      .caret-container {
-        margin-right: 1.2rem;
-      }
-    }
-
-    .hero-first-line {
-      white-space: nowrap;
-    }
-
-    .dynamic-content {
-      display: block;
-    }
-
-    @keyframes blink {
-      0% { opacity: 1; }
-      50% { opacity: 0; }
-    }
-
-    .feature-card {
-      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-  </style>
-</head>
-<body class="overflow-x-hidden bg-pattern">
-  <div class="bg-blur"></div>
-  
-  <!-- Navigation -->
-  <nav class="absolute top-0 w-full z-50 glass border-b border-primary/5 px-global py-4 nav-transparent">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <a href="/"><img src="/purple-valley-logo.svg" alt="Purple Valley" class="h-7 w-auto block"></a>
-      <div class="flex gap-4 md:gap-8 items-center text-sm font-medium">
-        <div class="hidden md:flex gap-8 items-center">
-          <a href="#thoughts" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Thoughts</a>
-          <a href="#visual" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Visual</a>
-          <a href="#style" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Style</a>
-          <a href="#context" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Context</a>
-        </div>
-        <a href="/login" class="ai-btn btn-variant-1 font-google-sans !h-10 md:!h-[52px] !px-4 md:!px-6">Sign in</a>
-      </div>
-    </div>
-  </nav>
-
-  <!-- HeroSection: Simulated Ghostwriting -->
-  <section class="relative h-[400px] md:h-[600px] px-global pt-32 md:pt-48 flex flex-col items-center bg-primary text-lavender" id="hero-typing-section">
-    <div class="max-w-5xl w-full">
-      <h1 class="text-4xl md:text-7xl font-literata font-extralight mb-6 leading-[0.95] tracking-tight text-left text-lavender" id="hero-typing">
-        <span class="hero-first-line"><span class="caret-container"><span class="static-text">AI that writes</span><span class="caret"></span></span><span class="dynamic-first-line"></span></span><span class="dynamic-content"></span>
-      </h1>
-    </div>
-  </section>
-
-  <!-- Section 0: Neural Sync -->
-  <section class="py-section-lg px-global" id="thoughts">
-    <div class="max-w-7xl mx-auto">
-      <div class="grid lg:grid-cols-2 gap-24 items-center">
-        <div class="order-2 lg:order-1 relative">
-           <div class="aspect-[4/3] bg-white rounded-[2.5rem] overflow-hidden border border-primary/10 relative group">
-              <img src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="Neural Writing Flow">
-              <div class="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-           </div>
-           <div class="absolute -top-10 -left-10 h-40 w-40 bg-accent/10 blur-3xl rounded-full animate-breathing"></div>
-        </div>
-        <div class="text-center lg:text-left flex flex-col items-center lg:items-start order-1 lg:order-2">
-          <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block">IDEAS AUTOCOMPLETE</span>
-          <h2 class="text-4xl md:text-5xl font-literata font-light mb-8 leading-tight">An extension for <br/>your thoughts</h2>
-          <p class="text-lg text-primary/60 font-light leading-relaxed mb-10">
-            Start typing, and when you stop, AI will keep going for you. So you can approve part of the text, or the whole paragraph
-          </p>
-          <div class="flex gap-4">
-            <div class="h-1.5 w-20 bg-accent rounded-full"></div>
-            <div class="h-1.5 w-8 bg-primary/10 rounded-full"></div>
-            <div class="h-1.5 w-8 bg-primary/10 rounded-full"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Section 1: Image Generation -->
-  <section class="py-section-lg px-global" id="visual">
-    <div class="max-w-7xl mx-auto">
-      <div class="grid lg:grid-cols-2 gap-24 items-center">
-        <div class="text-center lg:text-left flex flex-col items-center lg:items-start">
-          <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block">Visual Ideation</span>
-          <h2 class="text-4xl md:text-5xl font-literata font-light mb-8 leading-tight">From words to worlds</h2>
-          <p class="text-lg text-primary/60 font-light leading-relaxed mb-10">
-            Describe a scene and watch it come to life. Our <strong>Integrated Image Engine</strong> allows you to generate high-fidelity visuals directly within your writing flow
-          </p>
-          <div class="flex flex-wrap gap-4">
-             <div class="px-6 py-3 glass rounded-full text-sm font-google-sans border-accent/20">"A lone cabin in a purple valley..."</div>
-             <div class="ai-btn bg-accent text-white px-6">Generate</div>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="aspect-square bg-primary/5 rounded-3xl animate-breathing overflow-hidden border border-primary/10">
-             <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80" class="w-full h-full object-cover opacity-80" alt="Generated Visual">
-          </div>
-          <div class="aspect-square bg-primary/5 rounded-3xl animate-breathing overflow-hidden border border-primary/10 mt-8" style="animation-delay: 1s">
-             <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80" class="w-full h-full object-cover opacity-80" alt="Generated Visual">
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Section 1.5: Adaptive Style -->
-  <section class="py-section-lg px-global" id="style">
-    <div class="max-w-7xl mx-auto">
-      <div class="grid lg:grid-cols-2 gap-24 items-center">
-        <div class="order-2 lg:order-1 relative">
-           <div class="aspect-[4/3] bg-white rounded-[2.5rem] overflow-hidden border border-primary/10 relative group">
-              <img src="https://images.unsplash.com/photo-1516414447565-b14be0adf13e?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="Adaptive Style Flow">
-              <div class="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-           </div>
-           <div class="absolute -top-10 -left-10 h-40 w-40 bg-accent/10 blur-3xl rounded-full animate-breathing"></div>
-        </div>
-        <div class="text-center lg:text-left flex flex-col items-center lg:items-start order-1 lg:order-2">
-          <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block text-xs">ADAPTIVE STYLE</span>
-          <h2 class="text-4xl md:text-5xl font-literata font-light mb-8 leading-tight">Text that grows <br/>with you</h2>
-          <p class="text-lg text-primary/60 font-light leading-relaxed mb-10">
-            The more you type, the more AI knows about your writing style and making predictions better. It’s not just a tool; it’s a collaborator that evolves alongside your creative journey
-          </p>
-          <div class="flex gap-4">
-            <div class="h-1.5 w-8 bg-primary/10 rounded-full"></div>
-            <div class="h-1.5 w-20 bg-accent rounded-full"></div>
-            <div class="h-1.5 w-8 bg-primary/10 rounded-full"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Section 2: Project Context -->
-  <section class="py-section-lg px-global relative overflow-hidden" id="context">
-    <div class="max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
-      <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block text-xs">Grounded Intelligence</span>
-      <h2 class="text-4xl md:text-6xl font-literata font-light mb-8 text-primary">Write with Authority</h2>
-      <p class="text-lg text-primary/60 font-light max-w-2xl mb-16 leading-relaxed">
-        Ground your AI in reality. Simply <strong>Upload PDFs, notes, or data</strong> to your current Valley. Purple Valley uses this context to make suggestions that are accurate to <em>your</em> specific project
-      </p>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-12 w-full text-left">
-        <div class="p-10 glass rounded-[3rem] border border-primary/10 feature-card">
-          <h3 class="text-xl mb-4 text-accent">File-to-Flow</h3>
-          <p class="text-base text-primary/60 font-light leading-relaxed">Instantly reference your research papers, meeting transcripts, or creative bibles. The AI reads your files so you don't have to keep switching tabs</p>
-        </div>
-        <div class="p-10 glass rounded-[3rem] border border-primary/10 feature-card">
-          <h3 class="text-xl mb-4 text-accent">Personalized Predictions</h3>
-          <p class="text-base text-primary/60 font-light leading-relaxed">Your uploaded context informs every ghost-text suggestion, adopting the terminology and facts unique to your current workspace</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Final CTA: Extend your stories -->
-  <section class="relative py-32 px-global flex flex-col items-center text-center bg-primary text-lavender">
-    <div class="max-w-4xl">
-      <h2 class="text-4xl md:text-7xl font-literata font-extralight mb-8 leading-[1.1] tracking-tight text-center text-lavender" id="main-heading">
-        Extend your 
-        <span class="italic text-accent/80 rotating-word-container">
-          <span class="rotating-word">stories</span>
-        </span>
-      </h2>
-      <div class="flex flex-col sm:flex-row gap-6 justify-center">
-        <a href="/app" class="ai-btn btn-white font-google-sans">Try for free</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="py-20 px-global border-t border-primary/5">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12 text-center md:text-left">
-      <div class="flex flex-col gap-6 items-center md:items-start">
-        <img src="/purple-valley-logo.svg" alt="Purple Valley" class="h-8">
-        <p class="text-primary/40 text-sm max-w-xs">
-          The AI extension for your brain. Built for the writers, the dreamers, and the makers.
-        </p>
-      </div>
-      <div class="flex gap-12 text-sm font-google-sans font-medium">
-        <div class="flex flex-col gap-4">
-          <span class="text-primary/30 uppercase text-xs tracking-widest text-primary/40 text-sm">Product</span>
-          <a href="/app" class="hover:text-accent">Editor</a>
-          <a href="#" class="hover:text-accent text-primary/60">Pricing</a>
-        </div>
-        <div class="flex flex-col gap-4">
-          <span class="text-primary/30 uppercase text-xs tracking-widest text-primary/40 text-sm">Company</span>
-          <a href="#" class="hover:text-accent text-primary/60">About</a>
-          <a href="#" class="hover:text-accent text-primary/60">Privacy</a>
-        </div>
-      </div>
-    </div>
-    <div class="max-w-7xl mx-auto mt-20 pt-8 border-t border-primary/5 text-center text-primary/20 text-xs">
-      © 2026 Purple Valley AI. All rights reserved.
-    </div>
-  </footer>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-  <script>
-    const words = ['stories', 'emails', 'essays', 'notes', 'tweets', 'blogs', 'ideas', 'thoughts'];
-    const wordElement = document.querySelector('.rotating-word');
-    const container = document.querySelector('.rotating-word-container');
-    const mainHeading = document.getElementById('main-heading');
-    let currentIndex = 0;
-
-    function measureWidth(text) {
-      const span = document.createElement('span');
-      const style = window.getComputedStyle(mainHeading);
-      span.style.cssText = `
-        position: absolute;
-        visibility: hidden;
-        white-space: nowrap;
-        font-family: ${style.fontFamily};
-        font-size: ${style.fontSize};
-        font-weight: ${style.fontWeight};
-        font-style: italic;
-        letter-spacing: ${style.letterSpacing};
-        text-transform: ${style.textTransform};
-      `;
-      span.textContent = text;
-      document.body.appendChild(span);
-      const width = span.offsetWidth;
-      span.remove();
-      return width + 20;
-    }
-
-    container.style.width = measureWidth(words[0]) + 'px';
-
-    function rotateWord() {
-      const nextIndex = (currentIndex + 1) % words.length;
-      const nextWidth = measureWidth(words[nextIndex]);
-
-      const tl = gsap.timeline({ onComplete: () => { currentIndex = nextIndex; } });
-
-      tl.to(wordElement, { y: -50, opacity: 0, duration: 0.4, ease: "power2.in" })
-      .to(container, { width: nextWidth, duration: 0.4, ease: "power2.inOut" }, "-=0.2")
-      .set(wordElement, { textContent: words[nextIndex], y: 50 })
-      .to(wordElement, { y: 0, opacity: 1, duration: 0.6, ease: "back.out(1.2)" });
-    }
-
-    setInterval(rotateWord, 3000);
-
-    const staticContent = document.querySelector('.static-text');
-    const dynamicFirstLine = document.querySelector('.dynamic-first-line');
-    const dynamicContent = document.querySelector('.dynamic-content');
-    const heroWords = ["with ", "you,", "BR", "not ", "for ", "you."];
-    let heroTl = gsap.timeline({ delay: 0.5 });
-    let passedBr = false;
-
-    let currentTime = 0.5;
-    heroWords.forEach((word, index) => {
-      if (word === "BR") {
-        passedBr = true;
-        currentTime += 0.1;
-        return;
-      }
-
-      const hasComma = word.includes(',');
-      const targetContainer = passedBr ? dynamicContent : dynamicFirstLine;
-
-      heroTl.to({}, {
-        onStart: () => {
-          const span = document.createElement('span');
-          span.className = "word-fade prediction-remain";
-          span.style.display = 'inline-block';
-          span.textContent = word.replace(/ /g, '\u00A0');
-          targetContainer.appendChild(span);
-
-          if (index === heroWords.length - 1) {
-            const btnContainer = document.createElement('div');
-            btnContainer.className = "mt-6 opacity-0 transform translate-y-4";
-            btnContainer.innerHTML = '<a href="/app" class="ai-btn btn-white font-google-sans">Try for free</a>';
-            document.querySelector('#hero-typing').parentNode.appendChild(btnContainer);
-            gsap.to(btnContainer, { opacity: 1, y: 0, duration: 1, ease: "power3.out" });
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindcomplete - AI that writes with you, not for you</title>
+    <meta name="description"
+        content="Instead of acting based on prompts, it analyzes what you have written, along with uploaded text and images, to understand exactly what you're working on.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@100..900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#141319',
+                        surface: '#1f1e26',
+                        accent: '#c3fb50',
+                        text: '#d9d9d9',
+                    },
+                    fontFamily: {
+                        sans: ['"Google Sans Flex"', 'sans-serif'],
+                    },
+                }
+            }
         }
-      }, currentTime);
+    </script>
+    <style>
+        body {
+            font-family: 'Google Sans Flex', sans-serif;
+            background-color: #141319;
+            color: #d9d9d9;
+        }
 
-      currentTime += hasComma ? 0.8 : 0.2;
-    });
+        .text-logo-complete {
+            color: #c3fb50;
+        }
 
-    // 3. Final "Soft Accept"
-    heroTl.to({}, { duration: 0.8 }, currentTime)
-    .to(".prediction-remain", {
-      duration: 0.4,
-      onStart: () => {
-        document.querySelectorAll('.prediction-remain').forEach(el => {
-          el.style.animation = 'none';
-          el.style.opacity = '1';
-          el.style.transform = 'translateY(0)';
-        });
-      }
-    });
+        /* Rotating word animation */
+        .rotating-word-container {
+            display: inline-flex;
+            flex-direction: column;
+            vertical-align: middle;
+            height: 1.2em;
+            overflow: hidden;
+            position: relative;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            min-width: 50px;
+            transform: translateY(-4px);
+        }
 
-    // GSAP Scroll Animations
-    gsap.registerPlugin(ScrollTrigger);
-    gsap.utils.toArray('section:not(:first-child)').forEach((section) => {
-      const children = section.querySelectorAll('.max-w-4xl > *, .max-w-5xl > *, .max-w-7xl > *, .max-w-3xl > *');
-      gsap.from(children, {
-        scrollTrigger: { trigger: section, start: "top 90%", toggleActions: "restart none none reset" },
-        y: 30, opacity: 0, duration: 1, stagger: 0.1, ease: "power3.out", clearProps: "all"
-      });
-    });
+        .rotating-word {
+            display: block;
+            white-space: nowrap;
+            position: relative;
+            width: 100%;
+            color: #c3fb50;
+        }
+    </style>
+</head>
 
-    gsap.to(".bg-blur", {
-      scrollTrigger: { trigger: "body", start: "top top", end: "bottom bottom", scrub: 1.5 },
-      y: 150, x: 50, scale: 1.3
-    });
+<body class="overflow-x-hidden">
 
-    // Navigation State Trigger
-    ScrollTrigger.create({
-      trigger: "#hero-typing-section",
-      start: "bottom 100px",
-      onEnter: () => {
-        const nav = document.querySelector('nav');
-        nav.classList.remove('nav-transparent');
-        gsap.set(nav, { position: "fixed", y: -100 });
-        gsap.to(nav, { y: 0, duration: 0.6, ease: "power3.out" });
-      },
-      onLeaveBack: () => {
-        const nav = document.querySelector('nav');
-        nav.classList.add('nav-transparent');
-        gsap.set(nav, { position: "absolute", y: 0 });
-      }
-    });
-  </script>
+    <!-- Header -->
+    <header class="w-full h-[100px] flex items-center justify-between px-12 bg-background">
+        <a href="/" class="text-[26px] font-medium text-text leading-none">
+            Mind<span class="text-logo-complete">|complete</span>
+        </a>
+        <a href="/app"
+            class="bg-accent text-background h-12 px-5 py-3.5 rounded-full text-lg font-normal flex items-center justify-center hover:opacity-90 transition-opacity">
+            Try for free
+        </a>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="w-full flex flex-col gap-9 items-center px-12 py-[60px]">
+        <div class="flex flex-col gap-6 items-center text-center max-w-[680px]">
+            <h1 class="text-[60px] font-medium leading-none text-text">
+                AI that writes<br>with you, not for you
+            </h1>
+            <p class="text-lg leading-relaxed text-text/60">
+                Instead of acting based on prompts, it analyzes what you have written, along with uploaded text and
+                images, to understand exactly what you're working on.
+            </p>
+        </div>
+        <a href="/app"
+            class="bg-accent text-background h-12 px-5 py-3.5 rounded-full text-lg font-normal flex items-center justify-center hover:opacity-90 transition-opacity">
+            Try for free
+        </a>
+    </section>
+
+    <!-- Two Column Feature: Figma Plugin + Design with real copy -->
+    <section class="w-full px-12 py-16">
+        <div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+            <!-- Left: Figma Plugin Mockup -->
+            <div class="rounded-[48px] overflow-hidden bg-surface aspect-[4/3]">
+                <img src="/landing-image-1.jpg" alt="Mindcomplete Figma Plugin"
+                    class="w-full h-full object-cover block">
+            </div>
+            <!-- Right: Design with real copy -->
+            <div class="flex flex-col gap-6">
+                <span class="text-xs text-text/40 uppercase tracking-wider">Figma Plugin</span>
+                <h2 class="text-[32px] font-medium leading-tight text-text">Design with real copy</h2>
+                <p class="text-lg text-text/60 leading-relaxed">
+                    Instead of acting based on prompts, it analyzes what you have written, along with uploaded text and
+                    images, to understand exactly what you're working on.
+                </p>
+                <a href="https://www.figma.com/community/plugin/1593731353807484611/mindcomplete" target="_blank"
+                    class="text-accent text-lg font-normal hover:opacity-80 transition-opacity">
+                    Download Plugin
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Two Column Feature: Writing Styles -->
+    <section class="w-full px-12 py-16">
+        <div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+            <!-- Left: Your voice, amplified -->
+            <div class="flex flex-col gap-4">
+                <span class="text-xs text-text/40 uppercase tracking-wider">Style Match</span>
+                <h2 class="text-[32px] font-medium leading-tight text-text">Your voice, amplified</h2>
+                <p class="text-lg text-text/60 leading-relaxed">
+                    Mindcomplete learns your unique tone and writing style. Every suggestion sounds like you, not a
+                    generic robot.
+                </p>
+            </div>
+            <!-- Right: Writing Styles Menu Image -->
+            <div class="rounded-[48px] overflow-hidden bg-surface aspect-[4/3]">
+                <img src="/landing-image-2.jpg"
+                    alt="Writing Styles - Social media, Storytelling, Professional, Ideation"
+                    class="w-full h-full object-cover block">
+            </div>
+        </div>
+    </section>
+
+    <!-- Context Brain Section -->
+    <section class="w-full px-12 py-16">
+        <div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+            <!-- Left: Context Cards Image -->
+            <div class="rounded-[48px] overflow-hidden bg-surface aspect-[4/3]">
+                <img src="/landing-image-3.jpg" alt="Brand Guidelines and Strategy documents as context"
+                    class="w-full h-full object-cover block">
+            </div>
+            <!-- Right: Feed it everything -->
+            <div class="flex flex-col gap-4">
+                <span class="text-xs text-text/40 uppercase tracking-wider">Personal context</span>
+                <h2 class="text-[32px] font-medium leading-tight text-text">Feed it everything</h2>
+                <p class="text-lg text-text/60 leading-relaxed">
+                    PDFs, images, URLs. Drop them in, and AI writes with full project awareness.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Image Generation Section -->
+    <section class="w-full px-12 py-16">
+        <div class="max-w-4xl mx-auto flex flex-col gap-6 items-center text-center">
+            <h2 class="text-[40px] font-medium leading-tight text-text">Words become worlds</h2>
+            <p class="text-lg text-text/60 leading-relaxed">
+                Describe a scene. Generate it. All without leaving your writing flow.
+            </p>
+        </div>
+        <div class="max-w-5xl mx-auto mt-10 rounded-[48px] overflow-hidden bg-surface aspect-video">
+            <img src="/landing-image-4.jpg" alt="AI generated landscape" class="w-full h-full object-cover block">
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section class="w-full px-12 py-24 flex flex-col items-center text-center">
+        <h2 id="cta-heading" class="text-[48px] font-medium leading-tight text-text mb-10">
+            Extend your <span class="rotating-word-container"><span class="rotating-word">thoughts</span></span>
+        </h2>
+        <a href="/app"
+            class="bg-surface text-accent h-[60px] px-7 py-3.5 rounded-full text-lg font-normal flex items-center justify-center hover:opacity-90 transition-opacity">
+            Try for free
+        </a>
+    </section>
+
+    <!-- Footer -->
+    <footer class="w-full px-12 py-8 flex items-center justify-between">
+        <a href="/" class="text-[26px] font-medium text-text leading-none">
+            Mind<span class="text-logo-complete">|complete</span>
+        </a>
+        <p class="text-sm text-text/60">
+            Mindcomplete ™ Made by <a href="https://ryadovoy.com" target="_blank"
+                class="text-accent hover:opacity-80 transition-opacity">Sergey Ryadovoy</a>
+        </p>
+        <a href="https://buymeacoffee.com/ryadovoys" target="_blank"
+            class="bg-surface text-accent h-[60px] px-7 py-3.5 rounded-full text-lg font-normal flex items-center justify-center hover:opacity-90 transition-opacity">
+            Buy me a coffee
+        </a>
+    </footer>
+
+    <!-- GSAP for rotating word animation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script>
+        const words = ['thoughts', 'stories', 'emails', 'essays', 'notes', 'blogs', 'ideas'];
+        const wordElement = document.querySelector('.rotating-word');
+        const container = document.querySelector('.rotating-word-container');
+        const heading = document.getElementById('cta-heading');
+        let currentIndex = 0;
+
+        function measureWidth(text) {
+            const span = document.createElement('span');
+            const style = window.getComputedStyle(heading);
+            span.style.cssText = `
+                position: absolute;
+                visibility: hidden;
+                white-space: nowrap;
+                font-family: ${style.fontFamily};
+                font-size: ${style.fontSize};
+                font-weight: ${style.fontWeight};
+                letter-spacing: ${style.letterSpacing};
+            `;
+            span.textContent = text;
+            document.body.appendChild(span);
+            const width = span.offsetWidth;
+            span.remove();
+            return width + 10;
+        }
+
+        container.style.width = measureWidth(words[0]) + 'px';
+
+        function rotateWord() {
+            const nextIndex = (currentIndex + 1) % words.length;
+            const nextWidth = measureWidth(words[nextIndex]);
+
+            const tl = gsap.timeline({ onComplete: () => { currentIndex = nextIndex; } });
+
+            tl.to(wordElement, { y: -50, opacity: 0, duration: 0.4, ease: "power2.in" })
+                .to(container, { width: nextWidth, duration: 0.4, ease: "power2.inOut" }, "-=0.2")
+                .set(wordElement, { textContent: words[nextIndex], y: 50 })
+                .to(wordElement, { y: 0, opacity: 1, duration: 0.6, ease: "back.out(1.2)" });
+        }
+
+        setInterval(rotateWord, 3000);
+    </script>
+
 </body>
+
 </html>

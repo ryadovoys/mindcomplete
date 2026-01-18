@@ -59,7 +59,7 @@ Output ONLY the final image prompt in a single paragraph. Do not include any met
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
             'HTTP-Referer': `https://${host}`,
-            'X-Title': 'Purple Valley'
+            'X-Title': 'Mindcomplete'
         },
         body: JSON.stringify({
             model: CONFIG.PROMPT_MODEL,
@@ -87,7 +87,7 @@ async function generateImageOpenRouter(prompt, apiKey, host) {
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
             'HTTP-Referer': `https://${host}`,
-            'X-Title': 'Purple Valley'
+            'X-Title': 'Mindcomplete'
         },
         body: JSON.stringify({
             model: CONFIG.OPENROUTER_IMAGE_MODEL,
@@ -250,7 +250,7 @@ export default async function handler(req, res) {
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
-    const host = req.headers.host || 'purplevalley.co';
+    const host = req.headers.host || 'mindcomplete.vercel.app';
 
     try {
         // 1. Auth check

@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mindcomplete - Extension for your thoughts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@100..900&family=Inter:wght@100..900&family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --primary: #ffffff;
+      --lavender: #141319;
+      --accent: #c3fb50;
+      --sunlight: #19181E;
+      --section-md: 5rem;
+      --section-lg: 4rem;
+      --text-prediction: #c3fb50;
+      --text-muted: rgba(255, 255, 255, 0.5);
+    }
+
+    body {
+      font-family: 'Google Sans Flex', 'Inter', sans-serif;
+      color: var(--primary);
+      background-color: var(--lavender);
+    }
+
+    /* Text Logo */
+    .text-logo {
+      display: inline-flex;
+      align-items: center;
+      font-family: 'Google Sans Flex', sans-serif;
+      font-size: 18px;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      text-decoration: none;
+      color: var(--primary);
+    }
+
+    .text-logo-divider {
+      color: var(--primary);
+      margin: 0 1px;
+    }
+
+    .text-logo-complete {
+      color: var(--accent);
+    }
+
+    .font-literata {
+      font-family: 'Google Sans Flex', sans-serif;
+    }
+
+    .font-google-sans {
+      font-family: 'Google Sans Flex', sans-serif;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: 'Google Sans Flex', sans-serif;
+    }
+
+    .text-primary {
+      color: var(--primary);
+    }
+
+    .text-lavender {
+      color: var(--lavender);
+    }
+
+    .bg-primary {
+      background-color: var(--primary);
+    }
+
+    .bg-lavender {
+      background-color: var(--lavender);
+    }
+
+    .py-section-md {
+      padding-top: var(--section-md);
+      padding-bottom: var(--section-md);
+    }
+
+    .py-section-lg {
+      padding-top: var(--section-lg);
+      padding-bottom: var(--section-lg);
+    }
+
+    .px-global {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+
+    @media (min-width: 1024px) {
+      .px-global {
+        padding-left: 4rem;
+        padding-right: 4rem;
+      }
+    }
+
+    @keyframes breathing {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+    }
+
+    .animate-breathing {
+      animation: breathing 4s ease-in-out infinite;
+    }
+
+    .ai-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0 1.5rem;
+      height: 52px;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .btn-variant-1 {
+      background-color: var(--accent);
+      color: #141319 !important;
+    }
+
+    .btn-variant-1:hover {
+      opacity: 0.9;
+    }
+
+    .btn-white {
+      background-color: white;
+      color: #141319;
+    }
+
+    .btn-white:hover {
+      opacity: 0.9;
+    }
+
+    .rotating-word-container {
+      display: inline-flex;
+      flex-direction: column;
+      vertical-align: middle;
+      height: 1.3em;
+      overflow: hidden;
+      position: relative;
+      text-align: center;
+      justify-content: center;
+      align-items: center;
+      min-width: 50px;
+      transform: translateY(-0.15em);
+      margin-left: -10px;
+    }
+
+    .rotating-word {
+      display: block;
+      white-space: nowrap;
+      position: relative;
+      width: 100%;
+    }
+
+    .bg-pattern {
+      background-image: radial-gradient(circle at 1px 1px, rgba(48, 25, 53, 0.05) 1px, transparent 0);
+      background-size: 40px 40px;
+    }
+
+    .glass {
+      background: #19181E;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Navigation States */
+    nav {
+      transition: background 0.3s ease, border 0.3s ease;
+    }
+
+    nav.nav-transparent {
+      background: transparent !important;
+      border-bottom-color: transparent !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    nav.nav-transparent .nav-link {
+      color: rgba(229, 230, 250, 0.7) !important;
+    }
+
+    nav.nav-transparent img {
+      filter: brightness(0) invert(1);
+    }
+
+    nav.nav-transparent .btn-variant-1 {
+      background-color: var(--accent) !important;
+      color: #141319 !important;
+    }
+
+    .nav-link {
+      transition: color 0.3s ease;
+    }
+
+    .bg-blur {
+      position: fixed;
+      top: 10%;
+      left: 20%;
+      width: 60vw;
+      height: 60vw;
+      background: var(--accent);
+      filter: blur(120px);
+      opacity: 0.08;
+      border-radius: 50%;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    #hero-typing-section {
+      /* --text-prediction: rgba(229, 230, 250, 0.5); */
+      --text-prediction: var(--accent);
+    }
+
+    /* MATCHING APP GHOST TEXT */
+    .prediction-remain {
+      color: var(--text-prediction);
+    }
+
+    .word-fade {
+      display: inline-block;
+      opacity: 0;
+      animation: word-fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    @keyframes word-fade-in {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* Caret simulation */
+    .caret {
+      position: absolute;
+      right: -8px;
+      bottom: -0.2em;
+      width: 2px;
+      height: 1.2em;
+      background: var(--accent);
+      animation: blink 2s step-end infinite;
+      animation-delay: 1s;
+    }
+
+    .caret-container {
+      display: inline-block;
+      position: relative;
+      padding-right: 4px;
+      margin-right: 0.8rem;
+    }
+
+    @media (min-width: 768px) {
+      .caret-container {
+        margin-right: 1.2rem;
+      }
+    }
+
+    .hero-first-line {
+      white-space: nowrap;
+    }
+
+    .dynamic-content {
+      display: block;
+    }
+
+    @keyframes blink {
+      0% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0;
+      }
+    }
+
+    .feature-card {
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+  </style>
+</head>
+
+<body class="overflow-x-hidden" style="background-color: #141319;">
+
+
+  <!-- Navigation -->
+  <nav class="absolute top-0 w-full z-50 glass border-b border-primary/5 px-global py-4 nav-transparent">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <a href="/" class="text-logo">Mind<span class="text-logo-divider">|</span><span
+          class="text-logo-complete">complete</span></a>
+      <div class="flex gap-4 md:gap-8 items-center text-sm font-medium">
+        <div class="hidden md:flex gap-8 items-center">
+          <a href="#how-it-works" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">How it
+            works</a>
+          <a href="#context" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Context</a>
+          <a href="#visual" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Image Gen</a>
+          <a href="#figma" class="hover:opacity-70 transition-opacity text-primary/60 text-sm nav-link">Figma</a>
+        </div>
+        <div class="flex gap-2 items-center">
+          <a href="/app" class="ai-btn btn-variant-1 font-google-sans !h-10 md:!h-[52px] !px-4 md:!px-6"
+            style="color: #141319 !important;">Try for free</a>
+          <a href="/login" class="ai-btn btn-white font-google-sans !h-10 md:!h-[52px] !px-4 md:!px-6"
+            style="color: #141319 !important;">Sign in</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HeroSection: Simulated Ghostwriting -->
+  <section class="relative h-[400px] md:h-[600px] px-global pt-32 md:pt-48 flex flex-col items-center text-primary"
+    style="background-color: #141319;" id="hero-typing-section">
+    <div class="max-w-5xl w-full">
+      <h1
+        class="text-4xl md:text-7xl font-literata font-extralight mb-6 leading-[0.95] tracking-tight text-center text-primary"
+        id="hero-typing">
+        <span class="hero-first-line"><span class="caret-container"><span class="static-text">AI that writes</span><span
+              class="caret"></span></span><span class="dynamic-first-line"></span></span><span
+          class="dynamic-content"></span>
+      </h1>
+    </div>
+  </section>
+
+  <!-- Section 2: How It Works -->
+  <section class="py-24 px-global" id="how-it-works">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <div class="text-left flex flex-col items-start">
+          <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block">HOW IT
+            WORKS</span>
+          <h2 class="text-4xl md:text-5xl font-literata font-light mb-6 leading-tight">Type. Pause.<br />AI continues.
+          </h2>
+          <p class="text-lg text-primary/60 font-light leading-relaxed mb-8">
+            Accept a word, a sentence, or a paragraph. Keep writing. The more you type, the better AI understands your
+            voice.
+          </p>
+          <a href="/app" class="ai-btn btn-variant-1 font-google-sans">Start Writing Free</a>
+        </div>
+        <div class="relative">
+          <div class="absolute -top-16 -right-16 h-48 w-48 bg-accent/15 blur-3xl rounded-full"></div>
+          <img src="/mindcomplete-hero-4.jpg" class="w-full rounded-2xl shadow-2xl" alt="AI writing flow">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Context/Brain (Web Exclusive) -->
+  <section class="py-24 px-global" id="context">
+    <div class="max-w-4xl mx-auto text-center">
+      <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block">CONTEXT
+        BRAIN</span>
+      <h2 class="text-4xl md:text-5xl font-literata font-light mb-6 leading-tight">Feed it everything</h2>
+      <p class="text-lg text-primary/60 font-light leading-relaxed mb-12 max-w-2xl mx-auto">
+        PDFs, URLs, images, notes — drop them in. AI writes with full knowledge of your project. No prompts needed.
+      </p>
+      <!-- Floating cards placeholder -->
+      <div class="flex justify-center gap-6 flex-wrap">
+        <div
+          class="px-6 py-4 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl text-sm text-primary/70 transform -translate-y-4">
+          📄 brand-guidelines.pdf
+        </div>
+        <div
+          class="px-6 py-4 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl text-sm text-primary/70 transform translate-y-2">
+          🔗 competitor-analysis.com
+        </div>
+        <div
+          class="px-6 py-4 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl text-sm text-primary/70 transform -translate-y-2">
+          🖼️ moodboard.jpg
+        </div>
+      </div>
+      <p class="text-xs text-primary/30 mt-8">🖼️ PLACEHOLDER: Screenshot of web app Brain panel with files</p>
+    </div>
+  </section>
+
+  <!-- Section 4: Image Generation (Web Exclusive) -->
+  <section class="py-24 px-global" id="visual">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <div class="grid grid-cols-2 gap-4">
+          <div
+            class="aspect-square bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center text-primary/30 text-sm">
+            🖼️ Generated image 1
+          </div>
+          <div
+            class="aspect-square bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center text-primary/30 text-sm mt-8">
+            🖼️ Generated image 2
+          </div>
+        </div>
+        <div class="text-left flex flex-col items-start">
+          <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block">IMAGE
+            GENERATION</span>
+          <h2 class="text-4xl md:text-5xl font-literata font-light mb-6 leading-tight">Words become worlds</h2>
+          <p class="text-lg text-primary/60 font-light leading-relaxed mb-8">
+            Describe a scene. Generate it. All without leaving your writing flow.
+          </p>
+          <p class="text-xs text-primary/30">🖼️ PLACEHOLDER: Screenshot of editor with AI-generated image</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Writing Styles -->
+  <section class="py-24 px-global" id="style">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <div class="text-left flex flex-col items-start order-2 lg:order-1">
+          <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block">WRITING
+            STYLES</span>
+          <h2 class="text-4xl md:text-5xl font-literata font-light mb-6 leading-tight">Your tone. Instantly.</h2>
+          <p class="text-lg text-primary/60 font-light leading-relaxed mb-8">
+            Social media. Storytelling. Professional. Or define your own. AI adapts to your voice.
+          </p>
+        </div>
+        <div class="relative order-1 lg:order-2">
+          <div class="absolute -bottom-16 -left-16 h-48 w-48 bg-accent/15 blur-3xl rounded-full"></div>
+          <img src="/mindcomplete-3.jpg" class="w-full rounded-2xl shadow-2xl" alt="Writing style selector">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 6: Figma Plugin Promo -->
+  <section class="py-24 px-global" id="figma">
+    <div class="max-w-4xl mx-auto text-center">
+      <span class="text-accent font-google-sans font-bold tracking-widest text-xs uppercase mb-4 block">FIGMA
+        PLUGIN</span>
+      <h2 class="text-4xl md:text-5xl font-literata font-light mb-6 leading-tight">Already in Figma?</h2>
+      <p class="text-lg text-primary/60 font-light leading-relaxed mb-10 max-w-2xl mx-auto">
+        Select frames, images, and text layers as context. AI writes copy that fits your visual hierarchy.
+      </p>
+      <img src="/mindcomplete-1.jpg" class="w-full max-w-lg mx-auto rounded-2xl shadow-2xl mb-10"
+        alt="Mindcomplete Figma Plugin">
+      <a href="https://www.figma.com/community/plugin/1593731353807484611/mindcomplete" target="_blank"
+        class="ai-btn btn-variant-1 font-google-sans inline-flex items-center gap-2">
+        Get Figma Plugin
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- Final CTA: Extend your stories -->
+  <section class="relative py-32 px-global flex flex-col items-center text-center" style="background-color: #141319;">
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div class="h-64 w-64 bg-accent/20 blur-3xl rounded-full"></div>
+    </div>
+    <div class="max-w-4xl relative z-10">
+      <h2
+        class="text-4xl md:text-7xl font-literata font-extralight mb-8 leading-[1.1] tracking-tight text-center text-primary"
+        id="main-heading">
+        Extend your
+        <span class="italic rotating-word-container">
+          <span class="rotating-word">stories</span>
+        </span>
+      </h2>
+      <div class="flex flex-col sm:flex-row gap-6 justify-center">
+        <a href="/app" class="ai-btn btn-variant-1 font-google-sans">Try for free</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-20 px-global">
+    <div
+      class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12 text-center md:text-left">
+      <div class="flex flex-col gap-6 items-center md:items-start">
+        <span class="text-logo" style="font-size: 22px;">Mind<span class="text-logo-divider">|</span><span
+            class="text-logo-complete">complete</span></span>
+        <p class="text-primary/40 text-sm max-w-xs">
+          The AI extension for your brain. Built for the writers, the dreamers, and the makers.
+        </p>
+      </div>
+      <div class="flex gap-12 text-sm font-google-sans font-medium">
+        <div class="flex flex-col gap-4">
+          <span class="text-primary/30 uppercase text-xs tracking-widest text-primary/40 text-sm">Product</span>
+          <a href="/app" class="hover:text-accent">Editor</a>
+          <a href="#" class="hover:text-accent text-primary/60">Pricing</a>
+        </div>
+        <div class="flex flex-col gap-4">
+          <span class="text-primary/30 uppercase text-xs tracking-widest text-primary/40 text-sm">Company</span>
+          <a href="#" class="hover:text-accent text-primary/60">About</a>
+          <a href="#" class="hover:text-accent text-primary/60">Privacy</a>
+        </div>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto mt-20 pt-8 text-center text-primary/20 text-xs">
+      © 2026 Mindcomplete AI. All rights reserved.
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script>
+    const words = ['stories', 'emails', 'essays', 'notes', 'tweets', 'blogs', 'ideas', 'thoughts'];
+    const wordElement = document.querySelector('.rotating-word');
+    const container = document.querySelector('.rotating-word-container');
+    const mainHeading = document.getElementById('main-heading');
+    let currentIndex = 0;
+
+    function measureWidth(text) {
+      const span = document.createElement('span');
+      const style = window.getComputedStyle(mainHeading);
+      span.style.cssText = `
+        position: absolute;
+        visibility: hidden;
+        white-space: nowrap;
+        font-family: ${style.fontFamily};
+        font-size: ${style.fontSize};
+        font-weight: ${style.fontWeight};
+        font-style: italic;
+        letter-spacing: ${style.letterSpacing};
+        text-transform: ${style.textTransform};
+      `;
+      span.textContent = text;
+      document.body.appendChild(span);
+      const width = span.offsetWidth;
+      span.remove();
+      return width + 20;
+    }
+
+    container.style.width = measureWidth(words[0]) + 'px';
+
+    function rotateWord() {
+      const nextIndex = (currentIndex + 1) % words.length;
+      const nextWidth = measureWidth(words[nextIndex]);
+
+      const tl = gsap.timeline({ onComplete: () => { currentIndex = nextIndex; } });
+
+      tl.to(wordElement, { y: -50, opacity: 0, duration: 0.4, ease: "power2.in" })
+        .to(container, { width: nextWidth, duration: 0.4, ease: "power2.inOut" }, "-=0.2")
+        .set(wordElement, { textContent: words[nextIndex], y: 50 })
+        .to(wordElement, { y: 0, opacity: 1, duration: 0.6, ease: "back.out(1.2)" });
+    }
+
+    setInterval(rotateWord, 3000);
+
+    const staticContent = document.querySelector('.static-text');
+    const dynamicFirstLine = document.querySelector('.dynamic-first-line');
+    const dynamicContent = document.querySelector('.dynamic-content');
+    const heroWords = ["BR", "with ", "you, ", "not ", "for ", "you."];
+    let heroTl = gsap.timeline({ delay: 0.5 });
+    let passedBr = false;
+
+    let currentTime = 0.5;
+    heroWords.forEach((word, index) => {
+      if (word === "BR") {
+        passedBr = true;
+        currentTime += 0.1;
+        return;
+      }
+
+      const hasComma = word.includes(',');
+      const targetContainer = passedBr ? dynamicContent : dynamicFirstLine;
+
+      heroTl.to({}, {
+        onStart: () => {
+          const span = document.createElement('span');
+          span.className = "word-fade prediction-remain";
+          span.style.display = 'inline-block';
+          span.textContent = word.replace(/ /g, '\u00A0');
+          targetContainer.appendChild(span);
+
+
+        }
+      }, currentTime);
+
+      currentTime += hasComma ? 0.8 : 0.2;
+    });
+
+    // 3. Final "Soft Accept"
+    heroTl.to({}, { duration: 0.8 }, currentTime)
+      .to(".prediction-remain", {
+        duration: 0.4,
+        onStart: () => {
+          document.querySelectorAll('.prediction-remain').forEach(el => {
+            el.style.animation = 'none';
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+          });
+        }
+      });
+
+    // GSAP Scroll Animations
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.utils.toArray('section:not(:first-child)').forEach((section) => {
+      const children = section.querySelectorAll('.max-w-4xl > *, .max-w-5xl > *, .max-w-7xl > *, .max-w-3xl > *');
+      gsap.from(children, {
+        scrollTrigger: { trigger: section, start: "top 90%", toggleActions: "restart none none reset" },
+        y: 30, opacity: 0, duration: 1, stagger: 0.1, ease: "power3.out", clearProps: "all"
+      });
+    });
+
+    gsap.to(".bg-blur", {
+      scrollTrigger: { trigger: "body", start: "top top", end: "bottom bottom", scrub: 1.5 },
+      y: 150, x: 50, scale: 1.3
+    });
+
+    // Navigation State Trigger
+    ScrollTrigger.create({
+      trigger: "#hero-typing-section",
+      start: "bottom 100px",
+      onEnter: () => {
+        const nav = document.querySelector('nav');
+        nav.classList.remove('nav-transparent');
+        gsap.set(nav, { position: "fixed", y: -100 });
+        gsap.to(nav, { y: 0, duration: 0.6, ease: "power3.out" });
+      },
+      onLeaveBack: () => {
+        const nav = document.querySelector('nav');
+        nav.classList.add('nav-transparent');
+        gsap.set(nav, { position: "absolute", y: 0 });
+      }
+    });
+  </script>
+</body>
+
+</html>

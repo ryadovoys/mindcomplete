@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Purple Valley is an AI-powered writing assistant with text prediction and image generation. Users type in an editor and receive inline text completions that appear word-by-word with fade animations. Features subscription tiers (Free/Pro) with LemonSqueezy integration.
+Mindcomplete is an AI-powered writing assistant with text prediction and image generation. Users type in an editor and receive inline text completions that appear word-by-word with fade animations. Features subscription tiers (Free/Pro) with LemonSqueezy integration.
 
 ## Tech Stack
 
@@ -73,7 +73,7 @@ npm start         # Start production server
 
 ## Subscription System
 
-Purple Valley uses a hybrid subscription + credits model via LemonSqueezy:
+Mindcomplete uses a hybrid subscription + credits model via LemonSqueezy:
 
 **Tiers:**
 - **Free**: Unlimited text predictions, 0 images/month, 0 saved valleys

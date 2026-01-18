@@ -5,20 +5,22 @@
     <meta charset="UTF-8">
     <style>
         :root {
-            --background: #301935;
-            --text: #e5e6fa;
-            --text-prediction: rgba(229, 230, 250, 0.5);
-            --btn-background: #e5e6fa;
-            --text-btn: #301935;
+            --background: #141319;
+            --text: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --text-prediction: #c3fb50;
+            --accent: #c3fb50;
+            --border: rgba(255, 255, 255, 0.1);
 
             --radius-btn: 52px;
-            --radius-container: 16px;
+            --radius-container: 12px;
 
             --spacing-gap: 12px;
             --spacing-padding: 24px;
 
             --font-size-text: 18px;
             --font-size-btn: 14px;
+            --font-size-small: 14px;
         }
 
         * {
@@ -37,72 +39,165 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             color: var(--text);
             background: var(--background);
-            padding: var(--spacing-padding);
             display: flex;
             flex-direction: column;
-            gap: var(--spacing-gap);
             min-height: 100%;
-            border-radius: var(--radius-container);
         }
 
-        .content-area {
+        .context-bar {
+            padding: 12px var(--spacing-padding);
+            border-bottom: 1px solid var(--border);
+            font-size: var(--font-size-small);
+            color: var(--text);
+            background: #19181E;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-shrink: 0;
+            height: 60px;
+        }
+
+        .context-bar:not(.has-context) .context-info {
+            color: var(--text-muted);
+        }
+
+        .context-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: var(--font-size-small);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .checkbox.checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .checkbox svg {
+            width: 12px;
+            height: 12px;
+            stroke: #000;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .checkbox.checked svg {
+            opacity: 1;
+        }
+
+        .editor-container {
             flex: 1;
-            min-height: 80px;
+            padding: var(--spacing-padding);
             overflow-y: auto;
         }
 
-        .text-content {
+        .editor {
+            min-height: 100%;
+            outline: none;
+            font-family: inherit;
             font-size: var(--font-size-text);
-            font-weight: 400;
-            line-height: 1.4;
-            text-align: left;
+            line-height: 1.5;
+            color: var(--text);
             white-space: pre-wrap;
             word-break: break-word;
         }
 
-        .text-placeholder {
+        .editor:empty::before {
+            content: attr(data-placeholder);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        /* Inline prediction */
+        .inline-prediction {
             color: var(--text-prediction);
         }
 
-        .text-generated {
+        .inline-prediction .word {
+            cursor: pointer;
+        }
+
+        /* Highlighted text (from start up to hovered word) */
+        .inline-prediction .word.highlighted {
             color: var(--text);
         }
 
-        .loading {
-            display: flex;
+        .inline-regenerate {
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
-            color: var(--text-prediction);
-            font-size: var(--font-size-text);
-        }
-
-        .spinner {
-            width: 18px;
-            height: 18px;
-            border: 2px solid var(--text-prediction);
-            border-top-color: var(--text);
+            justify-content: center;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            background: rgba(255, 255, 255, 0.06);
+            cursor: pointer;
+            vertical-align: middle;
+            margin-left: 6px;
+            transition: background 0.15s ease;
         }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+        .inline-regenerate:hover {
+            background: rgba(255, 255, 255, 0.12);
         }
 
-        .button-row {
+        .inline-regenerate svg {
+            width: 14px;
+            height: 14px;
+            stroke: var(--text);
+        }
+
+        .bottom-bar {
+            padding: 16px var(--spacing-padding) var(--spacing-padding);
+            background: #141319;
             display: flex;
-            gap: var(--spacing-gap);
             align-items: center;
+            justify-content: space-between;
+            gap: var(--spacing-gap);
             flex-shrink: 0;
+        }
+
+        .hint {
+            font-size: var(--font-size-small);
+            color: var(--text-muted);
+        }
+
+        .hint kbd {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
         }
 
         .btn {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
             height: 36px;
             border: none;
             border-radius: var(--radius-btn);
@@ -110,54 +205,79 @@
             font-size: var(--font-size-btn);
             font-weight: 400;
             cursor: pointer;
-            transition: opacity 0.15s ease;
-            white-space: nowrap;
-        }
-
-        .btn:hover {
-            opacity: 0.85;
+            transition: all 0.15s ease;
+            padding: 0 16px;
         }
 
         .btn:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
         }
 
         .btn-primary {
-            background: var(--btn-background);
-            color: var(--text-btn);
-            padding: 12px 16px;
+            background: var(--accent);
+            color: #000000;
         }
 
-        .btn-secondary {
-            background: var(--btn-background);
-            color: var(--text-btn);
-            padding: 12px 16px;
+        .btn-primary:hover:not(:disabled) {
+            background: #d9ff8a;
         }
 
         .btn-ghost {
             background: transparent;
             color: var(--text);
-            padding: 12px 6px;
+            border: 1px solid var(--border);
+            padding: 0 12px;
+        }
+
+        .btn-ghost:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .btn-icon {
-            background: transparent;
             width: 36px;
-            height: 36px;
-            padding: 6px;
+            padding: 0;
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
         }
 
-        .btn-icon svg {
-            width: 24px;
-            height: 24px;
+        .btn-icon:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .btn-icon svg path {
-            fill: var(--text);
+        .status {
+            font-size: var(--font-size-small);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        /* Resize handle */
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-prediction);
+        }
+
+        .status-dot.generating {
+            background: var(--text);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
         .resize-handle {
             position: fixed;
             bottom: 2px;
@@ -168,193 +288,1010 @@
             opacity: 0.5;
         }
 
+        .resize-handle:hover {
+            opacity: 0.8;
+        }
+
         .resize-handle svg {
             width: 100%;
             height: 100%;
             stroke: var(--text);
         }
 
-        .resize-handle:hover {
-            opacity: 0.8;
+        /* Settings icon */
+        .settings-icon {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.15s ease;
+        }
+
+        .settings-icon:hover {
+            opacity: 1;
+        }
+
+        .settings-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: var(--text);
+        }
+
+        /* Footer */
+        .footer {
+            padding: 16px var(--spacing-padding);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: var(--font-size-small);
+            color: rgba(255, 255, 255, 0.4);
+            background: #19181E;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .footer a {
+            color: rgba(255, 255, 255, 0.4);
+            text-decoration: underline;
+            transition: color 0.15s ease;
+        }
+
+        .footer a:hover {
+            color: var(--text);
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--background);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+        }
+
+        .settings-panel.visible {
+            display: flex;
+        }
+
+        .settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--spacing-padding);
+            height: 60px;
+            background: #19181E;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .settings-header-icon {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.15s ease;
+        }
+
+        .settings-header-icon:hover {
+            opacity: 1;
+        }
+
+        .settings-header-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: var(--text);
+        }
+
+        .settings-title {
+            font-size: 18px;
+            color: var(--text);
+            text-align: left;
+        }
+
+        .settings-content {
+            flex: 1;
+            padding: var(--spacing-padding);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .settings-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .settings-section-title {
+            font-size: 16px;
+            color: var(--text);
+        }
+
+        .settings-section-desc {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.4);
+            line-height: 1.4;
+        }
+
+        .settings-section-desc p {
+            margin: 0 0 8px 0;
+        }
+
+        .settings-section-desc p:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-dropdown {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            max-width: 240px;
+        }
+
+        .settings-dropdown:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-dropdown-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text);
+        }
+
+        .settings-dropdown-text {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .settings-dropdown-arrow svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text);
+            opacity: 0.5;
+        }
+
+        .settings-checkbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .settings-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .settings-checkbox {
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .settings-checkbox.checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .settings-checkbox svg {
+            width: 14px;
+            height: 14px;
+            stroke: #000;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .settings-checkbox.checked svg {
+            opacity: 1;
+        }
+
+        .settings-checkbox-label {
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        /* Style dropdown menu */
+        .style-menu {
+            display: none;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .style-menu.visible {
+            display: flex;
+        }
+
+        .style-menu-item {
+            padding: 12px 16px;
+            font-size: 14px;
+            color: var(--text);
+            cursor: pointer;
+            transition: background 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .style-menu-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .style-menu-item.selected {
+            color: var(--accent);
+        }
+
+        .style-menu-item svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            opacity: 0;
+        }
+
+        .style-menu-item.selected svg {
+            opacity: 1;
+        }
+
+        /* Writing style input modal */
+        .style-input-container {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .style-input-container.visible {
+            display: flex;
+        }
+
+        .style-input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .style-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .style-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
         }
     </style>
 </head>
 
 <body>
-    <div class="content-area" id="contentArea">
-        <div class="text-content text-placeholder" id="placeholder">Mindcomplete...</div>
-        <div class="text-content text-generated" id="continuation" style="display: none;"></div>
-        <div class="loading" id="loading" style="display: none;">
-            <div class="spinner"></div>
-            <span>Generating...</span>
+    <!-- Main View -->
+    <div class="context-bar" id="contextBar">
+        <div class="context-info">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3">
+                </path>
+            </svg>
+            <span id="contextText">No selection</span>
+        </div>
+        <div class="settings-icon" id="settingsBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"
+                stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                </path>
+            </svg>
         </div>
     </div>
 
-    <!-- Initial state: Generate button -->
-    <div class="button-row" id="mainButtons">
-        <button class="btn btn-primary" id="continueBtn">Generate</button>
+    <div class="editor-container">
+        <div class="editor" id="editor" contenteditable="true" data-placeholder="What's on your mind?"
+            spellcheck="false"></div>
     </div>
 
-    <!-- After generation: Add to canvas, Clear, Regenerate -->
-    <div class="button-row" id="acceptButtons" style="display: none;">
-        <button class="btn btn-secondary" id="acceptBtn">Add to canvas</button>
-        <button class="btn btn-ghost" id="cancelBtn">Clear</button>
-        <button class="btn btn-icon" id="regenerateBtn" title="Regenerate">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                    d="M12 4V1L8 5L12 9V6C15.31 6 18 8.69 18 12C18 13.01 17.75 13.97 17.3 14.8L18.76 16.26C19.54 15.03 20 13.57 20 12C20 7.58 16.42 4 12 4ZM12 18C8.69 18 6 15.31 6 12C6 10.99 6.25 10.03 6.7 9.2L5.24 7.74C4.46 8.97 4 10.43 4 12C4 16.42 7.58 20 12 20V23L16 19L12 15V18Z"
-                    fill="currentColor" />
-            </svg>
-        </button>
+    <div class="bottom-bar">
+        <div class="status" id="status">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Ready</span>
+        </div>
+        <div class="button-group">
+            <button class="btn btn-ghost" id="clearBtn">Clear</button>
+            <button class="btn btn-primary" id="exportBtn">Paste to Figma</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span>Mindcomplete © by <a href="https://ryadovoy.com" target="_blank">Sergey Ryadovoy</a></span>
+        <a href="https://buymeacoffee.com/ryadovoys" target="_blank">Buy me a coffee</a>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <span class="settings-title" style="flex: 1;">Settings</span>
+            <div class="settings-header-icon" id="settingsClose">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </div>
+        </div>
+        <div class="settings-content">
+            <!-- Writing Style Section -->
+            <div class="settings-section">
+                <div class="settings-section-title">Writing style</div>
+                <div class="settings-section-desc">Pick the writing style you like to make it write closer to your goal.
+                </div>
+                <div class="settings-dropdown" id="styleDropdown">
+                    <div class="settings-dropdown-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                    </div>
+                    <span class="settings-dropdown-text" id="styleDropdownText">No style selected</span>
+                    <div class="settings-dropdown-arrow">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                </div>
+                <div class="style-menu" id="styleMenu">
+                    <div class="style-menu-item" data-style="none">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        No style
+                    </div>
+                    <div class="style-menu-item" data-style="storytelling">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Storytelling
+                    </div>
+                    <div class="style-menu-item" data-style="social">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Social media post
+                    </div>
+                    <div class="style-menu-item" data-style="professional">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Professional
+                    </div>
+                    <div class="style-menu-item" data-style="custom">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Custom...
+                    </div>
+                </div>
+                <div class="style-input-container" id="styleInputContainer">
+                    <textarea class="style-input" id="styleInput"
+                        placeholder="Describe your writing style..."></textarea>
+                    <button class="btn btn-primary" id="saveStyleBtn" style="align-self: flex-start;">Save
+                        style</button>
+                </div>
+            </div>
+
+            <!-- Context Recognition Section -->
+            <div class="settings-section">
+                <div class="settings-section-title">Context recognition</div>
+                <div class="settings-section-desc">Choose what types of content to analyze from your Figma selection.
+                </div>
+                <div class="settings-checkbox-list">
+                    <div class="settings-checkbox-item" id="imagesToggle">
+                        <div class="settings-checkbox checked" id="imagesCheckbox">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <span class="settings-checkbox-label">Images</span>
+                    </div>
+                    <div class="settings-checkbox-item" id="textToggle">
+                        <div class="settings-checkbox checked" id="textCheckbox">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <span class="settings-checkbox-label">Text</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Section -->
+            <div class="settings-section">
+                <div class="settings-section-title">About</div>
+                <div class="settings-section-desc">
+                    <p>AI that writes with you, not for you. That was the main idea behind this tool. You just start
+                        writing, and Mindcomplete continues for you when you stop.</p>
+                    <p>Instead of acting based on prompts, it analyzes what you have written, along with selected text
+                        and images, to understand exactly what you're working on.</p>
+                    <p>Powered by Google's Gemini 2.0 Flash model, it understands the context of a selected Section or
+                        Frame, so you can just drop all your context in one place and it will become the base for your
+                        writing.</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="resize-handle" id="resizeHandle">
         <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M14 2L2 14" stroke-width="1.5" stroke-linecap="round" />
             <path d="M14 8L8 14" stroke-width="1.5" stroke-linecap="round" />
-            <path d="M14 14L14 14" stroke-width="1.5" stroke-linecap="round" />
         </svg>
     </div>
 
     <script>
-        var currentNodeId = null;
-        var currentText = '';
-        var sectionContext = '';
-        var suggestion = '';
-        var isLoading = false;
+        // State
+        var context = '';
+        var imageDescriptions = [];
+        var currentPrediction = '';
+        var isGenerating = false;
+        var isAnalyzingImages = false;
+        var analyzeImagesEnabled = true;
+        var analyzeTextEnabled = true;
+        var writingStyle = '';
+        var debounceTimer = null;
+        var inlinePredictionEl = null;
+        var justAccepted = false;
+        var DEBOUNCE_MS = 500;
 
-        var API_URL = 'https://purplevalley.co/api/predict';
+        var API_URL = 'https://mindcomplete.vercel.app/api/predict';
+        var IMAGE_API_URL = 'https://mindcomplete.vercel.app/api/process-input';
 
-        var placeholder = document.getElementById('placeholder');
-        var continuation = document.getElementById('continuation');
-        var loading = document.getElementById('loading');
-        var mainButtons = document.getElementById('mainButtons');
-        var acceptButtons = document.getElementById('acceptButtons');
-        var continueBtn = document.getElementById('continueBtn');
-        var acceptBtn = document.getElementById('acceptBtn');
-        var cancelBtn = document.getElementById('cancelBtn');
-        var regenerateBtn = document.getElementById('regenerateBtn');
+        // Load saved settings
+        try {
+            var savedSettings = localStorage.getItem('mindcomplete_settings');
+            if (savedSettings) {
+                var settings = JSON.parse(savedSettings);
+                analyzeImagesEnabled = settings.images !== false;
+                analyzeTextEnabled = settings.text !== false;
+                writingStyle = settings.writingStyle || '';
+            }
+        } catch (e) { }
 
-        // Resize functionality
+        // DOM
+        var contextBar = document.getElementById('contextBar');
+        var contextText = document.getElementById('contextText');
+        var editor = document.getElementById('editor');
+        var statusDot = document.getElementById('statusDot');
+        var statusTextEl = document.getElementById('statusText');
+        var clearBtn = document.getElementById('clearBtn');
+        var exportBtn = document.getElementById('exportBtn');
         var resizeHandle = document.getElementById('resizeHandle');
-        var isResizing = false;
 
-        resizeHandle.addEventListener('mousedown', function (e) {
-            isResizing = true;
-            e.preventDefault();
+        // Settings DOM
+        var settingsBtn = document.getElementById('settingsBtn');
+        var settingsPanel = document.getElementById('settingsPanel');
+        var settingsClose = document.getElementById('settingsClose');
+        var imagesToggle = document.getElementById('imagesToggle');
+        var imagesCheckbox = document.getElementById('imagesCheckbox');
+        var textToggle = document.getElementById('textToggle');
+        var textCheckbox = document.getElementById('textCheckbox');
+        var styleDropdown = document.getElementById('styleDropdown');
+        var styleDropdownText = document.getElementById('styleDropdownText');
+        var styleInputContainer = document.getElementById('styleInputContainer');
+        var styleInput = document.getElementById('styleInput');
+        var saveStyleBtn = document.getElementById('saveStyleBtn');
+
+        // Initialize checkboxes
+        imagesCheckbox.classList.toggle('checked', analyzeImagesEnabled);
+        textCheckbox.classList.toggle('checked', analyzeTextEnabled);
+        styleInput.value = writingStyle;
+        styleDropdownText.textContent = writingStyle ? 'Custom style' : 'No style selected';
+
+        // Save settings
+        function saveSettings() {
+            try {
+                localStorage.setItem('mindcomplete_settings', JSON.stringify({
+                    images: analyzeImagesEnabled,
+                    text: analyzeTextEnabled,
+                    writingStyle: writingStyle,
+                    styleType: currentStyleType
+                }));
+            } catch (e) { }
+        }
+
+        // Settings panel toggle
+        settingsBtn.addEventListener('click', function () {
+            settingsPanel.classList.add('visible');
         });
 
+        settingsClose.addEventListener('click', function () {
+            settingsPanel.classList.remove('visible');
+        });
+
+        // Images checkbox
+        imagesToggle.addEventListener('click', function () {
+            analyzeImagesEnabled = !analyzeImagesEnabled;
+            imagesCheckbox.classList.toggle('checked', analyzeImagesEnabled);
+            if (!analyzeImagesEnabled) {
+                imageDescriptions = [];
+            }
+            saveSettings();
+        });
+
+        // Text checkbox
+        textToggle.addEventListener('click', function () {
+            analyzeTextEnabled = !analyzeTextEnabled;
+            textCheckbox.classList.toggle('checked', analyzeTextEnabled);
+            saveSettings();
+        });
+
+        // Style presets
+        var stylePresets = {
+            none: '',
+            storytelling: 'Write in a narrative storytelling style. Use vivid descriptions, engaging hooks, and create emotional connections. Build tension and resolution like a story arc.',
+            social: 'Write for social media: punchy, attention-grabbing, casual but professional. Use short sentences, emojis sparingly, and include calls-to-action. Keep it concise and shareable.',
+            professional: 'Write in a professional, business-appropriate tone. Be clear, concise, and authoritative. Avoid slang and casual language. Focus on facts and value.',
+            custom: ''
+        };
+
+        var currentStyleType = 'none';
+        var styleMenu = document.getElementById('styleMenu');
+        var styleMenuItems = styleMenu.querySelectorAll('.style-menu-item');
+
+        // Update dropdown text based on style type
+        function updateStyleDropdownText() {
+            var labels = { none: 'No style', storytelling: 'Storytelling', social: 'Social media post', professional: 'Professional', custom: 'Custom style' };
+            styleDropdownText.textContent = labels[currentStyleType] || 'No style';
+        }
+
+        // Update selected state in menu
+        function updateMenuSelection() {
+            styleMenuItems.forEach(function (item) {
+                item.classList.toggle('selected', item.dataset.style === currentStyleType);
+            });
+        }
+
+        // Load saved style type
+        try {
+            var savedSettings = localStorage.getItem('mindcomplete_settings');
+            if (savedSettings) {
+                var s = JSON.parse(savedSettings);
+                if (s.styleType) currentStyleType = s.styleType;
+            }
+        } catch (e) { }
+        updateStyleDropdownText();
+        updateMenuSelection();
+
+        // Toggle menu visibility
+        styleDropdown.addEventListener('click', function () {
+            styleMenu.classList.toggle('visible');
+            styleInputContainer.classList.remove('visible');
+        });
+
+        // Handle menu item click
+        styleMenuItems.forEach(function (item) {
+            item.addEventListener('click', function () {
+                currentStyleType = item.dataset.style;
+
+                if (currentStyleType === 'custom') {
+                    // Show custom input
+                    styleMenu.classList.remove('visible');
+                    styleInputContainer.classList.add('visible');
+                } else {
+                    // Apply preset
+                    writingStyle = stylePresets[currentStyleType];
+                    styleMenu.classList.remove('visible');
+                    styleInputContainer.classList.remove('visible');
+                    saveSettings();
+                }
+
+                updateStyleDropdownText();
+                updateMenuSelection();
+            });
+        });
+
+        // Save custom style button
+        saveStyleBtn.addEventListener('click', function () {
+            writingStyle = styleInput.value.trim();
+            currentStyleType = 'custom';
+            updateStyleDropdownText();
+            updateMenuSelection();
+            styleInputContainer.classList.remove('visible');
+            saveSettings();
+        });
+
+        // Resize
+        var isResizing = false;
+        resizeHandle.addEventListener('mousedown', function (e) { isResizing = true; e.preventDefault(); });
         document.addEventListener('mousemove', function (e) {
             if (!isResizing) return;
-            var width = Math.max(200, e.clientX + 10);
-            var height = Math.max(150, e.clientY + 10);
-            parent.postMessage({ pluginMessage: { type: 'resize', width: width, height: height } }, '*');
+            parent.postMessage({ pluginMessage: { type: 'resize', width: Math.max(300, e.clientX + 10), height: Math.max(300, e.clientY + 10) } }, '*');
         });
+        document.addEventListener('mouseup', function () { isResizing = false; });
 
-        document.addEventListener('mouseup', function () {
-            isResizing = false;
-        });
+        // Analyze a single image
+        async function analyzeImage(image) {
+            console.log('[UI] Analyzing image:', image.name, 'base64 length:', image.base64 ? image.base64.length : 0);
+            try {
+                var response = await fetch(IMAGE_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'image',
+                        imageData: image.base64,
+                        mimeType: image.mimeType,
+                        prompt: 'Describe this image briefly for use as writing context. Focus on key visual elements, text content, and overall purpose. Keep under 100 words.'
+                    })
+                });
+                console.log('[UI] API response status:', response.status);
+                if (!response.ok) throw new Error('API error: ' + response.status);
+                var data = await response.json();
+                console.log('[UI] Got description:', data.description ? data.description.substring(0, 50) + '...' : 'none');
+                return { name: image.name, description: data.description };
+            } catch (e) {
+                console.error('[UI] Image analysis failed:', e);
+                return { name: image.name, description: '[Could not analyze image]' };
+            }
+        }
 
-        window.onmessage = function (event) {
-            var msg = event.data.pluginMessage;
-            if (!msg) return;
+        // Analyze all images
+        async function analyzeImages(images) {
+            console.log('[UI] analyzeImages called with', images ? images.length : 0, 'images');
+            if (!images || images.length === 0) return [];
 
-            if (msg.type === 'quick-generate') {
-                quickGenerate(msg.text, msg.nodeId);
-                return;
+            isAnalyzingImages = true;
+            setStatus('Analyzing ' + images.length + ' image(s)...', true);
+
+            var results = [];
+            for (var i = 0; i < images.length; i++) {
+                var result = await analyzeImage(images[i]);
+                results.push(result);
             }
 
-            if (msg.type === 'selection-result' || msg.type === 'selection-changed') {
-                if (msg.text) {
-                    currentNodeId = msg.nodeId;
-                    currentText = msg.text;
-                    sectionContext = msg.sectionContext || '';
-                } else {
-                    currentNodeId = null;
-                    currentText = '';
-                    sectionContext = '';
+            isAnalyzingImages = false;
+            setStatus('Ready', false);
+            return results;
+        }
+
+        // Build full context with image descriptions and writing style
+        function getFullContext() {
+            var parts = [];
+
+            // Add writing style first if set
+            if (writingStyle) {
+                parts.push('[Writing Style]\n' + writingStyle);
+            }
+
+            // Add image descriptions
+            if (imageDescriptions.length > 0) {
+                for (var i = 0; i < imageDescriptions.length; i++) {
+                    parts.push('[Image: ' + imageDescriptions[i].name + ']\n' + imageDescriptions[i].description);
                 }
             }
 
-            if (msg.type === 'accept-result' && msg.success) {
-                resetUI();
+            // Add text context only if enabled
+            if (context && analyzeTextEnabled) {
+                parts.push('[Context]\n' + context);
+            }
+
+            return parts.join('\n\n');
+        }
+
+        // Messages from plugin
+        window.onmessage = async function (event) {
+            var msg = event.data.pluginMessage;
+            if (!msg) return;
+
+            if (msg.type === 'context-result' || msg.type === 'selection-changed') {
+                console.log('[UI] Received message:', msg.type, 'images:', msg.images ? msg.images.length : 0);
+
+                // Check if we have any content (text OR images)
+                var hasImages = msg.images && msg.images.length > 0;
+                var hasText = msg.context && msg.context.length > 0;
+
+                if (msg.success && (hasText || hasImages)) {
+                    context = msg.context || '';
+                    contextBar.classList.add('has-context');
+
+                    // Update context bar text
+                    var textCount = msg.items ? msg.items.length : 0;
+                    var imageCount = msg.images ? msg.images.length : 0;
+                    var parts = [];
+                    if (textCount > 0) parts.push(textCount + ' text' + (textCount !== 1 ? 's' : ''));
+                    if (imageCount > 0) parts.push(imageCount + ' image' + (imageCount !== 1 ? 's' : ''));
+                    contextText.textContent = msg.name + ' (' + parts.join(', ') + ')';
+
+                    // Analyze images if present and enabled
+                    if (hasImages && analyzeImagesEnabled) {
+                        imageDescriptions = await analyzeImages(msg.images);
+                        console.log('[MindComplete] Image descriptions:', imageDescriptions);
+                    } else {
+                        imageDescriptions = [];
+                    }
+                } else {
+                    context = '';
+                    imageDescriptions = [];
+                    contextBar.classList.remove('has-context');
+                    contextText.textContent = msg.error || 'No selection';
+                }
             }
         };
 
-        function quickGenerate(text, nodeId) {
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: text })
-            })
-                .then(function (response) {
-                    if (!response.ok) throw new Error('API error');
-                    return response.body.getReader();
-                })
-                .then(function (reader) {
-                    var decoder = new TextDecoder();
-                    var result = '';
-
-                    function read() {
-                        return reader.read().then(function (data) {
-                            if (data.done) {
-                                parent.postMessage({
-                                    pluginMessage: { type: 'quick-result', success: true, suggestion: result, nodeId: nodeId }
-                                }, '*');
-                                return;
-                            }
-
-                            var chunk = decoder.decode(data.value, { stream: true });
-                            var lines = chunk.split('\n');
-
-                            for (var i = 0; i < lines.length; i++) {
-                                var line = lines[i];
-                                if (line.indexOf('data: ') === 0) {
-                                    var jsonStr = line.slice(6);
-                                    if (jsonStr === '[DONE]') continue;
-                                    try {
-                                        var parsed = JSON.parse(jsonStr);
-                                        var content = parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content;
-                                        if (content) result += content;
-                                    } catch (e) { }
-                                }
-                            }
-                            return read();
-                        });
+        // Get text without prediction element
+        function getEditorText() {
+            var text = '';
+            function walk(node) {
+                if (node === inlinePredictionEl) return;
+                if (node.nodeType === Node.TEXT_NODE) {
+                    text += node.textContent;
+                } else if (node.nodeName === 'BR') {
+                    text += '\n';
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                    for (var i = 0; i < node.childNodes.length; i++) {
+                        walk(node.childNodes[i]);
                     }
-                    return read();
-                })
-                .catch(function (err) {
-                    parent.postMessage({ pluginMessage: { type: 'quick-result', success: false } }, '*');
+                }
+            }
+            for (var i = 0; i < editor.childNodes.length; i++) {
+                walk(editor.childNodes[i]);
+            }
+            return text;
+        }
+
+        // Create prediction element
+        function createInlinePrediction() {
+            if (!inlinePredictionEl) {
+                inlinePredictionEl = document.createElement('span');
+                inlinePredictionEl.className = 'inline-prediction';
+                inlinePredictionEl.contentEditable = 'false';
+
+                // Hover to highlight all words up to hovered word
+                inlinePredictionEl.addEventListener('mouseover', function (e) {
+                    var wordEl = e.target.closest('.word');
+                    if (!wordEl) return;
+                    highlightUpTo(wordEl);
                 });
+
+                inlinePredictionEl.addEventListener('mouseout', function (e) {
+                    clearHighlights();
+                });
+
+                // Click to accept up to that word (without trailing space)
+                inlinePredictionEl.addEventListener('click', function (e) {
+                    var wordEl = e.target.closest('.word');
+                    if (!wordEl) return;
+                    var endIndex = parseInt(wordEl.getAttribute('data-end'), 10);
+                    if (!isNaN(endIndex) && endIndex > 0) {
+                        acceptPartialPrediction(endIndex);
+                    }
+                });
+            }
+            return inlinePredictionEl;
         }
 
-        function resetUI() {
-            suggestion = '';
-            placeholder.style.display = 'block';
-            continuation.style.display = 'none';
-            continuation.textContent = '';
-            mainButtons.style.display = 'flex';
-            acceptButtons.style.display = 'none';
+        // Highlight all words from start up to (and including) the given word
+        function highlightUpTo(targetWord) {
+            if (!inlinePredictionEl) return;
+            var words = inlinePredictionEl.querySelectorAll('.word');
+            var found = false;
+            for (var i = 0; i < words.length; i++) {
+                if (!found) {
+                    words[i].classList.add('highlighted');
+                } else {
+                    words[i].classList.remove('highlighted');
+                }
+                if (words[i] === targetWord) {
+                    found = true;
+                }
+            }
         }
 
-        function generateContinuation() {
-            if (!currentText) {
-                placeholder.textContent = 'Select a text layer first...';
-                return;
+        function clearHighlights() {
+            if (!inlinePredictionEl) return;
+            var words = inlinePredictionEl.querySelectorAll('.word');
+            for (var i = 0; i < words.length; i++) {
+                words[i].classList.remove('highlighted');
             }
-            if (isLoading) return;
+        }
 
-            isLoading = true;
-            suggestion = '';
-            placeholder.style.display = 'none';
-            continuation.style.display = 'none';
-            loading.style.display = 'flex';
+        // Insert prediction at end
+        function insertInlinePrediction() {
+            var prediction = createInlinePrediction();
+            if (editor.contains(prediction)) return;
+            editor.appendChild(prediction);
+        }
 
-            var textToSend = currentText;
-            if (sectionContext) {
-                textToSend = '[Context from section]\n' + sectionContext + '\n\n[Continue this text]\n' + currentText;
+        // Remove prediction
+        function removeInlinePrediction() {
+            if (inlinePredictionEl && editor.contains(inlinePredictionEl)) {
+                inlinePredictionEl.remove();
             }
+            currentPrediction = '';
+        }
+
+        // Update display - render words with end positions including trailing space
+        function updatePredictionDisplay(text) {
+            if (!inlinePredictionEl) return;
+
+            var parts = text.split(/(\s+)/);
+            var html = '';
+            var charIndex = 0;
+
+            for (var i = 0; i < parts.length; i++) {
+                var part = parts[i];
+                if (!part) continue;
+
+                var partEnd = charIndex + part.length;
+
+                if (/^\s+$/.test(part)) {
+                    // Whitespace
+                    html += escapeHtml(part);
+                } else {
+                    // Word - find end position including any following space
+                    var endWithSpace = partEnd;
+                    if (i + 1 < parts.length && /^\s+$/.test(parts[i + 1])) {
+                        endWithSpace = partEnd + parts[i + 1].length;
+                    }
+                    html += '<span class="word" data-end="' + partEnd + '" data-end-with-space="' + endWithSpace + '">' + escapeHtml(part) + '</span>';
+                }
+                charIndex = partEnd;
+            }
+
+            inlinePredictionEl.innerHTML = html;
+        }
+
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Accept partial prediction
+        function acceptPartialPrediction(endIndex) {
+            if (!currentPrediction || !inlinePredictionEl) return;
+
+            var textToAccept = currentPrediction.substring(0, endIndex);
+            var remaining = currentPrediction.substring(endIndex);
+
+            // Set flag to prevent immediate regeneration
+            justAccepted = true;
+
+            // Add accepted text to editor
+            var textNode = document.createTextNode(textToAccept);
+            inlinePredictionEl.parentNode.insertBefore(textNode, inlinePredictionEl);
+
+            // Keep remaining prediction visible (including leading space)
+            currentPrediction = remaining;
+
+            if (currentPrediction) {
+                updatePredictionDisplay(currentPrediction);
+                setStatus('Tab to accept', false);
+            } else {
+                removeInlinePrediction();
+                setStatus('Ready', false);
+            }
+
+            exportBtn.disabled = false;
+
+            // Move cursor after inserted text
+            var range = document.createRange();
+            range.setStartAfter(textNode);
+            range.collapse(true);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+
+            // Reset flag after delay
+            setTimeout(function () {
+                justAccepted = false;
+            }, 200);
+        }
+
+        function setStatus(text, generating) {
+            statusTextEl.textContent = text;
+            statusDot.classList.toggle('generating', generating);
+        }
+
+        // Input handler
+        editor.addEventListener('input', function (e) {
+            // If just accepted, reset flag but still process input normally
+            if (justAccepted) {
+                justAccepted = false;
+            }
+
+            removeInlinePrediction();
+
+            var text = getEditorText();
+            exportBtn.disabled = text.trim().length === 0;
+
+            if (debounceTimer) clearTimeout(debounceTimer);
+
+            if (text.trim().length < 10) return;
+
+            debounceTimer = setTimeout(function () {
+                generatePrediction();
+            }, DEBOUNCE_MS);
+        });
+
+        // Tab to accept all, Space after accept triggers generation
+        editor.addEventListener('keydown', function (e) {
+            if (e.key === 'Tab' && currentPrediction) {
+                e.preventDefault();
+                acceptPrediction();
+            }
+            if (e.key === 'Escape') {
+                removeInlinePrediction();
+                setStatus('Ready', false);
+            }
+            // Prevent double space after accepting prediction
+            if (e.key === ' ' && justAccepted) {
+                e.preventDefault();
+                justAccepted = false;
+                // Trigger generation immediately
+                if (debounceTimer) clearTimeout(debounceTimer);
+                var text = getEditorText();
+                if (text.trim().length >= 10) {
+                    generatePrediction();
+                }
+            }
+        });
+
+        // Generate
+        function generatePrediction() {
+            if (isGenerating) return;
+
+            var text = getEditorText();
+            if (!text.trim()) return;
+
+            isGenerating = true;
+            currentPrediction = '';
+            setStatus('Generating...', true);
+
+            var textToSend = text;
+            var fullContext = getFullContext();
+            if (fullContext) {
+                textToSend = '[Context]\n' + fullContext + '\n\n[Continue this text]\n' + text;
+            }
+
+            // Clear any existing prediction content before inserting
+            if (inlinePredictionEl) {
+                inlinePredictionEl.innerHTML = '';
+            }
+            insertInlinePrediction();
 
             fetch(API_URL, {
                 method: 'POST',
@@ -363,77 +1300,190 @@
             })
                 .then(function (response) {
                     if (!response.ok) throw new Error('API error');
+
+                    if (!response.body || !response.body.getReader) {
+                        return response.text().then(function (text) {
+                            parseSSE(text);
+                            finishGeneration();
+                        });
+                    }
+
                     return response.body.getReader();
                 })
                 .then(function (reader) {
+                    if (!reader || !reader.read) return;
+
                     var decoder = new TextDecoder();
-                    loading.style.display = 'none';
-                    continuation.style.display = 'block';
 
                     function read() {
                         return reader.read().then(function (data) {
                             if (data.done) {
-                                if (suggestion) {
-                                    mainButtons.style.display = 'none';
-                                    acceptButtons.style.display = 'flex';
-                                } else {
-                                    placeholder.textContent = 'No suggestion generated...';
-                                    placeholder.style.display = 'block';
-                                }
-                                isLoading = false;
+                                finishGeneration();
                                 return;
                             }
 
                             var chunk = decoder.decode(data.value, { stream: true });
-                            var lines = chunk.split('\n');
-
-                            for (var i = 0; i < lines.length; i++) {
-                                var line = lines[i];
-                                if (line.indexOf('data: ') === 0) {
-                                    var jsonStr = line.slice(6);
-                                    if (jsonStr === '[DONE]') continue;
-                                    try {
-                                        var parsed = JSON.parse(jsonStr);
-                                        var content = parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content;
-                                        if (content) {
-                                            suggestion += content;
-                                            continuation.textContent = suggestion;
-                                        }
-                                    } catch (e) { }
-                                }
-                            }
+                            parseSSE(chunk);
                             return read();
                         });
                     }
                     return read();
                 })
                 .catch(function (err) {
-                    placeholder.textContent = 'Failed to generate...';
-                    placeholder.style.display = 'block';
-                    loading.style.display = 'none';
-                    isLoading = false;
+                    isGenerating = false;
+                    removeInlinePrediction();
+                    setStatus('Error', false);
                 });
         }
 
-        function acceptSuggestion() {
-            if (!currentNodeId || !suggestion) return;
-            parent.postMessage({
-                pluginMessage: {
-                    type: 'accept-suggestion',
-                    nodeId: currentNodeId,
-                    newText: currentText + ' ' + suggestion
+        function parseSSE(text) {
+            var lines = text.split('\n');
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i];
+                if (line.indexOf('data: ') === 0) {
+                    var jsonStr = line.slice(6);
+                    if (jsonStr === '[DONE]') continue;
+                    try {
+                        var parsed = JSON.parse(jsonStr);
+                        var content = parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content;
+                        if (content) {
+                            currentPrediction += content;
+                            updatePredictionDisplay(currentPrediction);
+                        }
+                    } catch (e) { }
                 }
-            }, '*');
-            currentText = currentText + ' ' + suggestion;
-            resetUI();
+            }
         }
 
-        continueBtn.addEventListener('click', generateContinuation);
-        regenerateBtn.addEventListener('click', generateContinuation);
-        acceptBtn.addEventListener('click', acceptSuggestion);
-        cancelBtn.addEventListener('click', resetUI);
+        var retryCount = 0;
+        var MAX_RETRIES = 2;
 
-        parent.postMessage({ pluginMessage: { type: 'get-selected-text' } }, '*');
+        function finishGeneration() {
+            isGenerating = false;
+
+            // Auto-retry if response is empty
+            if (!currentPrediction && retryCount < MAX_RETRIES) {
+                retryCount++;
+                console.log('[UI] Empty response, retrying (' + retryCount + '/' + MAX_RETRIES + ')');
+                setStatus('Retrying...', true);
+                setTimeout(function () {
+                    generatePrediction();
+                }, 500);
+                return;
+            }
+
+            retryCount = 0; // Reset for next generation
+            setStatus(currentPrediction ? 'Tab to accept' : 'Ready', false);
+
+            // Add regenerate icon after generation completes
+            if (currentPrediction && inlinePredictionEl) {
+                var regenIcon = document.createElement('span');
+                regenIcon.className = 'inline-regenerate';
+                regenIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>';
+                regenIcon.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    removeInlinePrediction();
+                    generatePrediction();
+                });
+                inlinePredictionEl.appendChild(regenIcon);
+            }
+        }
+
+        // Accept full prediction
+        function acceptPrediction() {
+            if (!currentPrediction || !inlinePredictionEl) return;
+
+            justAccepted = true;
+
+            // No trailing space - user adds it manually
+            var textNode = document.createTextNode(currentPrediction);
+            inlinePredictionEl.parentNode.insertBefore(textNode, inlinePredictionEl);
+            removeInlinePrediction();
+
+            setStatus('Ready', false);
+            exportBtn.disabled = false;
+
+            var range = document.createRange();
+            range.setStartAfter(textNode);
+            range.collapse(true);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            editor.focus();
+
+            setTimeout(function () { justAccepted = false; }, 100);
+        }
+
+        // Clear
+        clearBtn.addEventListener('click', function () {
+            editor.innerHTML = '';
+            removeInlinePrediction();
+            setStatus('Ready', false);
+            editor.focus();
+        });
+
+        // Export to Figma or clipboard
+        var exportBtn = document.getElementById('exportBtn');
+        var pendingExportText = '';
+        var originalBtnText = 'Paste to Figma';
+
+        function copyToClipboard(text) {
+            // Try modern API first
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                return navigator.clipboard.writeText(text);
+            }
+            // Fallback for older browsers/iframes
+            return new Promise(function (resolve, reject) {
+                var textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    resolve();
+                } catch (e) {
+                    reject(e);
+                }
+                document.body.removeChild(textarea);
+            });
+        }
+
+        exportBtn.addEventListener('click', function () {
+            var text = getEditorText();
+            if (!text.trim()) return;
+            pendingExportText = text;
+            parent.postMessage({ pluginMessage: { type: 'export-to-canvas', text: text } }, '*');
+        });
+
+        // Handle export result
+        window.addEventListener('message', function (event) {
+            var msg = event.data.pluginMessage;
+            if (!msg || msg.type !== 'export-result') return;
+
+            if (msg.success && msg.action === 'clipboard') {
+                // Copy to clipboard
+                copyToClipboard(pendingExportText).then(function () {
+                    exportBtn.textContent = 'Copied!';
+                    setTimeout(function () {
+                        exportBtn.textContent = originalBtnText;
+                    }, 2000);
+                }).catch(function () {
+                    setStatus('Copy failed', false);
+                });
+            } else if (msg.success && msg.action === 'inserted') {
+                exportBtn.textContent = 'Inserted!';
+                setTimeout(function () {
+                    exportBtn.textContent = originalBtnText;
+                }, 2000);
+            }
+            pendingExportText = '';
+        });
+
+        // Init
+        parent.postMessage({ pluginMessage: { type: 'get-context' } }, '*');
+        editor.focus();
     </script>
 </body>
 

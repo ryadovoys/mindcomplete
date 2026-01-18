@@ -22,13 +22,13 @@
 4. Click **Create Credentials** → **OAuth client ID**
 5. If prompted, configure the OAuth consent screen:
    - Choose "External" user type
-   - Fill in app name: "Purple Valley"
+   - Fill in app name: "Mindcomplete"
    - Add your email as developer contact
    - Add scopes: `email`, `profile`, `openid`
    - Add test users if in testing mode
 6. Create OAuth client ID:
    - Application type: **Web application**
-   - Name: "Purple Valley Web"
+   - Name: "Mindcomplete Web"
    - Authorized JavaScript origins:
      - `http://localhost:3000` (development)
      - `https://your-domain.com` (production)

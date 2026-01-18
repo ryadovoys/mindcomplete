@@ -1,34 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Purple Valley</title>
+  <title>Login - Mindcomplete</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@100..900&family=Inter:wght@100..900&family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@100..900&family=Inter:wght@100..900&family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&display=swap"
+    rel="stylesheet">
   <style>
     :root {
-      --primary: #301935;
-      --lavender: #e5e6fa;
-      --accent: #9246FF;
-      --sunlight: #fdfcf7;
+      --primary: #ffffff;
+      --lavender: #141319;
+      --accent: #c3fb50;
+      --sunlight: #19181E;
     }
-    
+
     body {
       font-family: 'Google Sans Flex', 'Inter', sans-serif;
       color: var(--primary);
       background-color: var(--lavender);
     }
-    
-    .font-literata { font-family: 'Literata', serif; }
-    .font-google-sans { font-family: 'Google Sans Flex', sans-serif; }
-    
-    h1, h2, h3 { font-family: 'Literata', serif; }
+
+    /* Text Logo */
+    .text-logo {
+      display: inline-flex;
+      align-items: center;
+      font-family: 'Google Sans Flex', sans-serif;
+      font-size: 18px;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      text-decoration: none;
+      color: var(--primary);
+    }
+
+    .text-logo-divider {
+      color: var(--primary);
+      margin: 0 1px;
+    }
+
+    .text-logo-complete {
+      color: var(--accent);
+    }
+
+    .font-literata {
+      font-family: 'Google Sans Flex', sans-serif;
+    }
+
+    .font-google-sans {
+      font-family: 'Google Sans Flex', sans-serif;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: 'Google Sans Flex', sans-serif;
+    }
 
     .bg-pattern {
-      background-image: radial-gradient(circle at 1px 1px, rgba(48, 25, 53, 0.05) 1px, transparent 0);
+      background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.03) 1px, transparent 0);
       background-size: 40px 40px;
     }
 
@@ -47,10 +81,10 @@
     }
 
     .glass {
-      background: rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.06);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(48, 25, 53, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .ai-btn {
@@ -64,11 +98,12 @@
       font-weight: 500;
       transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    
+
     .btn-variant-1 {
       background-color: var(--accent);
       color: white;
     }
+
     .btn-variant-1:hover {
       opacity: 0.9;
     }
@@ -76,21 +111,31 @@
     .input-field {
       width: 100%;
       padding: 14px;
-      background: white;
-      border: 1px solid rgba(48, 25, 53, 0.1);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 1rem;
       outline: none;
+      color: var(--primary);
       transition: border-color 0.2s;
     }
-    .input-field:focus { border-color: var(--accent); }
+
+    .input-field::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .input-field:focus {
+      border-color: var(--accent);
+    }
   </style>
 </head>
+
 <body class="min-h-screen flex flex-col bg-pattern overflow-x-hidden">
   <div class="bg-blur"></div>
 
   <!-- Header -->
   <header class="w-full px-8 py-6 flex justify-between items-center z-10">
-    <a href="/"><img src="/purple-valley-logo.svg" alt="Purple Valley" class="h-7"></a>
+    <a href="/" class="text-logo">Mind<span class="text-logo-divider">|</span><span
+        class="text-logo-complete">complete</span></a>
     <div class="flex gap-4 items-center">
       <a href="/" class="text-sm font-medium hover:text-accent transition-colors">Back</a>
     </div>
@@ -101,21 +146,23 @@
     <div class="flex flex-col items-center text-center w-full" style="max-width: 420px;">
       <div class="mb-12">
         <h1 class="text-4xl lg:text-6xl font-literata font-extralight mb-4 leading-tight tracking-tight">
-          Writer's block? <br/>
+          Writer's block? <br />
           <span class="italic text-accent/80">Gone.</span>
         </h1>
       </div>
 
       <div class="glass w-full p-8 lg:p-12 space-y-6 rounded-[3rem] border-white/40">
         <form id="email-login-form" class="space-y-4">
-          <input type="email" id="email-input" placeholder="Personal or work email" class="input-field font-light" required>
+          <input type="email" id="email-input" placeholder="Personal or work email" class="input-field font-light"
+            required>
           <button type="submit" class="ai-btn btn-variant-1 w-full py-4 text-lg font-google-sans shadow-primary/10">
             Continue with Email
           </button>
         </form>
 
         <p class="text-[11px] leading-relaxed text-primary/30 text-center px-4">
-          By continuing, you acknowledge Purple Valley's <a href="#" class="underline hover:text-accent">Privacy Policy</a>.
+          By continuing, you acknowledge Mindcomplete's <a href="#" class="underline hover:text-accent">Privacy
+            Policy</a>.
         </p>
       </div>
     </div>
@@ -142,4 +189,5 @@
     });
   </script>
 </body>
+
 </html>

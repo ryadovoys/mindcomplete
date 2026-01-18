@@ -28,12 +28,12 @@ const CONFIG = {
   TIME_WEEK_MS: 604800000,
 
   // localStorage keys
-  STORAGE_SESSION_ID: 'purplevalley_session_id',
-  STORAGE_FILES: 'purplevalley_files',
-  STORAGE_TOKENS: 'purplevalley_tokens',
-  STORAGE_RULES: 'purplevalley_rules',
-  STORAGE_STYLE: 'purplevalley_style',
-  STORAGE_CUSTOM_STYLE: 'purplevalley_custom_style',
+  STORAGE_SESSION_ID: 'mindcomplete_session_id',
+  STORAGE_FILES: 'mindcomplete_files',
+  STORAGE_TOKENS: 'mindcomplete_tokens',
+  STORAGE_RULES: 'mindcomplete_rules',
+  STORAGE_STYLE: 'mindcomplete_style',
+  STORAGE_CUSTOM_STYLE: 'mindcomplete_custom_style',
 
   // Prebuilt writing styles
   WRITING_STYLES: {
@@ -50,6 +50,55 @@ const CONFIG = {
   API_AUTH_DELETE: '/api/auth/delete-account',
   API_GENERATE_IMAGE: '/api/generate-image',
 };
+
+// Global toast notification functions
+let toastTimeout = null;
+
+function showToast(message, duration = 1500) {
+  let toast = document.querySelector('.toolbar-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'toolbar-toast';
+    document.body.appendChild(toast);
+  }
+
+  // Clear any pending hide
+  if (toastTimeout) {
+    clearTimeout(toastTimeout);
+    toastTimeout = null;
+  }
+
+  toast.textContent = message;
+
+  // Position centered above the toolbar
+  const toolbar = document.querySelector('.editor-toolbar');
+  if (toolbar) {
+    const toolbarRect = toolbar.getBoundingClientRect();
+    const toolbarCenter = toolbarRect.left + toolbarRect.width / 2;
+    toast.style.left = `${toolbarCenter}px`;
+  }
+
+  toast.classList.add('visible');
+
+  // Auto-hide after duration (0 = persistent until hideToast called)
+  if (duration > 0) {
+    toastTimeout = setTimeout(() => {
+      toast.classList.remove('visible');
+      toastTimeout = null;
+    }, duration);
+  }
+}
+
+function hideToast() {
+  if (toastTimeout) {
+    clearTimeout(toastTimeout);
+    toastTimeout = null;
+  }
+  const toast = document.querySelector('.toolbar-toast');
+  if (toast) {
+    toast.classList.remove('visible');
+  }
+}
 
 class PredictionManager {
   constructor(options = {}) {
@@ -430,22 +479,26 @@ class PredictionManager {
       if (!wordBounds) return;
 
       if (this.selectStartOffset === null) {
+        // First click: set start point
         this.selectStartOffset = wordBounds.start;
         this.selectPreviewOffset = wordBounds.end;
         this.hoverWordEnd = null;
         this.selectionFixed = false;
         this.updatePredictionDisplay();
-        this.setSelectionReady(true);
+        this.setSelectionReady(false);
+        this.showSelectToast('Select end');
       } else if (!this.selectionFixed) {
+        // Second click: set end point and auto-apply
         if (wordBounds.end <= this.selectStartOffset) {
           this.selectPreviewOffset = this.selectStartOffset;
           this.selectStartOffset = wordBounds.start;
         } else {
           this.selectPreviewOffset = wordBounds.end;
         }
-        this.selectionFixed = true;
-        this.updatePredictionDisplay();
-        this.setSelectionReady(this.selectStartOffset !== this.selectPreviewOffset);
+        // Auto-apply
+        if (this.selectStartOffset !== this.selectPreviewOffset) {
+          this.confirmSelectSelection();
+        }
       }
       return;
     }
@@ -538,7 +591,6 @@ class PredictionManager {
       const wordBounds = this.getWordBoundaries(offsetAtStart);
       if (!wordBounds) return;
 
-      // Tap cycle: 1st tap = start, 2nd tap = end, 3rd tap = reset & new start
       if (this.selectStartOffset === null) {
         // First tap: set start point
         this.selectStartOffset = wordBounds.start;
@@ -546,19 +598,13 @@ class PredictionManager {
         this.selectionFixed = false;
         this.updatePredictionDisplay();
         this.setSelectionReady(false);
-      } else if (!this.selectionFixed) {
-        // Second tap: set end point, fix selection
-        this.updateSelectPreviewOffset(wordBounds);
-        this.selectionFixed = true;
-        this.updatePredictionDisplay();
-        this.setSelectionReady(true);
+        this.showSelectToast('Select end');
       } else {
-        // Third tap: reset and start fresh
-        this.selectStartOffset = wordBounds.start;
-        this.selectPreviewOffset = wordBounds.end;
-        this.selectionFixed = false;
-        this.updatePredictionDisplay();
-        this.setSelectionReady(false);
+        // Second tap: set end point and auto-apply
+        this.updateSelectPreviewOffset(wordBounds);
+        if (this.selectStartOffset !== this.selectPreviewOffset) {
+          this.confirmSelectSelection();
+        }
       }
     }
   }
@@ -1005,19 +1051,20 @@ class PredictionManager {
     const newSegment = targetText.slice(this.lastStreamedText.length);
     if (!newSegment) return;
 
-    // Split by character for letter-by-letter appearance
-    const letters = newSegment.split('');
-    letters.forEach((char, index) => {
-      if (char === ' ') {
-        this.inlinePredictionEl.appendChild(document.createTextNode(' '));
+    // Split new segment into words, preserving whitespace
+    const tokens = newSegment.split(/(\s+)/);
+
+    tokens.forEach((token) => {
+      if (!token) return;
+
+      if (/^\s+$/.test(token)) {
+        // Whitespace - append as text
+        this.inlinePredictionEl.appendChild(document.createTextNode(token));
       } else {
+        // Word - wrap in span with fade animation
         const span = document.createElement('span');
-        span.textContent = char;
+        span.textContent = token;
         span.className = 'word-fade prediction-remain';
-        if (this.enableWordFade) {
-          // Faster stagger for letters: 20ms
-          span.style.animationDelay = `${index * 0.02}s`;
-        }
         this.inlinePredictionEl.appendChild(span);
       }
     });
@@ -1155,8 +1202,16 @@ class PredictionManager {
     this.navigationOffset = 0;
     this.updatePredictionDisplay();
 
+    // Change button to X for cancel
     const selectBtn = document.querySelector('.select-menu-btn');
-    if (selectBtn) selectBtn.classList.add('active');
+    if (selectBtn) {
+      selectBtn.classList.add('active');
+      const icon = selectBtn.querySelector('.material-symbols-outlined');
+      if (icon) icon.textContent = 'close';
+    }
+
+    // Show toast notification
+    this.showSelectToast('Select beginning');
 
     const settingsIcon = document.querySelector('#settings-btn .material-symbols-outlined');
     if (settingsIcon) settingsIcon.textContent = 'close';
@@ -1177,12 +1232,16 @@ class PredictionManager {
     this.navigationOffset = 0;
     this.updatePredictionDisplay();
 
+    // Restore button icon
     const selectBtn = document.querySelector('.select-menu-btn');
     if (selectBtn) {
       selectBtn.classList.remove('active');
       const icon = selectBtn.querySelector('.material-symbols-outlined');
       if (icon) icon.textContent = 'text_select_end';
     }
+
+    // Hide toast
+    this.hideSelectToast();
 
     const settingsIcon = document.querySelector('#settings-btn .material-symbols-outlined');
     if (settingsIcon) settingsIcon.textContent = 'more_horiz';
@@ -1192,14 +1251,23 @@ class PredictionManager {
     if (offset === null) return;
 
     if (this.selectStartOffset === null) {
+      // First selection - set beginning
       this.selectStartOffset = offset;
       this.selectPreviewOffset = this.isMobile ? offset : null;
       this.updatePredictionDisplay();
       this.setSelectionReady(false);
+
+      // Show "Select end" toast
+      this.showSelectToast('Select end');
     } else {
+      // Second selection - set end and auto-apply
       this.selectPreviewOffset = offset;
       this.updatePredictionDisplay();
-      this.setSelectionReady(this.selectStartOffset !== null && this.selectPreviewOffset !== null && this.selectPreviewOffset !== this.selectStartOffset);
+
+      // Auto-apply if we have a valid range
+      if (this.selectPreviewOffset !== this.selectStartOffset) {
+        this.confirmSelectSelection();
+      }
     }
   }
 
@@ -1234,6 +1302,14 @@ class PredictionManager {
     if (this.selectConfirmBtn) {
       this.selectConfirmBtn.disabled = !ready;
     }
+  }
+
+  showSelectToast(message) {
+    showToast(message, 0); // Persistent until hideToast called
+  }
+
+  hideSelectToast() {
+    hideToast();
   }
 
   acceptSelectModeRange(startOffset, endOffset) {
@@ -4275,6 +4351,7 @@ document.addEventListener('DOMContentLoaded', () => {
     editor.textContent = '';
     editor.focus();
     editor.dispatchEvent(new Event('input'));
+    showToast('Cleared');
     closeAllMenus();
   });
 
@@ -4284,7 +4361,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const icon = btn.querySelector('.material-symbols-outlined');
       if (icon) {
         if (window.predictionManager.selectModeActive) {
-          icon.textContent = 'check';
+          icon.textContent = 'close';
         } else {
           icon.textContent = 'text_select_end';
         }
@@ -4295,8 +4372,8 @@ document.addEventListener('DOMContentLoaded', () => {
   selectMenuButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
       if (window.predictionManager.selectModeActive) {
-        // Confirm selection (even if empty/no selection made)
-        window.predictionManager.confirmSelectSelection();
+        // Cancel selection mode (don't apply)
+        window.predictionManager.disableSelectMode();
       } else {
         window.predictionManager.enableSelectMode();
       }
@@ -4318,17 +4395,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       await navigator.clipboard.writeText(text);
-
-      // Visual feedback
-      const icon = btn.querySelector('.material-symbols-outlined');
-      const originalIcon = icon.textContent;
-      icon.textContent = 'check';
-      btn.classList.add('active');
-
-      setTimeout(() => {
-        icon.textContent = originalIcon;
-        btn.classList.remove('active');
-      }, 2000);
+      showToast('Copied');
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }

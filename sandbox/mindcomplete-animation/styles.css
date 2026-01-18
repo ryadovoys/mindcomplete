@@ -1,0 +1,264 @@
+/* ==============================================
+   DESIGN TOKENS
+   ============================================== */
+
+:root {
+    /* Color Primitives */
+    --color-lime-500: #c3fb50;
+    --color-dark-900: #141319;
+    --color-dark-800: #19181e;
+    --color-white: #ffffff;
+    --color-black: #000000;
+
+    /* Semantic Colors */
+    --color-background: var(--color-lime-500);
+    --color-card-bg: var(--color-dark-900);
+    --color-card-header-bg: var(--color-dark-800);
+    --color-text-primary: var(--color-white);
+    --color-text-accent: var(--color-lime-500);
+    --color-button-bg: var(--color-lime-500);
+    --color-button-text: var(--color-black);
+
+    /* Typography */
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-size-logo: 24px;
+    --font-size-heading: 36px;
+    --font-size-button: 24px;
+    --font-weight-regular: 400;
+
+    /* Spacing */
+    --spacing-card-padding: 32px;
+    --spacing-header-padding-y: 14px;
+    --spacing-content-gap: 20px;
+    --spacing-top: 80px;
+    --spacing-content-bottom: 48px;
+
+    /* Layout */
+    --card-max-width: 700px;
+
+    /* Border Radius */
+    --radius-card: 32px;
+    --radius-button: 100px;
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-medium: 300ms ease;
+}
+
+/* ==============================================
+   RESET & BASE
+   ============================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--color-background);
+    min-height: 100vh;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    padding: var(--spacing-top) 40px 0 40px;
+}
+
+/* ==============================================
+   LAYOUT
+   ============================================== */
+
+.container {
+    position: relative;
+    width: 100%;
+    max-width: var(--card-max-width);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==============================================
+   CARD
+   ============================================== */
+
+.card {
+    background-color: var(--color-card-bg);
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+/* Header */
+.card-header {
+    background-color: var(--color-card-header-bg);
+    padding: var(--spacing-header-padding-y) var(--spacing-card-padding);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    min-height: 80px;
+}
+
+.logo-text {
+    font-size: var(--font-size-logo);
+    font-weight: var(--font-weight-regular);
+    color: var(--color-text-primary);
+}
+
+.settings-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    cursor: pointer;
+    transition: opacity var(--transition-fast);
+}
+
+.settings-icon:hover {
+    opacity: 1;
+}
+
+.settings-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Content */
+.card-content {
+    padding: var(--spacing-card-padding);
+    padding-bottom: var(--spacing-content-bottom);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
+    gap: var(--spacing-content-gap);
+}
+
+/* ==============================================
+   TYPING TEXT
+   ============================================== */
+
+.typing-text {
+    font-size: var(--font-size-heading);
+    font-weight: var(--font-weight-regular);
+    line-height: 1.2;
+    max-width: 675px;
+}
+
+.text-white {
+    color: var(--color-text-primary);
+}
+
+.text-lime {
+    color: var(--color-text-accent);
+    display: inline;
+}
+
+/* Word Animation */
+.word {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(15px);
+    transition:
+        opacity 0.4s ease-out,
+        transform 0.4s ease-out;
+}
+
+.word.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.word.hiding {
+    opacity: 0;
+    transform: translateX(0);
+    transition: opacity 0.4s ease-out;
+}
+
+/* Cursor - static, no blink */
+.cursor {
+    color: var(--color-text-primary);
+}
+
+@keyframes blink {
+
+    0%,
+    50% {
+        opacity: 1;
+    }
+
+    51%,
+    100% {
+        opacity: 0;
+    }
+}
+
+/* ==============================================
+   BUTTON
+   ============================================== */
+
+.cta-button {
+    background-color: var(--color-button-bg);
+    color: var(--color-button-text);
+    font-family: var(--font-family);
+    font-size: var(--font-size-button);
+    font-weight: var(--font-weight-regular);
+    padding: 18px 32px;
+    border: none;
+    border-radius: var(--radius-button);
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-medium);
+    align-self: flex-start;
+    margin-top: auto;
+}
+
+.cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(195, 251, 80, 0.3);
+}
+
+.cta-button:active {
+    transform: translateY(0);
+}
+
+/* ==============================================
+   RESPONSIVE
+   ============================================== */
+
+@media (max-width: 768px) {
+    body {
+        padding: 20px 20px 0 20px;
+    }
+
+    .card-header {
+        padding: 12px 24px;
+        min-height: 60px;
+    }
+
+    .logo-text {
+        font-size: 18px;
+    }
+
+    .settings-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .card-content {
+        padding: 24px;
+    }
+
+    .typing-text {
+        font-size: 24px;
+    }
+
+    .cta-button {
+        font-size: 16px;
+        padding: 14px 24px;
+    }
+}

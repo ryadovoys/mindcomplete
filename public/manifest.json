@@ -1,14 +1,14 @@
 {
-  "name": "Purple Valley",
-  "short_name": "Purple Valley",
-  "description": "AI-powered writing assistant that completes your thoughts in real-time.",
+  "name": "Mindcomplete",
+  "short_name": "Mindcomplete",
+  "description": "AI-powered writing assistant that writes with you, not for you.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0e0a27",
-  "theme_color": "#0e0a27",
+  "background_color": "#141319",
+  "theme_color": "#141319",
   "icons": [
     {
-      "src": "/purple-valley-favicon.png",
+      "src": "/mindcomplete-favicon.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
