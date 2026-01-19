@@ -1212,9 +1212,6 @@ class PredictionManager {
 
     // Show toast notification
     this.showSelectToast('Select beginning');
-
-    const settingsIcon = document.querySelector('#settings-btn .material-symbols-outlined');
-    if (settingsIcon) settingsIcon.textContent = 'close';
   }
 
   disableSelectMode() {
@@ -1242,9 +1239,6 @@ class PredictionManager {
 
     // Hide toast
     this.hideSelectToast();
-
-    const settingsIcon = document.querySelector('#settings-btn .material-symbols-outlined');
-    if (settingsIcon) settingsIcon.textContent = 'more_horiz';
   }
 
   handleSelectModeSelection(offset) {
@@ -1422,7 +1416,6 @@ class BrainManager {
     if (this.anchors.length === 0) {
       this.brainContent.innerHTML = `
         <div class="brain-empty-state">
-          <span class="material-symbols-outlined">psychology</span>
           <p>Add context to help the AI understand your project.</p>
         </div>
       `;
@@ -1845,7 +1838,15 @@ class ContextManager {
     this.clearStyleBtnMobile = document.getElementById('clear-rules-btn-mobile');
 
     // Shared file input
-    this.fileInput = document.getElementById('file-input');
+    this.fileInput = document.getElementById('context-file-input');
+
+    // Brain Panel Elements
+    this.brainAttachBtn = document.getElementById('brain-attach-btn');
+    this.brainSendBtn = document.getElementById('brain-send-btn');
+    this.brainInputText = document.getElementById('brain-input-text');
+    this.brainAttachmentPreview = document.getElementById('brain-attachment-preview');
+    this.attachmentName = document.getElementById('attachment-name');
+    this.removeAttachmentBtn = document.getElementById('remove-attachment-btn');
 
     // Menu buttons
     this.filesMenuBtn = document.querySelector('.files-menu-btn');
@@ -1855,16 +1856,10 @@ class ContextManager {
     this.sideMenu = document.getElementById('side-menu');
     this.sideMenuBackdrop = document.getElementById('side-menu-backdrop');
     this.sideMenuClose = document.getElementById('side-menu-close');
+
+    // Legacy/Unused elements binding kept to prevent errors if elements missing
+    this.filesModal = document.getElementById('files-modal');
     this.sideMenuFilesList = document.getElementById('side-menu-files-list');
-    this.sideMenuUploadBtn = document.getElementById('side-menu-upload-btn');
-    this.sideMenuRemoveFilesBtn = document.getElementById('side-menu-remove-files-btn');
-    this.sideMenuRulesTextarea = document.getElementById('side-menu-rules-textarea');
-    this.sideMenuSaveRulesBtn = document.getElementById('side-menu-save-rules-btn');
-    this.sideMenuClearRulesBtn = document.getElementById('side-menu-clear-rules-btn');
-    this.sideMenuStyleDropdown = document.getElementById('side-menu-style-dropdown');
-    this.sideMenuCustomStyleTextarea = document.getElementById('side-menu-custom-style-textarea');
-    this.sideMenuSaveStyleBtn = document.getElementById('side-menu-save-style-btn');
-    this.sideMenuClearStyleBtn = document.getElementById('side-menu-clear-style-btn');
 
     this.init();
   }
@@ -1919,13 +1914,16 @@ class ContextManager {
     this.browseFilesBtn?.addEventListener('click', () => this.fileInput?.click());
     this.browseFilesBtnMobile?.addEventListener('click', () => this.fileInput?.click());
 
-    // File input change
-    this.fileInput?.addEventListener('change', (e) => this.handleFiles(e.target.files));
+    // Brain Panel bindings REMOVED: Managed by BrainManager
+
+    // File input change REMOVED: Managed by BrainManager
 
     // Setup drag and drop
     this.setupDragDrop(this.filesDropzone);
     this.setupDragDrop(this.filesDropzoneMobile);
+    // this.setupDragDrop(this.sideMenu); // Disabled: Managed by BrainManager
 
+    // Legacy/Modal Bindings
     // Files modal close buttons
     document.getElementById('files-modal-close')?.addEventListener('click', () => this.closeFilesModal());
     document.getElementById('files-sheet-close')?.addEventListener('click', () => this.closeFilesModal());
@@ -1940,61 +1938,17 @@ class ContextManager {
     this.filesBottomSheet?.addEventListener('click', (e) => { if (e.target === this.filesBottomSheet) this.closeFilesModal(); });
     this.rulesBottomSheet?.addEventListener('click', (e) => { if (e.target === this.rulesBottomSheet) this.closeRulesModal(); });
 
-    // Save rules buttons
+    // Save/Clear logic from legacy panels (keep for compatibility if modals still exist)
     this.saveRulesBtn?.addEventListener('click', () => this.handleSaveRules());
-    this.saveRulesBtnMobile?.addEventListener('click', () => this.handleSaveRules());
-
-    // Clear rules buttons
     this.clearRulesBtn?.addEventListener('click', () => this.handleClearRules());
-    this.clearRulesBtnMobile?.addEventListener('click', () => this.handleClearRules());
-
-    // Save style buttons
     this.saveStyleBtn?.addEventListener('click', () => this.handleSaveStyle());
-    this.saveStyleBtnMobile?.addEventListener('click', () => this.handleSaveStyle());
-
-    // Clear style buttons
     this.clearStyleBtn?.addEventListener('click', () => this.handleClearStyle());
-    this.clearStyleBtnMobile?.addEventListener('click', () => this.handleClearStyle());
-
-    // Sync textarea values between desktop and mobile
-    this.rulesTextarea?.addEventListener('input', () => {
-      if (this.rulesTextareaMobile) this.rulesTextareaMobile.value = this.rulesTextarea.value;
-    });
-    this.rulesTextareaMobile?.addEventListener('input', () => {
-      if (this.rulesTextarea) this.rulesTextarea.value = this.rulesTextareaMobile.value;
-    });
-
-    // Initialize custom dropdowns
-    this.initDropdown(this.styleDropdown);
-    this.initDropdown(this.styleDropdownMobile);
-    this.initDropdown(this.sideMenuStyleDropdown);
-
-    // Close dropdowns on outside click
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.custom-dropdown')) {
-        document.querySelectorAll('.custom-dropdown.active').forEach(d => d.classList.remove('active'));
-      }
-    });
-
-    // Custom style textarea sync
-    this.customStyleTextarea?.addEventListener('input', () => {
-      if (this.customStyleTextareaMobile) this.customStyleTextareaMobile.value = this.customStyleTextarea.value;
-      if (this.sideMenuCustomStyleTextarea) this.sideMenuCustomStyleTextarea.value = this.customStyleTextarea.value;
-    });
-    this.customStyleTextareaMobile?.addEventListener('input', () => {
-      if (this.customStyleTextarea) this.customStyleTextarea.value = this.customStyleTextareaMobile.value;
-      if (this.sideMenuCustomStyleTextarea) this.sideMenuCustomStyleTextarea.value = this.customStyleTextareaMobile.value;
-    });
-    this.sideMenuCustomStyleTextarea?.addEventListener('input', () => {
-      if (this.customStyleTextarea) this.customStyleTextarea.value = this.sideMenuCustomStyleTextarea.value;
-      if (this.customStyleTextareaMobile) this.customStyleTextareaMobile.value = this.sideMenuCustomStyleTextarea.value;
-    });
 
     // Side menu handlers
     this.sideMenuClose?.addEventListener('click', () => this.closeSideMenu());
     this.sideMenuBackdrop?.addEventListener('click', () => this.closeSideMenu());
-    this.sideMenuUploadBtn?.addEventListener('click', () => this.fileInput?.click());
-    this.sideMenuRemoveFilesBtn?.addEventListener('click', () => this.clearFiles());
+
+    // Restore Side Menu Rules/Style Bindings
     this.sideMenuSaveRulesBtn?.addEventListener('click', () => this.handleSaveRulesFromSideMenu());
     this.sideMenuClearRulesBtn?.addEventListener('click', () => this.handleClearRulesFromSideMenu());
     this.sideMenuSaveStyleBtn?.addEventListener('click', () => this.handleSaveStyleFromSideMenu());
@@ -2122,17 +2076,26 @@ class ContextManager {
     }
     this.toggleCustomStyleTextarea();
 
-    // Render files list
-    this.renderSideMenuFilesList();
+    // Notify BrainManager to refresh if needed
+    if (window.brainManager) {
+      window.brainManager.loadAnchors();
+    }
+
+    this.sideMenu.classList.add('visible');
     document.body.classList.add('side-menu-open');
+    if (this.sideMenuBackdrop) this.sideMenuBackdrop.classList.add('visible');
   }
 
   closeSideMenu() {
-    document.body.classList.remove('side-menu-open');
+    if (this.sideMenu) {
+      this.sideMenu.classList.remove('visible');
+      document.body.classList.remove('side-menu-open');
+      if (this.sideMenuBackdrop) this.sideMenuBackdrop.classList.remove('visible');
+    }
   }
 
   toggleSideMenu() {
-    if (document.body.classList.contains('side-menu-open')) {
+    if (this.sideMenu && this.sideMenu.classList.contains('visible')) {
       this.closeSideMenu();
     } else {
       this.openSideMenu();
@@ -2309,277 +2272,200 @@ class ContextManager {
     this.updateUI();
   }
 
-  renderSideMenuFilesList() {
-    if (!this.sideMenuFilesList) return;
+  renderAnchors() {
+    const anchorsList = document.getElementById('brain-anchors-list');
+    const emptyState = document.getElementById('brain-empty-state');
 
-    // Get tokens display element
-    const tokensDisplay = document.getElementById('side-menu-tokens-display');
+    if (!anchorsList) return;
+
+    // Clear existing (except empty state if we want to keep it logic, but usually we toggle visibility)
+    // Actually, let's rebuild list.
+    anchorsList.innerHTML = '';
 
     if (this.files.length === 0) {
-      this.sideMenuFilesList.innerHTML = '';
-      if (tokensDisplay) tokensDisplay.style.display = 'none';
+      if (emptyState) {
+        emptyState.style.display = 'flex';
+        anchorsList.appendChild(emptyState);
+      }
       return;
+    } else {
+      if (emptyState) emptyState.style.display = 'none';
     }
 
-    // Render file items
-    this.sideMenuFilesList.innerHTML = this.files.map((file, index) =>
-      `<div class="side-menu-file" data-index="${index}">` +
-      `<div class="side-menu-file-icon">` +
-      `<span class="material-symbols-outlined">description</span>` +
-      `</div>` +
-      `<span class="side-menu-file-name">${file.name || file}</span>` +
-      `<button class="side-menu-file-remove" data-index="${index}" aria-label="Remove file">` +
-      `<span class="material-symbols-outlined">close</span>` +
-      `</button>` +
-      `</div>`
-    ).join('');
+    // Render file items as anchors
+    this.files.forEach((file, index) => {
+      const anchorEl = document.createElement('div');
+      anchorEl.className = 'brain-anchor-item';
+      anchorEl.innerHTML = `
+        <div class="anchor-icon">
+          <span class="material-symbols-outlined">description</span>
+        </div>
+        <div class="anchor-info">
+          <span class="anchor-name">${file.name || file}</span>
+          <span class="anchor-type">File</span>
+        </div>
+        <button class="btn-icon-small anchor-remove" data-index="${index}">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      `;
 
-    // Show estimated tokens
-    if (tokensDisplay) {
-      tokensDisplay.textContent = `~${this.estimatedTokens.toLocaleString()} tokens`;
-      tokensDisplay.style.display = 'block';
-    }
-
-    // Add delete handlers
-    this.sideMenuFilesList.querySelectorAll('.side-menu-file-remove').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      const removeBtn = anchorEl.querySelector('.anchor-remove');
+      removeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.removeFile(parseInt(btn.dataset.index));
+        this.removeFile(index);
       });
+
+      anchorsList.appendChild(anchorEl);
     });
   }
 
-  // Legacy methods for backwards compatibility
-  openModal() {
-    this.openFilesModal();
+  handleFileSelection(file) {
+    if (!file) return;
+    this.pendingUploadFile = file;
+
+    // Update UI
+    if (this.attachmentName) this.attachmentName.textContent = file.name;
+    if (this.brainAttachmentPreview) this.brainAttachmentPreview.style.display = 'flex';
   }
 
-  closeModal() {
-    this.closeFilesModal();
-    this.closeRulesModal();
-  }
+  async handleSend() {
+    const text = this.brainInputText ? this.brainInputText.value.trim() : '';
+    const file = this.pendingUploadFile;
 
-  handleSaveRules() {
-    // Get text from whichever textarea is available
-    const text = (this.rulesTextarea?.value || this.rulesTextareaMobile?.value || '').trim();
-    this.rulesText = text;
+    if (!text && !file) return;
 
-    // Save to localStorage
-    if (text) {
-      localStorage.setItem(CONFIG.STORAGE_RULES, text);
-    } else {
-      localStorage.removeItem(CONFIG.STORAGE_RULES);
-    }
-
-    if (this.rulesStatusEl) {
-      this.rulesStatusEl.textContent = text ? 'Rules saved' : 'Rules cleared';
-      setTimeout(() => {
-        if (this.rulesStatusEl && (this.rulesStatusEl.textContent === 'Rules saved' || this.rulesStatusEl.textContent === 'Rules cleared')) {
-          this.rulesStatusEl.textContent = '';
-        }
-      }, 2000);
-    }
-
-    this.updateUI();
-  }
-
-  handleClearRules() {
-    this.rulesText = '';
-    if (this.rulesTextarea) this.rulesTextarea.value = '';
-    if (this.rulesTextareaMobile) this.rulesTextareaMobile.value = '';
-    localStorage.removeItem(CONFIG.STORAGE_RULES);
-
-    if (this.rulesStatusEl) {
-      this.rulesStatusEl.textContent = 'Rules cleared';
-      setTimeout(() => {
-        if (this.rulesStatusEl && this.rulesStatusEl.textContent === 'Rules cleared') {
-          this.rulesStatusEl.textContent = '';
-        }
-      }, 2000);
-    }
-
-    this.updateUI();
-  }
-
-  async handleFiles(fileList) {
-    if (!fileList || fileList.length === 0) return;
-
-    // Store new files in pending array for accumulation
-    if (!this.pendingFiles) this.pendingFiles = [];
-
-    // Add new files to pending (for re-upload with existing)
-    for (const file of fileList) {
-      // Check if file with same name already exists
-      const existingIndex = this.pendingFiles.findIndex(f => f.name === file.name);
-      if (existingIndex >= 0) {
-        this.pendingFiles[existingIndex] = file; // Replace
-      } else {
-        this.pendingFiles.push(file); // Add new
-      }
-    }
-
-    const formData = new FormData();
-    for (const file of this.pendingFiles) {
-      formData.append('files', file);
-    }
-
-    if (this.statusEl) {
-      this.statusEl.textContent = 'Uploading...';
+    // Disable send button
+    if (this.brainSendBtn) {
+      this.brainSendBtn.disabled = true;
+      this.brainSendBtn.classList.add('loading');
     }
 
     try {
+      // Prepare FormData
+      const formData = new FormData();
+      if (file) {
+        formData.append('files', file);
+      }
+      if (text) {
+        formData.append('text', text); // backend needs to handle this
+      }
+      // Also include sessionId if exists
+      if (this.sessionId) {
+        formData.append('sessionId', this.sessionId);
+      }
+
       const response = await fetch(CONFIG.API_CONTEXT, {
         method: 'POST',
         body: formData
       });
 
-      if (!response.ok) {
-        let errorMessage = 'Upload failed';
-        try {
-          const error = await response.json();
-          errorMessage = error.error || errorMessage;
-        } catch (e) {
-          // Response wasn't JSON (iOS Safari compatibility)
-          try {
-            errorMessage = await response.text() || errorMessage;
-          } catch (e2) {
-            // Use default error message
-          }
-        }
-        throw new Error(errorMessage);
-      }
+      if (!response.ok) throw new Error('Failed to upload context');
 
       const data = await response.json();
       this.sessionId = data.sessionId;
-      this.files = data.files;
-      this.estimatedTokens = data.estimatedTokens;
+      this.files = data.files || []; // Assuming API returns updated files list
 
-      // Save to localStorage for session recovery
+      this.estimatedTokens = data.estimatedTokens || 0;
+
+      // Local Storage Updates
       localStorage.setItem(CONFIG.STORAGE_SESSION_ID, this.sessionId);
       localStorage.setItem(CONFIG.STORAGE_FILES, JSON.stringify(this.files));
       localStorage.setItem(CONFIG.STORAGE_TOKENS, this.estimatedTokens.toString());
 
+      // Clear Inputs
+      if (this.brainInputText) this.brainInputText.value = '';
+      this.pendingUploadFile = null;
+      if (this.brainAttachmentPreview) this.brainAttachmentPreview.style.display = 'none';
+      if (this.fileInput) this.fileInput.value = '';
+
       this.updateUI();
+
     } catch (error) {
-      console.error('Upload error:', error);
-      if (this.statusEl) {
-        this.statusEl.textContent = `Error: ${error.message}`;
+      console.error('Send error:', error);
+      showToast('Failed to add context');
+    } finally {
+      if (this.brainSendBtn) {
+        this.brainSendBtn.disabled = false;
+        this.brainSendBtn.classList.remove('loading');
       }
     }
+  }
 
-    // Reset file input so same file can be re-selected
-    if (this.fileInput) {
-      this.fileInput.value = '';
+  openSideMenu() {
+    if (this.sideMenu) {
+      this.sideMenu.classList.add('visible');
+      document.body.classList.add('side-menu-open');
+      if (this.sideMenuBackdrop) this.sideMenuBackdrop.classList.add('visible');
+
+      // Notify BrainManager to refresh if needed
+      if (window.brainManager) {
+        window.brainManager.loadAnchors();
+      }
     }
+  }
+
+  closeSideMenu() {
+    if (this.sideMenu) {
+      this.sideMenu.classList.remove('visible');
+      document.body.classList.remove('side-menu-open');
+      if (this.sideMenuBackdrop) this.sideMenuBackdrop.classList.remove('visible');
+    }
+  }
+
+  toggleSideMenu() {
+    if (this.sideMenu && this.sideMenu.classList.contains('visible')) {
+      this.closeSideMenu();
+    } else {
+      this.openSideMenu();
+    }
+  }
+
+  // Legacy methods kept but decoupled from new Brain Panel UI
+
+  openModal() {
+    // this.openFilesModal(); // Legacy
+  }
+
+  closeModal() {
+    // this.closeFilesModal(); // Legacy
+    // this.closeRulesModal(); // Legacy
+  }
+
+  handleSaveRules() {
+    // Legacy logic
+  }
+
+  handleClearRules() {
+    // Legacy logic
+  }
+
+  async handleFiles(fileList) {
+    // Legacy logic - disabled to prevent interference with BrainManager
+    console.warn('ContextManager.handleFiles is deprecated. Use BrainManager.');
   }
 
   async clearFiles() {
-    if (this.sessionId) {
-      try {
-        await fetch(`${CONFIG.API_CONTEXT}/${this.sessionId}`, { method: 'DELETE' });
-      } catch (e) {
-        console.error('Error clearing files:', e);
-      }
-    }
-
-    this.sessionId = null;
-    this.files = [];
-    this.pendingFiles = []; // Clear pending files too
-    this.estimatedTokens = 0;
-
-    // Clear file-related localStorage (keep rules)
-    localStorage.removeItem(CONFIG.STORAGE_SESSION_ID);
-    localStorage.removeItem(CONFIG.STORAGE_FILES);
-    localStorage.removeItem(CONFIG.STORAGE_TOKENS);
-
-    this.updateUI();
+    // Legacy logic
   }
 
   async removeFile(index) {
-    if (index < 0 || index >= this.files.length) return;
-
-    // Get the filename being removed
-    const removedFile = this.files[index];
-    const removedFileName = removedFile.name || removedFile;
-
-    // Remove from files array
-    this.files.splice(index, 1);
-
-    // Remove from pendingFiles array (the actual File objects)
-    if (this.pendingFiles) {
-      const pendingIndex = this.pendingFiles.findIndex(f => f.name === removedFileName);
-      if (pendingIndex >= 0) {
-        this.pendingFiles.splice(pendingIndex, 1);
-      }
-    }
-
-    // If no files left, clear session on server
-    if (this.files.length === 0) {
-      await this.clearFiles();
-    } else if (this.pendingFiles && this.pendingFiles.length > 0) {
-      // Re-upload remaining files to get new session
-      const formData = new FormData();
-      for (const file of this.pendingFiles) {
-        formData.append('files', file);
-      }
-
-      try {
-        const response = await fetch(CONFIG.API_CONTEXT, {
-          method: 'POST',
-          body: formData
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          this.sessionId = data.sessionId;
-          this.files = data.files;
-          this.estimatedTokens = data.estimatedTokens;
-
-          localStorage.setItem(CONFIG.STORAGE_SESSION_ID, this.sessionId);
-          localStorage.setItem(CONFIG.STORAGE_FILES, JSON.stringify(this.files));
-          localStorage.setItem(CONFIG.STORAGE_TOKENS, this.estimatedTokens.toString());
-        }
-      } catch (e) {
-        console.error('Error re-uploading files:', e);
-      }
-
-      this.updateUI();
-    } else {
-      // Just update localStorage and UI
-      localStorage.setItem(CONFIG.STORAGE_FILES, JSON.stringify(this.files));
-      this.updateUI();
-    }
-  }
-
-  async clearContext() {
-    await this.clearFiles();
-    this.handleClearRules();
+    // Legacy logic
   }
 
   updateUI() {
-    // Render file lists (both desktop, mobile, and side menu)
-    this.renderFilesList(this.filesList);
-    this.renderFilesList(this.filesListMobile);
-    this.renderSideMenuFilesList();
-
-    // Update file counts
-    const count = this.files.length;
-    if (this.filesCount) {
-      this.filesCount.textContent = `${count} file${count !== 1 ? 's' : ''}`;
-    }
-    if (this.filesCountMobile) {
-      this.filesCountMobile.textContent = count.toString();
-    }
-
-    // Update menu button indicators (separate for files and rules)
+    // Legacy UI updates only
     if (this.filesMenuBtn) {
-      this.filesMenuBtn.classList.toggle('has-context', this.files.length > 0);
+      // this.filesMenuBtn.classList.toggle('has-context', this.files.length > 0);
     }
-    if (this.rulesMenuBtn) {
-      const hasRules = this.rulesText.length > 0;
-      const hasStyle = this.selectedStyle !== 'none';
-      this.rulesMenuBtn.classList.toggle('has-context', hasRules || hasStyle);
-    }
+    // Do NOT render into brain-anchors-list
+  }
+
+  renderFilesList(container) {
+    // Legacy
+  }
+
+  renderSideMenuFilesList() {
+    // Disabled
   }
 
   renderFilesList(container) {
@@ -2649,7 +2535,15 @@ class ValleysManager {
     this.autoSaveTimer = null;
     this.autoSaveDebounceMs = 2000;
     this.init();
+
+    // Ensure we have access to emoji list
+    this.PROJECT_EMOJIS = ['📝', '✏️', '📖', '📚', '💡', '🎯', '🚀', '⭐', '💎', '🔥', '🌟', '📌', '🎨', '🧠', '💭', '📊', '🔮', '🌈', '🎪', '🎭'];
+
     this.renderSidebarList();
+  }
+
+  getRandomEmoji() {
+    return this.PROJECT_EMOJIS[Math.floor(Math.random() * this.PROJECT_EMOJIS.length)];
   }
 
   init() {
@@ -2771,7 +2665,7 @@ class ValleysManager {
   }
 
   startRenaming(id) {
-    const row = document.querySelector(`.sidebar-valley-row[data-id="${id}"]`) ||
+    const row = document.querySelector(`.sidebar-valley-card[data-id="${id}"]`) ||
       document.querySelector(`.valley-item[data-id="${id}"]`);
     if (!row) return;
 
@@ -2848,10 +2742,40 @@ class ValleysManager {
         this.renderSidebarList();
         this.renderList();
       }
-    } catch (err) {
-      console.error('Rename error:', err);
-      this.renderSidebarList();
-      this.renderList();
+    } catch (error) {
+      console.error('Error updating title:', error);
+    }
+  }
+
+  async updateValleyEmoji(id, newEmoji) {
+    // If it's a temp valley, just update locally
+    if (id.toString().startsWith('temp-')) {
+      if (this.tempValley) {
+        this.tempValley.emoji = newEmoji;
+      }
+      return;
+    }
+
+    try {
+      const token = await window.authManager.getAccessToken();
+      const response = await fetch(`${CONFIG.API_VALLEYS}?id=${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ emoji: newEmoji })
+      });
+
+      if (!response.ok) throw new Error('Failed to update emoji');
+
+      const data = await response.json();
+      const index = this.valleys.findIndex(v => v.id === id);
+      if (index !== -1) {
+        this.valleys[index].emoji = newEmoji;
+      }
+    } catch (error) {
+      console.error('Error updating emoji:', error);
     }
   }
 
@@ -2885,12 +2809,19 @@ class ValleysManager {
     this.tempValley = {
       id: 'temp-' + Date.now(),
       title: 'New valley',
+      emoji: this.getRandomEmoji ? this.getRandomEmoji() : '📝',
       created_at: new Date().toISOString()
     };
 
     this.activeValleyId = this.tempValley.id;
-    this.renderSidebarList();
-    this.renderList();
+    this.renderSidebarList(); // Updates list
+
+    // Switch to Editor View
+    if (window.dashboardManager) {
+      window.dashboardManager.showEditor(this.activeValleyId);
+      window.dashboardManager.updateHeader(this.tempValley.title, this.tempValley.emoji);
+    }
+
     this.closeModal();
   }
 
@@ -2906,8 +2837,11 @@ class ValleysManager {
   }
 
   generateTitle(text) {
-    // Take first 200 chars and normalize whitespace. CSS handles truncation.
-    return text.replace(/\s+/g, ' ').trim().slice(0, 200) || 'Untitled';
+    const lines = text.split('\n');
+    let firstLine = lines.find(line => line.trim().length > 0) || '';
+    firstLine = firstLine.trim();
+    if (firstLine.length > 50) firstLine = firstLine.substring(0, 50).trim() + '...';
+    return firstLine || 'Untitled';
   }
 
   async saveValley(isAutoSave = false) {
@@ -2926,8 +2860,8 @@ class ValleysManager {
     const text = clone.innerHTML;
     const plainText = editor.textContent.trim();
 
-    // Requirement #3: If empty, it's not saved to DB
-    if (!plainText && !text.includes('img')) {
+    // Requirement #3: If empty, it's not saved to DB unless explicitly saved
+    if (isAutoSave && !plainText && !text.includes('img')) {
       return { success: false, error: 'Nothing to save' };
     }
 
@@ -2939,7 +2873,13 @@ class ValleysManager {
       return { success: false, error: 'Sign in to save valleys' };
     }
 
-    const title = this.generateTitle(plainText);
+    // Determine title: Use UI value if custom, otherwise generate from content
+    let title = document.getElementById('project-title-input')?.value.trim();
+    const autoTitle = this.generateTitle(plainText);
+
+    if (!title || title === 'New valley' || title === 'Untitled Project') {
+      title = autoTitle;
+    }
     const rules = window.contextManager?.getRulesText() || '';
     const writingStyle = window.contextManager?.getWritingStyleText() || '';
     const contextSessionId = window.contextManager?.getSessionId() || null;
@@ -2952,13 +2892,16 @@ class ValleysManager {
         const method = isRealValley ? 'PUT' : 'POST';
         const url = isRealValley ? `${CONFIG.API_VALLEYS}?id=${idToSave}` : CONFIG.API_VALLEYS;
 
+        const currentValley = this.valleys.find(v => v.id === idToSave) || (this.tempValley?.id === idToSave ? this.tempValley : null);
+        const emoji = currentValley?.emoji || null;
+
         const response = await fetch(url, {
           method: method,
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ title, text, rules, writingStyle, contextSessionId })
+          body: JSON.stringify({ title, emoji, text, rules, writingStyle, contextSessionId })
         });
 
         if (!response.ok) {
@@ -2972,6 +2915,10 @@ class ValleysManager {
         }
 
         const data = await response.json();
+        // Flatten emoji from files if present
+        if (!data.emoji && data.files?.emoji) {
+          data.emoji = data.files.emoji;
+        }
 
         // Requirement #2: Promoting temp valley to real one on first save
         if (idToSave && idToSave.toString().startsWith('temp-')) {
@@ -3016,7 +2963,10 @@ class ValleysManager {
       if (!response.ok) throw new Error('Failed to load valleys');
 
       const data = await response.json();
-      this.valleys = data.valleys || [];
+      this.valleys = (data.valleys || []).map(v => {
+        if (!v.emoji) v.emoji = this.getRandomEmoji ? this.getRandomEmoji() : '📝';
+        return v;
+      });
       this.renderList();
 
       // Always start with a new temp valley
@@ -3036,6 +2986,7 @@ class ValleysManager {
     this.tempValley = {
       id: 'temp-' + Date.now(),
       title: 'New valley',
+      emoji: this.getRandomEmoji ? this.getRandomEmoji() : '📝',
       created_at: new Date().toISOString()
     };
 
@@ -3079,6 +3030,10 @@ class ValleysManager {
       if (!response.ok) throw new Error('Failed to load valley');
 
       const valley = await response.json();
+      // Flatten emoji from files if present
+      if (!valley.emoji && valley.files?.emoji) {
+        valley.emoji = valley.files.emoji;
+      }
 
       // Restore editor content
       if (editor) {
@@ -3118,11 +3073,19 @@ class ValleysManager {
       this.highlightSidebarValleys();
       this.closeModal();
       if (editor) editor.focus();
+
+      // Update Dashboard/Header
+      if (window.dashboardManager) {
+        window.dashboardManager.showEditor(id);
+        window.dashboardManager.updateHeader(valley.title, valley.emoji);
+      }
+
     } catch (error) {
       console.error('Load valley error:', error);
       // Restore empty editor on error
       const editor = document.querySelector('.editor');
       if (editor && editor.querySelector('.loading-editor')) editor.innerHTML = '';
+      window.dashboardManager?.showDashboard(); // Go back on error
     } finally {
       this.isLoading = false;
     }
@@ -3190,6 +3153,11 @@ class ValleysManager {
   renderList() {
     if (!this.listContainer) {
       this.renderSidebarList();
+      // Also update dashboard grid if possible
+      if (window.dashboardManager) {
+        const displayValleys = this.tempValley ? [this.tempValley, ...this.valleys] : this.valleys;
+        window.dashboardManager.renderProjects(displayValleys);
+      }
       return;
     }
 
@@ -3198,6 +3166,11 @@ class ValleysManager {
     }
 
     const displayValleys = this.tempValley ? [this.tempValley, ...this.valleys] : this.valleys;
+
+    // Sync with Dashboard Grid
+    if (window.dashboardManager) {
+      window.dashboardManager.renderProjects(displayValleys);
+    }
 
     if (displayValleys.length === 0) {
       if (this.listContainer) this.listContainer.innerHTML = '';
@@ -3242,56 +3215,14 @@ class ValleysManager {
 
 
   renderSidebarList() {
-    if (!this.sidebarList) return;
-
-    const displayValleys = this.tempValley ? [this.tempValley, ...this.valleys] : this.valleys;
-
-    if (!displayValleys.length) {
-      this.sidebarList.innerHTML = '';
-      if (this.sidebarEmpty) this.sidebarEmpty.classList.add('visible');
-      return;
+    if (window.dashboardManager) {
+      window.dashboardManager.renderProjects(this.valleys);
     }
-
-    if (this.sidebarEmpty) this.sidebarEmpty.classList.remove('visible');
-
-    this.sidebarList.innerHTML = displayValleys
-      .map(
-        (valley) => `
-        <div class="sidebar-valley-row" data-id="${valley.id}">
-          <span class="valley-title">${this.escapeHtml(valley.title)}</span>
-          <button class="btn-icon sidebar-valley-menu" title="Menu">
-            <span class="material-symbols-outlined">more_horiz</span>
-          </button>
-        </div>
-      `
-      )
-      .join('');
-
-    this.sidebarList.querySelectorAll('.sidebar-valley-row').forEach((item) => {
-      item.addEventListener('click', (e) => {
-        const menuBtn = e.target.closest('.sidebar-valley-menu');
-        if (menuBtn) {
-          e.stopPropagation();
-          const rect = menuBtn.getBoundingClientRect();
-          this.openContextMenu(item.dataset.id, rect.left - 130, rect.top + 30);
-          return;
-        }
-
-        if (item.dataset.id.startsWith('temp-')) return;
-
-        this.loadValley(item.dataset.id);
-        if (window.innerWidth < CONFIG.DESKTOP_BREAKPOINT_PX) {
-          document.body.classList.remove('sidebar-open');
-        }
-      });
-    });
-
-    this.highlightSidebarValleys();
   }
 
   highlightSidebarValleys() {
     if (!this.sidebarList) return;
-    this.sidebarList.querySelectorAll('.sidebar-valley-row').forEach((row) => {
+    this.sidebarList.querySelectorAll('.sidebar-valley-card').forEach((row) => {
       row.classList.toggle('active', row.dataset.id === this.activeValleyId);
     });
   }
@@ -3322,6 +3253,494 @@ class ValleysManager {
 
   closeModal() {
     if (this.modal) this.modal.classList.remove('visible');
+  }
+}
+
+// Dashboard Manager - Handles project grid and navigation
+class DashboardManager {
+  constructor() {
+    this.dashboardView = document.getElementById('dashboard-view');
+    this.editorView = document.getElementById('editor-view');
+    this.projectsGrid = document.getElementById('projects-grid');
+    this.titleInput = document.getElementById('project-title-input');
+    this.titleDisplay = document.getElementById('project-title-display');
+    this.emojiDisplay = document.getElementById('project-emoji-display');
+    this.backBtn = document.getElementById('back-to-dashboard-btn');
+    this.dashboardThemeBtn = document.getElementById('dashboard-theme-btn');
+    this.dashboardAccountBtn = document.getElementById('dashboard-account-btn');
+  }
+
+  init() {
+    // Check URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('project');
+
+    if (projectId) {
+      // Wait for Auth to be ready before creating logic? 
+      // ValleysManager.loadValleys checks auth.
+      // We'll rely on global ValleysManager to handle data loading loop;
+      // Once loaded, we should open it.
+      // But init runs before data is loaded.
+      // We'll set a pending ID to open.
+      this.pendingProjectId = projectId;
+    } else {
+      this.showDashboard();
+    }
+
+    // Bind Back Button
+    if (this.backBtn) {
+      this.backBtn.addEventListener('click', () => {
+        if (window.valleysManager) {
+          window.valleysManager.saveValley(true).then(() => {
+            this.showDashboard();
+          });
+        } else {
+          this.showDashboard();
+        }
+      });
+    }
+
+    // Bind Dashboard Theme Toggle
+    if (this.dashboardThemeBtn) {
+      this.dashboardThemeBtn.addEventListener('click', () => {
+        document.body.classList.toggle('light-theme');
+        const isLight = document.body.classList.contains('light-theme');
+        localStorage.setItem(CONFIG.STORAGE_THEME, isLight ? 'light' : 'dark');
+        const icon = this.dashboardThemeBtn.querySelector('.material-symbols-outlined');
+        if (icon) icon.textContent = isLight ? 'light_mode' : 'dark_mode';
+      });
+    }
+
+    // Bind Back Button - Auto save on exit
+    if (this.backBtn) {
+      this.backBtn.addEventListener('click', async () => {
+        if (window.valleysManager) {
+          // Force save before leaving
+          await window.valleysManager.saveValley(true);
+          this.showDashboard();
+        } else {
+          this.showDashboard();
+        }
+      });
+    }
+
+    // Bind Emoji Picker
+    this.emojiBtn = document.getElementById('project-emoji-btn');
+    this.emojiPicker = document.getElementById('emoji-picker-dropdown');
+    this.emojiGrid = document.getElementById('emoji-grid');
+
+    // Curated list of mindful/creative emojis
+    const EMOJI_LIST = [
+      '📝', '💡', '🚀', '🎨', '🧠', '⚡', '✨', '🔥',
+      '📚', '🎯', '🌈', '🧩', '🎤', '🎧', '🎸', '🎹',
+      '📷', '🎥', '🎬', '🎭', '👾', '🕹️', '🎲', '🎰',
+      '💎', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖️', '🎗️',
+      '🎟️', '🎫', '🎪', '🎢', '🎡', '🎠', '🏗️', '🏛️'
+    ];
+
+    if (this.emojiBtn && this.emojiPicker && this.emojiGrid) {
+      // Render emojis
+      this.emojiGrid.innerHTML = EMOJI_LIST.map(emoji =>
+        `<button class="emoji-option" data-emoji="${emoji}">${emoji}</button>`
+      ).join('');
+
+      // Toggle picker
+      this.emojiBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.emojiPicker.classList.toggle('visible');
+      });
+
+      // Handle selection
+      this.emojiGrid.addEventListener('click', (e) => {
+        const option = e.target.closest('.emoji-option');
+        if (option) {
+          e.stopPropagation();
+          const selectedEmoji = option.dataset.emoji;
+          if (this.emojiDisplay) this.emojiDisplay.textContent = selectedEmoji;
+          this.emojiPicker.classList.remove('visible');
+
+          // Save functionality
+          if (window.valleysManager && window.valleysManager.activeValleyId) {
+            // We need a specific method to update just the emoji, or reuse saveValley? 
+            // saveValley grabs emoji from activeValley object usually. 
+            // Let's update the local object directly first.
+            const valley = window.valleysManager.valleys.find(v => v.id === window.valleysManager.activeValleyId);
+            if (valley) {
+              if (!valley.files) valley.files = {};
+              valley.files.emoji = selectedEmoji;
+              valley.emoji = selectedEmoji; // Critical: Update root property for saveValley to pick it up
+              window.valleysManager.saveValley(false).then(() => {
+                showToast('Icon updated');
+              });
+            }
+          } else if (window.valleysManager && window.valleysManager.tempValley) {
+            // Update temp valley
+            if (!window.valleysManager.tempValley.files) window.valleysManager.tempValley.files = {};
+            window.valleysManager.tempValley.files.emoji = selectedEmoji;
+            window.valleysManager.tempValley.emoji = selectedEmoji; // Critical: Update root property
+            // No need to save to DB yet, will save on first edit or exit
+          }
+        }
+      });
+
+      // Close on outside click
+      document.addEventListener('click', (e) => {
+        if (!this.emojiPicker.contains(e.target) && !this.emojiBtn.contains(e.target)) {
+          this.emojiPicker.classList.remove('visible');
+        }
+      });
+    }
+
+    if (this.titleInput && this.titleDisplay) {
+      const syncInputWidth = () => {
+        this.titleDisplay.textContent = this.titleInput.value || ' ';
+      };
+
+      this.titleInput.addEventListener('input', syncInputWidth);
+
+      this.titleInput.addEventListener('focus', () => {
+        document.querySelector('.project-title-container')?.classList.add('editing');
+        syncInputWidth();
+      });
+
+      this.titleInput.addEventListener('blur', () => {
+        document.querySelector('.project-title-container')?.classList.remove('editing');
+        this.commitTitleChange();
+      });
+
+      this.titleInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          this.titleInput.blur();
+        }
+        if (e.key === 'Escape') {
+          this.titleInput.value = this.titleDisplay.textContent;
+          this.titleInput.blur();
+        }
+        syncInputWidth();
+      });
+    }
+
+
+
+    // Bind Dashboard Account Button
+    if (this.dashboardAccountBtn) {
+      this.dashboardAccountBtn.addEventListener('click', () => {
+        // Reusing existing user-menu-overlay or triggering Auth
+        if (window.authManager && window.authManager.isAuthenticated()) {
+          // Open user menu
+          const userMenuOverlay = document.querySelector('.user-menu-overlay');
+          if (userMenuOverlay) {
+            userMenuOverlay.classList.add('visible');
+            // Ensure menu is ready (timeout logic from valid openMenu if needed, or CSS handles it)
+            setTimeout(() => userMenuOverlay.classList.add('menu-ready'), 100);
+          }
+        } else {
+          // Open Auth Modal
+          if (window.authManager) window.authManager.openModal();
+        }
+      });
+    }
+
+    // Bind existing static Create New card in case renderProjects hasn't run yet
+    const existingCreateCard = document.getElementById('create-project-card');
+    if (existingCreateCard) {
+      existingCreateCard.onclick = () => {
+        if (window.valleysManager) window.valleysManager.newValley();
+      };
+    }
+  }
+
+
+
+  commitTitleChange() {
+    const newTitle = this.titleInput.value.trim();
+    if (newTitle && window.valleysManager && window.valleysManager.activeValleyId) {
+      this.titleDisplay.textContent = newTitle;
+      window.valleysManager.updateValleyTitle(window.valleysManager.activeValleyId, newTitle);
+    } else {
+      // Revert
+      this.titleInput.value = this.titleDisplay.textContent;
+    }
+  }
+
+  updateHeader(title, emoji) {
+    if (this.titleDisplay) this.titleDisplay.textContent = title;
+    if (this.titleInput) this.titleInput.value = title;
+    if (this.emojiDisplay) this.emojiDisplay.textContent = emoji || '📝';
+  }
+
+  showDashboard() {
+    if (this.editorView) this.editorView.style.display = 'none';
+    if (this.dashboardView) this.dashboardView.style.display = 'block';
+
+    // Clean URL
+    if (window.history.pushState) {
+      const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+      window.history.pushState({ path: newurl }, '', newurl);
+    }
+
+    if (window.valleysManager) {
+      this.renderProjects(window.valleysManager.valleys);
+    }
+  }
+
+  showEditor(projectId) {
+    if (this.dashboardView) this.dashboardView.style.display = 'none';
+    if (this.editorView) this.editorView.style.display = 'block';
+
+    if (projectId) {
+      const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?project=' + projectId;
+      window.history.pushState({ path: newurl }, '', newurl);
+    }
+  }
+
+  renderProjects(valleys) {
+    // Check for pending project load from URL
+    if (this.pendingProjectId && valleys) {
+      const id = this.pendingProjectId;
+      const exists = valleys.find(v => v.id === id);
+      if (exists) {
+        this.pendingProjectId = null;
+        window.valleysManager.loadValley(id);
+        return;
+      }
+    }
+
+    if (!this.projectsGrid) return;
+    this.projectsGrid.innerHTML = '';
+
+    // Create Card
+    const createCard = document.createElement('div');
+    createCard.className = 'project-card create-card';
+    createCard.innerHTML = `
+        <div class="create-icon-wrapper"><span class="material-symbols-outlined">add</span></div>
+        <span class="create-label">Create new notebook</span>
+     `;
+    createCard.onclick = () => window.valleysManager.newValley();
+    this.projectsGrid.appendChild(createCard);
+
+    // Valley Cards
+    if (valleys) {
+      // Sort by updated_at desc
+      const sorted = [...valleys].sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
+
+      sorted.forEach(v => {
+        const card = this.createProjectCard(v);
+        this.projectsGrid.appendChild(card);
+      });
+    }
+  }
+
+  // Project emojis for random assignment and picker
+  static PROJECT_EMOJIS = ['📝', '✏️', '📖', '📚', '💡', '🎯', '🚀', '⭐', '💎', '🔥', '🌟', '📌', '🎨', '🧠', '💭', '📊', '🔮', '🌈', '🎪', '🎭'];
+
+  getRandomEmoji() {
+    return DashboardManager.PROJECT_EMOJIS[Math.floor(Math.random() * DashboardManager.PROJECT_EMOJIS.length)];
+  }
+
+  createProjectCard(valley) {
+    const card = document.createElement('div');
+    card.className = 'project-card';
+    const sourceCount = valley.sources_count !== undefined ? valley.sources_count : (valley.files ? (valley.files.files ? valley.files.files.length : 0) : 0);
+
+    // Assign random emoji if not set
+    if (!valley.emoji) {
+      valley.emoji = this.getRandomEmoji();
+    }
+
+    // Determine if temp
+    if (valley.id.toString().startsWith('temp-')) {
+      card.classList.add('temp-valley');
+    }
+
+    card.innerHTML = `
+        <div class="card-header">
+            <div class="card-emoji" data-valley-id="${valley.id}">${valley.emoji}</div>
+            <button class="card-menu-btn"><span class="material-symbols-outlined">more_vert</span></button>
+        </div>
+        <div class="card-content">
+            <h3 class="card-title">${this.escapeHtml(valley.title)}</h3>
+            <div class="card-meta">
+                <span>${sourceCount} sources</span>
+            </div>
+        </div>
+      `;
+
+    // Emoji picker
+    const emojiEl = card.querySelector('.card-emoji');
+    emojiEl.onclick = (e) => {
+      e.stopPropagation();
+      this.showEmojiPicker(e, valley, emojiEl);
+    };
+
+    const menuBtn = card.querySelector('.card-menu-btn');
+    menuBtn.onclick = (e) => {
+      e.stopPropagation();
+      this.showCardContextMenu(e, valley, card);
+    };
+
+    card.onclick = (e) => {
+      if (!e.target.closest('.card-menu-btn') && !e.target.closest('.card-emoji')) {
+        window.valleysManager.loadValley(valley.id);
+      }
+    };
+    return card;
+  }
+
+  showCardContextMenu(e, valley, card) {
+    // Remove any existing context menu
+    const existingMenu = document.querySelector('.card-context-menu');
+    if (existingMenu) existingMenu.remove();
+
+    // Create context menu
+    const menu = document.createElement('div');
+    menu.className = 'card-context-menu';
+    menu.innerHTML = `
+      <button class="context-menu-item" data-action="rename">
+        <span class="material-symbols-outlined">edit</span>
+        <span>Rename</span>
+      </button>
+      <button class="context-menu-item context-menu-item--danger" data-action="delete">
+        <span class="material-symbols-outlined">delete</span>
+        <span>Delete</span>
+      </button>
+    `;
+
+    // Position menu near the button
+    const rect = e.target.closest('.card-menu-btn').getBoundingClientRect();
+    menu.style.position = 'fixed';
+    menu.style.top = `${rect.bottom + 8}px`;
+    menu.style.left = `${rect.left}px`;
+
+    document.body.appendChild(menu);
+
+    // Handle menu item clicks
+    menu.querySelectorAll('.context-menu-item').forEach(item => {
+      item.onclick = (ev) => {
+        ev.stopPropagation();
+        const action = item.dataset.action;
+        menu.remove();
+
+        if (action === 'rename') {
+          this.startInlineRename(valley, card);
+        } else if (action === 'delete') {
+          this.deleteProject(valley);
+        }
+      };
+    });
+
+    // Close menu when clicking outside
+    const closeMenu = (ev) => {
+      if (!menu.contains(ev.target)) {
+        menu.remove();
+        document.removeEventListener('click', closeMenu);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', closeMenu), 0);
+  }
+
+  showEmojiPicker(e, valley, emojiEl) {
+    // Remove any existing emoji picker
+    const existingPicker = document.querySelector('.emoji-picker');
+    if (existingPicker) existingPicker.remove();
+
+    // Create emoji picker dropdown
+    const picker = document.createElement('div');
+    picker.className = 'emoji-picker';
+
+    // Create grid of emojis
+    const grid = document.createElement('div');
+    grid.className = 'emoji-picker-grid';
+
+    DashboardManager.PROJECT_EMOJIS.forEach(emoji => {
+      const btn = document.createElement('button');
+      btn.className = 'emoji-btn';
+      btn.textContent = emoji;
+      btn.onclick = (ev) => {
+        ev.stopPropagation();
+        emojiEl.textContent = emoji;
+        valley.emoji = emoji;
+        window.valleysManager.updateValleyEmoji(valley.id, emoji);
+        picker.remove();
+      };
+      grid.appendChild(btn);
+    });
+
+    picker.appendChild(grid);
+
+    // Position picker
+    const rect = emojiEl.getBoundingClientRect();
+    picker.style.position = 'fixed';
+    picker.style.top = `${rect.bottom + 8}px`;
+    picker.style.left = `${rect.left}px`;
+
+    document.body.appendChild(picker);
+
+    // Close on outside click
+    const closePicker = (ev) => {
+      if (!picker.contains(ev.target)) {
+        picker.remove();
+        document.removeEventListener('click', closePicker);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', closePicker), 0);
+  }
+
+  startInlineRename(valley, card) {
+    const titleEl = card.querySelector('.card-title');
+    if (!titleEl) return;
+
+    const originalTitle = valley.title;
+
+    // Make title editable
+    titleEl.contentEditable = 'true';
+    titleEl.focus();
+
+    // Select all text
+    const range = document.createRange();
+    range.selectNodeContents(titleEl);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    const save = () => {
+      titleEl.contentEditable = 'false';
+      const newTitle = titleEl.textContent.trim();
+      if (newTitle && newTitle !== originalTitle) {
+        window.valleysManager.updateValleyTitle(valley.id, newTitle);
+        valley.title = newTitle;
+      } else {
+        titleEl.textContent = originalTitle;
+      }
+    };
+
+    titleEl.onblur = save;
+    titleEl.onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        titleEl.blur();
+      }
+      if (e.key === 'Escape') {
+        titleEl.textContent = originalTitle;
+        titleEl.blur();
+      }
+    };
+  }
+
+  async deleteProject(valley) {
+    if (!confirm(`Are you sure you want to delete "${valley.title}"? This cannot be undone.`)) {
+      return;
+    }
+
+    await window.valleysManager.deleteValley(valley.id);
+    this.renderProjects(window.valleysManager.valleys);
+  }
+
+  escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
   }
 }
 
@@ -3381,6 +3800,10 @@ function setupImageContainer(container) {
   });
 }
 
+
+
+
+
 // Auth Manager - handles user authentication
 class AuthManager {
   constructor() {
@@ -3404,7 +3827,13 @@ class AuthManager {
 
     this.signoutBtn = document.getElementById('signout-btn');
     this.deleteAccountBtn = document.getElementById('delete-account-btn');
-    this.currentTab = 'signin';
+
+    // Auth Modal New Elements
+    this.authGoogleBtn = document.getElementById('auth-google-btn');
+    this.authToggleModeBtn = document.getElementById('auth-toggle-mode');
+    this.authToggleText = document.getElementById('auth-toggle-text');
+
+    this.currentMode = 'signin'; // 'signin' or 'signup'
 
     this.init();
   }
@@ -3476,32 +3905,29 @@ class AuthManager {
       });
     }
 
-    // Tab switching
-    document.querySelectorAll('.auth-tab').forEach(tab => {
-      tab.addEventListener('click', () => this.switchTab(tab.dataset.tab));
-    });
+    // Toggle Mode Link
+    if (this.authToggleModeBtn) {
+      this.authToggleModeBtn.addEventListener('click', (e) => this.toggleMode(e));
+    }
 
-    // Form submission
+    // Google Sign In
+    if (this.authGoogleBtn) {
+      this.authGoogleBtn.addEventListener('click', () => this.signInWithGoogle());
+    }
+
+    // Submit Button (Email/Password) - Sign In
     if (this.submitBtn) {
       this.submitBtn.addEventListener('click', () => this.handleSubmit());
     }
 
-    // Enter key submits form
-    if (this.emailInput) {
-      this.emailInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') this.handleSubmit();
-      });
+    // Signup layout buttons
+    const submitBtnSignup = document.getElementById('auth-submit-btn-signup');
+    if (submitBtnSignup) {
+      submitBtnSignup.addEventListener('click', () => this.handleSubmit());
     }
-    if (this.passwordInput) {
-      this.passwordInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') this.handleSubmit();
-      });
-    }
-
-    // Google sign in
-    const googleBtn = document.getElementById('google-signin-btn');
-    if (googleBtn) {
-      googleBtn.addEventListener('click', () => this.signInWithGoogle());
+    const googleBtnSignup = document.getElementById('auth-google-btn-signup');
+    if (googleBtnSignup) {
+      googleBtnSignup.addEventListener('click', () => this.signInWithGoogle());
     }
 
     // Account modal
@@ -3555,26 +3981,54 @@ class AuthManager {
     });
   }
 
-  switchTab(tab) {
-    this.currentTab = tab;
-    document.querySelectorAll('.auth-tab').forEach(t => {
-      t.classList.toggle('active', t.dataset.tab === tab);
-    });
-    if (this.authTitle) {
-      this.authTitle.textContent = tab === 'signin' ? 'Sign In' : 'Sign Up';
+  toggleMode(e) {
+    if (e) e.preventDefault();
+    this.currentMode = this.currentMode === 'signin' ? 'signup' : 'signin';
+    this.updateModalUI();
+  }
+
+  updateModalUI() {
+    const signinLayout = document.getElementById('auth-signin-layout');
+    const signupLayout = document.getElementById('auth-signup-layout');
+
+    if (this.currentMode === 'signin') {
+      if (this.authTitle) this.authTitle.textContent = 'Sign In';
+      if (signinLayout) signinLayout.style.display = 'block';
+      if (signupLayout) signupLayout.style.display = 'none';
+      if (this.authToggleText) {
+        this.authToggleText.innerHTML = 'Don\'t have an account? <a href="#" id="auth-toggle-mode">Create one</a>';
+        const link = this.authToggleText.querySelector('a');
+        if (link) link.addEventListener('click', (e) => this.toggleMode(e));
+      }
+    } else {
+      if (this.authTitle) this.authTitle.textContent = 'Create Account';
+      if (signinLayout) signinLayout.style.display = 'none';
+      if (signupLayout) signupLayout.style.display = 'block';
+      if (this.authToggleText) {
+        this.authToggleText.innerHTML = 'Already have an account? <a href="#" id="auth-toggle-mode">Sign in</a>';
+        const link = this.authToggleText.querySelector('a');
+        if (link) link.addEventListener('click', (e) => this.toggleMode(e));
+      }
     }
-    if (this.submitBtn) {
-      this.submitBtn.textContent = tab === 'signin' ? 'Sign In' : 'Sign Up';
-    }
-    if (this.errorEl) {
-      this.errorEl.textContent = '';
-      this.errorEl.classList.remove('success');
-    }
+    // Clear errors
+    const errorEl = document.getElementById('auth-error');
+    const errorElSignup = document.getElementById('auth-error-signup');
+    if (errorEl) errorEl.textContent = '';
+    if (errorElSignup) errorElSignup.textContent = '';
   }
 
   async handleSubmit() {
-    const email = this.emailInput?.value.trim();
-    const password = this.passwordInput?.value;
+    // Get values from current active layout
+    let email, password, errorEl;
+    if (this.currentMode === 'signin') {
+      email = document.getElementById('auth-email')?.value.trim();
+      password = document.getElementById('auth-password')?.value;
+      errorEl = document.getElementById('auth-error');
+    } else {
+      email = document.getElementById('auth-email-signup')?.value.trim();
+      password = document.getElementById('auth-password-signup')?.value;
+      errorEl = document.getElementById('auth-error-signup');
+    }
 
     if (!email || !password) {
       this.showError('Please fill in all fields');
@@ -3585,7 +4039,7 @@ class AuthManager {
     this.showError('');
 
     try {
-      if (this.currentTab === 'signin') {
+      if (this.currentMode === 'signin') {
         const { error } = await window.supabase.auth.signInWithPassword({
           email,
           password
@@ -3698,7 +4152,8 @@ class AuthManager {
       if (this.emailInput) this.emailInput.value = '';
       if (this.passwordInput) this.passwordInput.value = '';
       this.showError('');
-      this.switchTab('signin');
+      this.currentMode = 'signin';
+      this.updateModalUI();
     }
   }
 
@@ -3858,7 +4313,15 @@ document.addEventListener('DOMContentLoaded', () => {
   window.contextManager = new ContextManager();
   window.predictionManager = new PredictionManager();
   window.valleysManager = new ValleysManager();
+  window.dashboardManager = new DashboardManager();
   window.authManager = new AuthManager();
+
+  // Dashboard Manager Init
+  if (window.dashboardManager) {
+    window.dashboardManager.init();
+  } else {
+    console.warn('DashboardManager not initialized');
+  }
 
   // Modal handling
   const modal = document.getElementById('about-modal');
@@ -3866,7 +4329,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalClose = document.getElementById('about-modal-close');
 
   const openModal = () => modal.classList.add('visible');
-  /* Logo click listener removed as requested */
 
   if (modalClose) {
     modalClose.addEventListener('click', () => {
@@ -3900,77 +4362,28 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // MENU FUNCTIONALITY
-  // MENU FUNCTIONALITY
   const settingsBtn = document.getElementById('settings-btn');
-  const settingsIcon = settingsBtn.querySelector('.material-symbols-outlined');
-
-  const menuBtn = document.getElementById('menu-btn');
-  const menuIcon = menuBtn ? menuBtn.querySelector('.material-symbols-outlined') : null;
-
-  // Initialize menu icon for desktop
-  if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX && menuIcon) {
-    // Icon is handled by CSS class now
-  }
 
   const rightMenuOverlay = document.querySelector('.right-menu-overlay');
   const userMenuOverlay = document.querySelector('.user-menu-overlay');
-  const sidebar = document.getElementById('sidebar');
-  const sidebarBackdrop = document.getElementById('sidebar-backdrop');
 
-  const selectMenuButtons = Array.from(document.querySelectorAll('.select-menu-btn'));
-  const editor = document.querySelector('.editor');
-  let menuReadyTimeout = null;
-
-  const openMenu = (overlay, icon, openIconName = 'close') => {
+  const openMenu = (overlay) => {
     overlay.classList.add('visible');
-    if (icon) icon.textContent = openIconName;
-    if (menuReadyTimeout) {
-      clearTimeout(menuReadyTimeout);
-    }
-    menuReadyTimeout = setTimeout(() => {
-      overlay.classList.add('menu-ready');
-      menuReadyTimeout = null;
-    }, 120);
   };
 
   const closeMenu = () => {
-    if (rightMenuOverlay && rightMenuOverlay.classList.contains('visible')) {
-      if (menuReadyTimeout) {
-        clearTimeout(menuReadyTimeout);
-        menuReadyTimeout = null;
-      }
-      rightMenuOverlay.classList.remove('menu-ready');
-      rightMenuOverlay.classList.remove('visible');
-      if (settingsIcon) settingsIcon.textContent = 'more_horiz';
-    }
-    if (userMenuOverlay && userMenuOverlay.classList.contains('visible')) {
-      if (menuReadyTimeout) {
-        clearTimeout(menuReadyTimeout);
-        menuReadyTimeout = null;
-      }
-      userMenuOverlay.classList.remove('menu-ready');
-      userMenuOverlay.classList.remove('visible');
-    }
-  };
-
-  const openSidebarDrawer = () => {
-    document.body.classList.add('sidebar-open');
-  };
-
-  const closeSidebarDrawer = () => {
-    document.body.classList.remove('sidebar-open');
+    if (rightMenuOverlay) rightMenuOverlay.classList.remove('visible');
+    if (userMenuOverlay) userMenuOverlay.classList.remove('visible');
   };
 
   const closeAllMenus = () => {
     closeMenu();
-    closeSidebarDrawer();
     window.contextManager?.closeSideMenu();
   };
 
   settingsBtn.addEventListener('click', () => {
     if (window.predictionManager.selectModeActive) {
       window.predictionManager.disableSelectMode();
-      if (settingsIcon) settingsIcon.textContent = 'edit';
       return;
     }
 
@@ -3978,46 +4391,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.contextManager.toggleSideMenu();
   });
 
-  if (menuBtn) {
-    menuBtn.addEventListener('click', () => {
-      // Desktop toggle
-      if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX) {
-        document.body.classList.toggle('sidebar-collapsed');
-        return;
-      }
-
-      if (document.body.classList.contains('sidebar-open')) {
-        closeSidebarDrawer();
-      } else {
-        closeMenu();
-        closeSidebarDrawer();
-        openSidebarDrawer();
-      }
-    });
-  }
-
-  // Sidebar close button and logo click handlers
-  const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
-  const sidebarCreateBtn = document.getElementById('sidebar-create-valley-btn');
-
-  const collapseSidebar = () => {
-    if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX) {
-      document.body.classList.add('sidebar-collapsed');
-    } else {
-      closeSidebarDrawer();
-    }
-  };
-
-  if (sidebarCreateBtn) {
-    sidebarCreateBtn.addEventListener('click', async () => {
-      await window.valleysManager.newValley();
-      closeSidebarDrawer();
-    });
-  }
-
-  if (sidebarCloseBtn) {
-    sidebarCloseBtn.addEventListener('click', collapseSidebar);
-  }
+  // Sidebar listeners removed as sidebar is deleted
 
   if (rightMenuOverlay) {
     rightMenuOverlay.addEventListener('click', (e) => {
@@ -4034,6 +4408,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // Legacy header binding if present?
+  // Current Editor Header has back-btn and project-title logic handled by DashboardManager
+
 
   const sidebarAccountTrigger = document.getElementById('sidebar-account-trigger');
   if (sidebarAccountTrigger) {

@@ -20,142 +20,169 @@
 </head>
 
 <body class="sidebar-collapsed">
-  <div class="app-shell">
-    <aside class="sidebar" id="sidebar">
-      <!-- Top Group: Header + Button + Valleys (gap-24) -->
-      <div class="sidebar-top">
-        <!-- Header: Logo + Close Button -->
-        <div class="sidebar-header">
-          <button class="btn-icon" id="sidebar-close-btn" aria-label="Close sidebar">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
+  <!-- Dashboard View -->
+  <div id="dashboard-view" class="view-container dashboard-view">
+    <header class="dashboard-header">
+      <div class="header-left">
+        <div class="logo-container">
+          <a href="/" class="logo-link">
+            <img src="mindcomplete-logo.svg" alt="Mindcomplete" class="dashboard-logo">
+          </a>
 
-        <div class="sidebar-actions">
-          <button class="sidebar-item sidebar-create-btn" id="sidebar-create-valley-btn">
-            <span class="material-symbols-outlined">edit_square</span>
-            <span>Create new valley</span>
-          </button>
-        </div>
-
-        <div class="sidebar-divider"></div>
-
-        <!-- Valleys List (gap-12) -->
-        <div class="sidebar-valleys" id="sidebar-valleys-list"></div>
-        <div class="sidebar-valleys-empty" id="sidebar-valleys-empty">
-          <p class="section-description">No valleys saved yet</p>
         </div>
       </div>
+      <div class="header-right">
 
-      <!-- Account Section (px-12, pt-12, pb-36, gap-10) -->
-      <div class="sidebar-account">
-        <button class="sidebar-account-trigger" id="sidebar-account-trigger">
-          <div class="sidebar-avatar" id="sidebar-avatar">R</div>
-          <span class="sidebar-account-name" id="sidebar-account-name">Guest</span>
+        <button class="avatar-btn" id="dashboard-account-btn">
+          <div class="user-avatar" id="dashboard-avatar">
+            <span class="material-symbols-outlined">person</span>
+          </div>
         </button>
       </div>
-    </aside>
-    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+    </header>
 
-    <div class="app-main">
-      <header class="header">
-        <div class="header-left">
-          <button class="btn-icon" id="menu-btn" aria-label="Menu">
-            <span class="material-symbols-outlined menu-icon-open">menu</span>
-            <span class="material-symbols-outlined menu-icon-close">close</span>
-          </button>
-          <span class="logo header-logo">Mind<span class="logo-divider">|</span><span
-              class="logo-complete">complete</span></span>
-        </div>
-        <div class="header-right">
-          <button class="btn-icon" id="settings-btn" aria-label="Settings">
-            <span class="material-symbols-outlined">psychology</span>
-          </button>
-        </div>
-      </header>
+    <main class="dashboard-content">
 
-      <!-- Gradient overlay to fade text under header -->
-      <div class="header-gradient-overlay"></div>
-
-      <!-- Right Side Menu Panel (Brain) -->
-      <div class="side-menu-backdrop" id="side-menu-backdrop"></div>
-      <div class="side-menu brain-panel" id="side-menu">
-        <div class="side-menu-resizer"></div>
-        <div class="brain-header">
-          <h2 class="brain-title">
-            <span class="material-symbols-outlined">psychology</span>
-            Brain
-          </h2>
-          <button class="btn-icon side-menu-close" id="side-menu-close" aria-label="Close">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-
-        <!-- Stack of Context Anchors (Scrollable) -->
-        <div class="brain-content" id="brain-anchors-list">
-          <!-- Empty State -->
-          <div class="brain-empty-state" id="brain-empty-state">
-            <span class="material-symbols-outlined">psychology</span>
-            <p>Add context to help the AI understand<br>your project.</p>
+      <div class="projects-grid" id="projects-grid">
+        <!-- Create New Project Card -->
+        <div class="project-card create-card" id="create-project-card">
+          <div class="create-icon-wrapper">
+            <span class="material-symbols-outlined">add</span>
           </div>
-          <!-- Anchors will be injected here -->
+          <span class="create-label">Create new notebook</span>
         </div>
+        <!-- Projects will be injected here -->
+      </div>
+    </main>
+  </div>
 
-        <!-- Fixed Bottom Input Area -->
-        <div class="brain-input-area">
-          <div class="brain-input-container">
-            <!-- Attachment Preview (Dynamic) -->
-            <div class="brain-attachment-preview" id="brain-attachment-preview" style="display: none;">
-              <div class="attachment-chip">
-                <span class="material-symbols-outlined" id="attachment-icon">description</span>
-                <span class="attachment-name" id="attachment-name">file.txt</span>
-                <button class="btn-icon-small" id="remove-attachment-btn">
-                  <span class="material-symbols-outlined">close</span>
+  <!-- Editor View -->
+  <div id="editor-view" class="view-container editor-view" style="display: none;">
+    <div class="app-shell">
+      <!-- Sidebar Removed -->
+
+      <div class="app-main" style="padding-left: 0;"> <!-- Explicitly remove padding reserved for sidebar if any -->
+        <header class="header">
+          <div class="header-left">
+            <button class="logo-back-btn" id="back-to-dashboard-btn" aria-label="Back to Dashboard">
+              <svg width="45.5" height="26" viewBox="0 0 49 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M0.000289917 22.5V3.884H3.19829L9.12629 19.146H9.23029L15.1583 3.884H18.3563V22.5H16.1723V10.67L16.2763 7.134H16.1723L10.0883 22.5H8.26829L2.18429 7.134H2.08029L2.18429 10.67V22.5H0.000289917Z"
+                  fill="#D9D9D9" />
+                <path d="M25.5 0V28H24.5V0H25.5Z" fill="#C3FB50" />
+                <path
+                  d="M41.0227 23.4122C38.2216 23.4122 35.8814 22.4637 34.0022 20.5668C32.123 18.6609 31.1834 16.2853 31.1834 13.4399C31.1834 10.5767 32.1274 8.2144 34.0155 6.35291C35.9125 4.48254 38.2482 3.54736 41.0227 3.54736C41.9712 3.54736 42.8709 3.67146 43.7219 3.91966C44.5729 4.16786 45.3441 4.518 46.0355 4.97008C46.7269 5.41329 47.2543 5.84321 47.6177 6.25983C47.99 6.67645 48.1762 6.88476 48.1762 6.88476L46.5673 8.26759C46.5673 8.26759 46.39 8.08144 46.0355 7.70914C45.6898 7.32798 45.2687 6.98227 44.7723 6.67202C44.2848 6.36177 43.7263 6.118 43.097 5.94072C42.4765 5.76343 41.7851 5.67479 41.0227 5.67479C38.8864 5.67479 37.087 6.38836 35.6244 7.81551C34.1706 9.24266 33.4438 11.113 33.4438 13.4266C33.4438 15.7313 34.1618 17.615 35.5978 19.0776C37.0427 20.5402 38.8465 21.2715 41.0094 21.2715C41.7983 21.2715 42.5341 21.1651 43.2166 20.9524C43.8992 20.7308 44.5374 20.4249 45.1313 20.0349C45.7341 19.6449 46.1906 19.2682 46.5008 18.9047C46.82 18.5413 46.9795 18.3596 46.9795 18.3596L48.6416 19.8488C48.6416 19.8488 48.4288 20.0925 48.0033 20.5801C47.5779 21.0587 46.9972 21.5285 46.2615 21.9895C45.5258 22.4416 44.7191 22.7917 43.8416 23.0399C42.9729 23.2881 42.0333 23.4122 41.0227 23.4122Z"
+                  fill="#AFE04A" />
+              </svg>
+            </button>
+            <div class="project-title-container">
+              <div class="emoji-picker-container">
+                <button id="project-emoji-btn" class="project-emoji-btn" aria-label="Change Icon">
+                  <span id="project-emoji-display" class="project-emoji-display">📝</span>
+                </button>
+                <div class="emoji-picker-dropdown" id="emoji-picker-dropdown">
+                  <div class="emoji-grid" id="emoji-grid">
+                    <!-- Emojis will be injected here -->
+                  </div>
+                </div>
+              </div>
+              <div class="title-wrapper">
+                <span class="project-title-display" id="project-title-display">Untitled Project</span>
+                <input type="text" id="project-title-input" class="project-title-input" placeholder="Untitled Project"
+                  spellcheck="false">
+              </div>
+
+            </div>
+
+          </div>
+          <div class="header-right">
+            <button class="btn-secondary btn-sm" id="settings-btn" aria-label="Context">
+              Context
+            </button>
+          </div>
+        </header>
+
+        <!-- Gradient overlay to fade text under header -->
+        <div class="header-gradient-overlay"></div>
+
+        <!-- Right Side Menu Panel (Brain) -->
+        <div class="side-menu-backdrop" id="side-menu-backdrop"></div>
+        <div class="side-menu brain-panel" id="side-menu">
+          <div class="side-menu-resizer"></div>
+          <div class="brain-header">
+            <h2 class="brain-title">
+              Context
+            </h2>
+            <button class="btn-icon side-menu-close" id="side-menu-close" aria-label="Close">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <!-- Stack of Context Anchors (Scrollable) -->
+          <div class="brain-content" id="brain-anchors-list">
+            <!-- Empty State -->
+            <div class="brain-empty-state" id="brain-empty-state">
+              <p>Add context to help the AI understand<br>your project.</p>
+            </div>
+            <!-- Anchors will be injected here -->
+          </div>
+
+          <!-- Fixed Bottom Input Area -->
+          <div class="brain-input-area">
+            <div class="brain-input-container">
+              <!-- Attachment Preview (Dynamic) -->
+              <div class="brain-attachment-preview" id="brain-attachment-preview" style="display: none;">
+                <div class="attachment-chip">
+                  <span class="material-symbols-outlined" id="attachment-icon">description</span>
+                  <span class="attachment-name" id="attachment-name">file.txt</span>
+                  <button class="btn-icon-small" id="remove-attachment-btn">
+                    <span class="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="brain-input-controls">
+                <button class="btn-icon brain-attach-btn" id="brain-attach-btn" aria-label="Attach file">
+                  <span class="material-symbols-outlined">attach_file</span>
+                </button>
+                <textarea class="brain-textarea" id="brain-input-text" placeholder="Add context" rows="1"></textarea>
+                <button class="btn-icon-primary brain-send-btn" id="brain-send-btn" aria-label="Send">
+                  <span class="material-symbols-outlined">arrow_upward</span>
                 </button>
               </div>
             </div>
 
-            <div class="brain-input-controls">
-              <button class="btn-icon brain-attach-btn" id="brain-attach-btn" aria-label="Attach file">
-                <span class="material-symbols-outlined">attach_file</span>
-              </button>
-              <textarea class="brain-textarea" id="brain-input-text" placeholder="Add context" rows="1"></textarea>
-              <button class="btn-icon-primary brain-send-btn" id="brain-send-btn" aria-label="Send">
-                <span class="material-symbols-outlined">arrow_upward</span>
-              </button>
-            </div>
+            <!-- Hidden File Input -->
+            <input type="file" id="context-file-input"
+              accept=".txt,.md,.png,.jpg,.jpeg,.webp,image/*,text/plain,text/markdown" class="visually-hidden">
           </div>
-
-          <!-- Hidden File Input -->
-          <input type="file" id="context-file-input"
-            accept=".txt,.md,.png,.jpg,.jpeg,.webp,image/*,text/plain,text/markdown" class="visually-hidden">
         </div>
-      </div>
 
-      <div class="container">
-        <div class="editor-wrapper">
-          <!-- Editable layer with inline predictions -->
-          <div class="editor" contenteditable="true" data-placeholder="What's on your mind" spellcheck="false"></div>
+        <div class="container">
+          <div class="editor-wrapper">
+            <!-- Editable layer with inline predictions -->
+            <div class="editor" contenteditable="true" data-placeholder="What's on your mind" spellcheck="false"></div>
+          </div>
         </div>
-      </div>
 
-      <!-- Floating Editor Toolbar -->
-      <div class="editor-toolbar">
-        <button class="toolbar-btn clear-menu-btn" aria-label="Clear">
-          <span class="material-symbols-outlined">ink_eraser</span>
-        </button>
-        <button class="toolbar-btn create-image-btn" aria-label="Create image">
-          <span class="material-symbols-outlined">add_photo_alternate</span>
-        </button>
-        <button class="toolbar-btn toggle-prediction-btn" aria-label="Auto-prediction">
-          <span class="material-symbols-outlined">auto_fix_high</span>
-        </button>
-        <button class="toolbar-btn copy-all-btn" aria-label="Copy all">
-          <span class="material-symbols-outlined">content_copy</span>
-        </button>
-        <button class="toolbar-btn select-menu-btn" aria-label="Select part">
-          <span class="material-symbols-outlined">text_select_end</span>
-        </button>
+        <!-- Floating Editor Toolbar -->
+        <div class="editor-toolbar">
+          <button class="toolbar-btn clear-menu-btn" aria-label="Clear">
+            <span class="material-symbols-outlined">ink_eraser</span>
+          </button>
+          <button class="toolbar-btn create-image-btn" aria-label="Create image">
+            <span class="material-symbols-outlined">add_photo_alternate</span>
+          </button>
+          <button class="toolbar-btn toggle-prediction-btn" aria-label="Auto-prediction">
+            <span class="material-symbols-outlined">auto_fix_high</span>
+          </button>
+          <button class="toolbar-btn copy-all-btn" aria-label="Copy all">
+            <span class="material-symbols-outlined">content_copy</span>
+          </button>
+          <button class="toolbar-btn select-menu-btn" aria-label="Select part">
+            <span class="material-symbols-outlined">text_select_end</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -418,34 +445,80 @@
   <!-- Auth Modal -->
   <div class="modal" id="auth-modal">
     <div class="modal-content context-modal-content">
-      <div class="context-modal-header">
-        <div class="header-spacer"></div>
-        <span class="context-modal-title" id="auth-modal-title">Sign In</span>
-        <div class="header-spacer"></div>
+      <div class="context-modal-header" style="justify-content: flex-end; padding: 0 4px 0 0;">
+        <button class="context-modal-close" id="auth-modal-close" aria-label="Close">
+          <span class="material-symbols-outlined">close</span>
+        </button>
       </div>
-      <div class="context-modal-body">
-        <div class="context-section" id="auth-form-section">
-          <!-- Auth Tabs -->
-          <div class="auth-tabs">
-            <button class="auth-tab active" data-tab="signin">Sign In</button>
-            <button class="auth-tab" data-tab="signup">Sign Up</button>
+      <div class="context-modal-body" style="gap: 36px;">
+
+        <!-- Title -->
+        <h2 class="auth-modal-title" id="auth-modal-title" style="margin: 0;">Sign In</h2>
+
+        <!-- Sign In Layout: Google first -->
+        <div id="auth-signin-layout">
+          <button class="btn-google" id="auth-google-btn">
+            <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20px" height="20px">
+              <path fill="#FFC107"
+                d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
+              <path fill="#FF3D00"
+                d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
+              <path fill="#4CAF50"
+                d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
+              <path fill="#1976D2"
+                d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
+            </svg>
+            <span id="auth-google-text">Sign in with Google</span>
+          </button>
+
+          <div class="auth-divider" style="margin: 36px 0;">
+            <span class="auth-divider-text">or</span>
           </div>
 
-          <!-- Email Input -->
-          <input type="email" id="auth-email" class="auth-input" placeholder="Email">
-
-          <!-- Password Input -->
-          <input type="password" id="auth-password" class="auth-input" placeholder="Password">
-
-          <!-- Error Message -->
-          <div class="auth-error" id="auth-error"></div>
-
-          <!-- Submit Button -->
-          <div class="section-buttons">
-            <button class="btn-primary" id="auth-submit-btn">Sign In</button>
+          <div class="auth-form" id="auth-form-section" style="margin-bottom: 36px;">
+            <input type="email" id="auth-email" class="auth-input" placeholder="Email">
+            <input type="password" id="auth-password" class="auth-input" placeholder="Password">
+            <div class="auth-error" id="auth-error"></div>
           </div>
 
+          <button class="btn-primary" id="auth-submit-btn" style="width: 100%;">Sign In</button>
         </div>
+
+        <!-- Create Account Layout: Email first (hidden by default) -->
+        <div id="auth-signup-layout" style="display: none;">
+          <div class="auth-form" style="margin-bottom: 36px;">
+            <input type="email" id="auth-email-signup" class="auth-input" placeholder="Email">
+            <input type="password" id="auth-password-signup" class="auth-input" placeholder="Password">
+            <div class="auth-error" id="auth-error-signup"></div>
+          </div>
+
+          <button class="btn-primary" id="auth-submit-btn-signup" style="width: 100%; margin-bottom: 36px;">Create
+            Account</button>
+
+          <div class="auth-divider" style="margin: 0;">
+            <span class="auth-divider-text">or</span>
+          </div>
+
+          <button class="btn-google" id="auth-google-btn-signup" style="margin-top: 36px;">
+            <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20px" height="20px">
+              <path fill="#FFC107"
+                d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
+              <path fill="#FF3D00"
+                d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
+              <path fill="#4CAF50"
+                d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
+              <path fill="#1976D2"
+                d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
+            </svg>
+            <span>Sign up with Google</span>
+          </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="auth-footer" style="margin: 0;">
+          <p id="auth-toggle-text">Don't have an account? <a href="#" id="auth-toggle-mode">Create one</a></p>
+        </div>
+
       </div>
     </div>
   </div>
@@ -453,16 +526,15 @@
   <!-- Edit Name Modal -->
   <div class="modal" id="edit-name-modal">
     <div class="modal-content context-modal-content" style="max-width: 400px; min-width: auto;">
-      <div class="context-modal-header">
-        <div class="header-spacer"></div>
-        <span class="context-modal-title">Edit Name</span>
-        <div class="header-spacer"></div>
+      <div class="context-modal-header" style="justify-content: flex-end; padding: 0 4px 0 0;">
+        <button class="context-modal-close" id="edit-name-close" aria-label="Close">
+          <span class="material-symbols-outlined">close</span>
+        </button>
       </div>
-      <div class="context-modal-body">
-        <input type="text" id="edit-user-name-input" class="auth-input" placeholder="Enter your name">
-        <div class="section-buttons">
-          <button class="btn-primary" id="save-user-name-btn" style="width: 100%">Save</button>
-        </div>
+      <div class="context-modal-body" style="gap: 24px;">
+        <h2 class="auth-modal-title" style="margin: 0;">Rename Project</h2>
+        <input type="text" id="edit-name-input" class="auth-input" placeholder="Project name">
+        <button class="btn-primary" id="edit-name-save" style="width: 100%">Save</button>
       </div>
     </div>
   </div>

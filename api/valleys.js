@@ -29,12 +29,16 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  console.log(`[API Valleys] ${req.method} request received`);
+
   if (!supabase) {
+    console.error('[API Valleys] Supabase client not initialized via global var');
     return res.status(500).json({ error: 'Supabase not configured' });
   }
 
   // Get authenticated user (optional for GET list, required for mutations)
   const user = await getUserFromToken(req.headers.authorization);
+  console.log(`[API Valleys] User authenticated: ${user ? user.id : 'No'}`);
 
   // Extract ID from query param or URL path
   // URL format: /api/valleys?id=[id] or /api/valleys/[id]
@@ -58,19 +62,33 @@ export default async function handler(req, res) {
           .single();
 
         if (error || !data) {
+          console.error('[API Valleys] GET single error:', error);
           return res.status(404).json({ error: 'Valley not found' });
         }
         return res.status(200).json(data);
       } else {
         // GET list
+        // GET list
         const { data, error } = await supabase
           .from('valleys')
-          .select('id, title, created_at')
+          .select('id, title, created_at, files')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
-        return res.status(200).json({ valleys: data || [] });
+        if (error) {
+          console.error('[API Valleys] GET list error:', error);
+          throw error;
+        }
+
+        const valleys = (data || []).map(v => ({
+          id: v.id,
+          title: v.title,
+          emoji: v.files?.emoji || null,
+          created_at: v.created_at,
+          sources_count: v.files?.files?.length || 0
+        }));
+
+        return res.status(200).json({ valleys });
       }
     }
 
@@ -80,7 +98,8 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: 'Sign in to save valleys' });
       }
 
-      const { title, text, rules, writingStyle, contextSessionId } = req.body;
+      console.log('[API Valleys] POST body:', JSON.stringify(req.body).substring(0, 200) + '...');
+      const { title, emoji, text, rules, writingStyle, contextSessionId } = req.body;
 
       if (!text) {
         return res.status(400).json({ error: 'Text is required' });
@@ -88,6 +107,7 @@ export default async function handler(req, res) {
 
       // Check tier limits
       const { tier, limits } = await getUserTier(user.id, user.email);
+      console.log(`[API Valleys] User tier: ${tier}, Max valleys: ${limits.max_valleys}`);
 
       // Free tier: cannot save valleys
       if (tier === 'free') {
@@ -99,10 +119,14 @@ export default async function handler(req, res) {
       }
 
       // Pro tier: check max valleys limit
-      const { count } = await supabase
+      const { count, error: countError } = await supabase
         .from('valleys')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
+
+      if (countError) {
+        console.error('[API Valleys] Count error:', countError);
+      }
 
       const currentCount = count || 0;
       if (currentCount >= limits.max_valleys) {
@@ -115,13 +139,18 @@ export default async function handler(req, res) {
       }
 
       // Fetch file content if contextSessionId provided
-      let filesData = null;
+      let filesData = {};
+
       if (contextSessionId) {
-        const { data: contextData } = await supabase
+        const { data: contextData, error: contextError } = await supabase
           .from('contexts')
           .select('text, files, estimated_tokens')
           .eq('session_id', contextSessionId)
           .single();
+
+        if (contextError) {
+          console.error('[API Valleys] Context fetch error:', contextError);
+        }
 
         if (contextData) {
           filesData = {
@@ -130,6 +159,10 @@ export default async function handler(req, res) {
             estimatedTokens: contextData.estimated_tokens
           };
         }
+      }
+
+      if (emoji) {
+        filesData.emoji = emoji;
       }
 
       const id = uuidv4();
@@ -148,11 +181,23 @@ export default async function handler(req, res) {
           created_at: now,
           updated_at: now
         })
-        .select('id, title, created_at')
+        .select('id, title, created_at, files')
         .single();
 
-      if (error) throw error;
-      return res.status(200).json(data);
+      if (error) {
+        console.error('[API Valleys] Insert error:', error);
+        throw error;
+      }
+
+      const responseData = {
+        id: data.id,
+        title: data.title,
+        emoji: data.files?.emoji || null,
+        created_at: data.created_at,
+        sources_count: data.files?.files?.length || 0
+      };
+
+      return res.status(200).json(responseData);
     }
 
     // PUT /api/valleys - update existing valley
@@ -164,7 +209,9 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: 'Authentication required' });
       }
 
-      const { title, text, rules, writingStyle, contextSessionId } = req.body;
+      console.log(`[API Valleys] PUT request for valleyId: ${valleyId}`);
+
+      const { title, emoji, text, rules, writingStyle, contextSessionId } = req.body;
 
       const updateData = {
         updated_at: new Date().toISOString()
@@ -175,21 +222,47 @@ export default async function handler(req, res) {
       if (rules !== undefined) updateData.rules = rules || null;
       if (writingStyle !== undefined) updateData.writing_style = writingStyle || null;
 
-      // Fetch file content if contextSessionId provided
-      if (contextSessionId) {
-        const { data: contextData } = await supabase
-          .from('contexts')
-          .select('text, files, estimated_tokens')
-          .eq('session_id', contextSessionId)
+      // Handle files/emoji update
+      if (contextSessionId || emoji !== undefined) {
+        // Fetch current valley to merge files data
+        const { data: currentValley, error: fetchError } = await supabase
+          .from('valleys')
+          .select('files')
+          .eq('id', valleyId)
           .single();
 
-        if (contextData) {
-          updateData.files = {
-            content: contextData.text,
-            files: contextData.files,
-            estimatedTokens: contextData.estimated_tokens
-          };
+        if (fetchError) {
+          console.error('[API Valleys] Fetch current valley error:', fetchError);
         }
+
+        let filesData = currentValley?.files || {};
+
+        if (contextSessionId) {
+          const { data: contextData, error: contextError } = await supabase
+            .from('contexts')
+            .select('text, files, estimated_tokens')
+            .eq('session_id', contextSessionId)
+            .single();
+
+          if (contextError) {
+            console.error('[API Valleys] Context fetch error:', contextError);
+          }
+
+          if (contextData) {
+            filesData = {
+              ...filesData,
+              content: contextData.text,
+              files: contextData.files,
+              estimatedTokens: contextData.estimated_tokens
+            };
+          }
+        }
+
+        if (emoji !== undefined) {
+          filesData.emoji = emoji;
+        }
+
+        updateData.files = filesData;
       }
 
       const { data, error } = await supabase
@@ -197,11 +270,24 @@ export default async function handler(req, res) {
         .update(updateData)
         .eq('id', valleyId)
         .eq('user_id', user.id)
-        .select('id, title, created_at')
+        .select('id, title, created_at, files')
         .single();
 
-      if (error) throw error;
-      return res.status(200).json(data);
+      if (error) {
+        console.error('[API Valleys] Update error:', error);
+        throw error;
+      }
+
+      const responseData = {
+        id: data.id,
+        title: data.title,
+        emoji: data.files?.emoji || null,
+        created_at: data.created_at,
+        sources_count: data.files?.files?.length || 0
+      };
+
+
+      return res.status(200).json(responseData);
     }
 
     // DELETE /api/valleys - delete valley (must belong to user)
@@ -225,7 +311,7 @@ export default async function handler(req, res) {
 
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
-    console.error('Valleys API error:', error);
+    console.error('[API Valleys] Unhandled API error:', error);
     return res.status(500).json({ error: error.message });
   }
 }
