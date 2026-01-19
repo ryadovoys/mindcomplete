@@ -4,8 +4,8 @@ const ASSETS = [
   '/index.html',
   '/styles.css',
   '/app.js',
-  '/purple-valley-favicon.png',
-  '/purple-valley-logo.svg',
+  '/mindcomplete-favicon.png',
+  '/mindcomplete-logo.svg',
   '/manifest.json'
 ];
 
