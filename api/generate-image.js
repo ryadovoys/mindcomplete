@@ -261,43 +261,36 @@ export default async function handler(req, res) {
 
         const isAdmin = ADMIN_EMAILS.includes(user.email);
         let remaining = 0;
-        let usedCredit = false;
+        const DAILY_LIMIT = 5;
 
-        // 2. Tier-based limit check (skip for admins)
+        // 2. Limit check (skip for admins)
         if (!isAdmin) {
-            const { tier, limits } = await getUserTier(user.id, user.email);
-            const monthlyCount = await getMonthlyImageCount(user.id);
-            const monthlyLimit = limits.images_per_month;
+            // Get count for today (UTC)
+            const todayStart = new Date();
+            todayStart.setUTCHours(0, 0, 0, 0);
+            const todayEnd = new Date();
+            todayEnd.setUTCHours(23, 59, 59, 999);
 
-            // Free tier: no images allowed
-            if (tier === 'free') {
-                return res.status(403).json({
-                    error: 'Upgrade to Pro to generate images',
-                    tier: 'free',
-                    remaining: 0,
-                    upgradeRequired: true
-                });
+            const { count, error: countError } = await supabase
+                .from('image_generations')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+                .gte('created_at', todayStart.toISOString())
+                .lte('created_at', todayEnd.toISOString());
+
+            if (countError) {
+                console.error('[IMAGE] Error checking daily count:', countError);
+                return res.status(500).json({ error: 'Failed to check usage limit' });
             }
 
-            // Pro tier: check monthly limit
-            remaining = Math.max(0, monthlyLimit - monthlyCount);
+            remaining = Math.max(0, DAILY_LIMIT - count);
 
             if (remaining <= 0) {
-                // Check if user has credits
-                const credits = await getUserCredits(user.id);
-                if (credits > 0) {
-                    // Will use a credit
-                    usedCredit = true;
-                    remaining = credits;
-                } else {
-                    return res.status(429).json({
-                        error: `You've used all ${monthlyLimit} Pro images this month. Buy credits to continue.`,
-                        tier: 'pro',
-                        remaining: 0,
-                        credits: 0,
-                        needsCredits: true
-                    });
-                }
+                return res.status(403).json({
+                    error: `You've reached your daily limit of ${DAILY_LIMIT} images.`,
+                    limitReached: true,
+                    remaining: 0
+                });
             }
         } else {
             remaining = 999; // Unlimited for admin
@@ -323,17 +316,7 @@ export default async function handler(req, res) {
         const imageUrl = imageResult.url || (imageResult.data?.[0]?.url) || (imageResult.data?.[0]);
         const base64Image = await imageUrlToBase64(imageUrl);
 
-        // 3. Deduct credit if used
-        if (usedCredit && !isAdmin) {
-            const deducted = await deductCredit(user.id);
-            if (!deducted) {
-                console.error('[IMAGE] Failed to deduct credit');
-            } else {
-                console.log('[IMAGE] Used 1 credit');
-            }
-        }
-
-        // 4. Track generation
+        // 3. Track generation
         const { error: trackError } = await supabase
             .from('image_generations')
             .insert({
@@ -345,15 +328,11 @@ export default async function handler(req, res) {
             console.error('[IMAGE] Tracking error:', trackError);
         }
 
-        // Get updated credits if used
-        const finalCredits = usedCredit ? await getUserCredits(user.id) : null;
-
         res.status(200).json({
             success: true,
             prompt: finalPrompt,
             image: base64Image,
-            remaining: isAdmin ? 999 : (usedCredit ? finalCredits : remaining - 1),
-            usedCredit
+            remaining: isAdmin ? 999 : remaining - 1
         });
 
     } catch (error) {

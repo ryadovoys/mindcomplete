@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toolbar Debug Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            background: #1a1a1a;
+            color: white;
+            font-family: system-ui;
+        }
+
+        .test-container {
+            position: relative;
+            height: 400px;
+            border: 2px solid #444;
+            margin-bottom: 20px;
+        }
+
+        .backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 400;
+            pointer-events: auto;
+        }
+
+        .toolbar {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            padding: 6px;
+            background: #2a2a2a;
+            border-radius: 12px;
+            z-index: 401;
+            gap: 6px;
+        }
+
+        .toolbar-btn {
+            width: 48px;
+            height: 48px;
+            border: none;
+            background: #3a3a3a;
+            border-radius: 12px;
+            cursor: pointer;
+            color: white;
+            font-size: 20px;
+        }
+
+        .toolbar-btn:hover {
+            background: #4a4a4a;
+        }
+
+        #log {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 8px;
+            border-bottom: 1px solid #444;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Toolbar Z-Index Debug Test</h1>
+
+    <div class="test-container">
+        <div class="backdrop" id="backdrop">
+            <p style="padding: 20px;">Backdrop (z-index: 400, pointer-events: auto)</p>
+        </div>
+
+        <div class="toolbar" id="toolbar">
+            <button class="toolbar-btn" onclick="logClick('Button 1')">1</button>
+            <button class="toolbar-btn" onclick="logClick('Button 2')">2</button>
+            <button class="toolbar-btn" onclick="logClick('Button 3')">3</button>
+        </div>
+    </div>
+
+    <h2>Event Log:</h2>
+    <div id="log"></div>
+
+    <button onclick="checkZIndex()" style="padding: 12px 24px; margin: 20px 0; cursor: pointer;">
+        Check Z-Index Values
+    </button>
+
+    <script>
+        function logClick(btn) {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `✅ ${new Date().toLocaleTimeString()}: ${btn} clicked successfully!`;
+            entry.style.color = '#4ade80';
+            log.insertBefore(entry, log.firstChild);
+        }
+
+        function checkZIndex() {
+            const backdrop = document.getElementById('backdrop');
+            const toolbar = document.getElementById('toolbar');
+
+            const backdropZ = window.getComputedStyle(backdrop).zIndex;
+            const toolbarZ = window.getComputedStyle(toolbar).zIndex;
+
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `
+        Backdrop z-index: ${backdropZ}<br>
+        Toolbar z-index: ${toolbarZ}<br>
+        ${toolbarZ > backdropZ ? '✅ Toolbar is above backdrop' : '❌ Backdrop is blocking toolbar!'}
+      `;
+            entry.style.color = toolbarZ > backdropZ ? '#4ade80' : '#f87171';
+            log.insertBefore(entry, log.firstChild);
+        }
+
+        // Log backdrop clicks
+        document.getElementById('backdrop').addEventListener('click', (e) => {
+            if (e.target.id === 'backdrop') {
+                const log = document.getElementById('log');
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.textContent = `⚠️ ${new Date().toLocaleTimeString()}: Backdrop clicked (this should not block toolbar)`;
+                entry.style.color = '#fbbf24';
+                log.insertBefore(entry, log.firstChild);
+            }
+        });
+
+        // Check on load
+        window.addEventListener('load', checkZIndex);
+    </script>
+</body>
+
+</html>

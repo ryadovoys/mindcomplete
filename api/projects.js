@@ -29,58 +29,57 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  console.log(`[API Valleys] ${req.method} request received`);
+  console.log(`[API Projects] ${req.method} request received`);
 
   if (!supabase) {
-    console.error('[API Valleys] Supabase client not initialized via global var');
+    console.error('[API Projects] Supabase client not initialized via global var');
     return res.status(500).json({ error: 'Supabase not configured' });
   }
 
   // Get authenticated user (optional for GET list, required for mutations)
   const user = await getUserFromToken(req.headers.authorization);
-  console.log(`[API Valleys] User authenticated: ${user ? user.id : 'No'}`);
+  console.log(`[API Projects] User authenticated: ${user ? user.id : 'No'}`);
 
   // Extract ID from query param or URL path
-  // URL format: /api/valleys?id=[id] or /api/valleys/[id]
+  // URL format: /api/projects?id=[id] or /api/projects/[id]
   const urlParts = req.url.split('?')[0].split('/').filter(Boolean);
-  const valleyId = req.query.id || (urlParts.length > 2 ? urlParts[urlParts.length - 1] : null);
+  const projectId = req.query.id || (urlParts.length > 2 ? urlParts[urlParts.length - 1] : null);
 
   try {
-    // GET /api/valleys - list user's valleys or get single valley
+    // GET /api/projects - list user's projects or get single project
     if (req.method === 'GET') {
       if (!user) {
-        return res.status(200).json(valleyId ? { error: 'Authentication required' } : { valleys: [] });
+        return res.status(200).json(projectId ? { error: 'Authentication required' } : { projects: [] });
       }
 
-      if (valleyId) {
-        // GET single valley
+      if (projectId) {
+        // GET single project
         const { data, error } = await supabase
-          .from('valleys')
+          .from('valleys') // DB table name remains 'valleys'
           .select('*')
-          .eq('id', valleyId)
+          .eq('id', projectId)
           .eq('user_id', user.id)
           .single();
 
         if (error || !data) {
-          console.error('[API Valleys] GET single error:', error);
-          return res.status(404).json({ error: 'Valley not found' });
+          console.error('[API Projects] GET single error:', error);
+          return res.status(404).json({ error: 'Project not found' });
         }
         return res.status(200).json(data);
       } else {
         // GET list
-        // GET list
         const { data, error } = await supabase
-          .from('valleys')
+          .from('valleys') // DB table name remains 'valleys'
           .select('id, title, created_at, files')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
         if (error) {
-          console.error('[API Valleys] GET list error:', error);
+          console.error('[API Projects] GET list error:', error);
           throw error;
         }
 
-        const valleys = (data || []).map(v => ({
+        const projects = (data || []).map(v => ({
           id: v.id,
           title: v.title,
           emoji: v.files?.emoji || null,
@@ -88,55 +87,24 @@ export default async function handler(req, res) {
           sources_count: v.files?.files?.length || 0
         }));
 
-        return res.status(200).json({ valleys });
+        return res.status(200).json({ projects });
       }
     }
 
-    // POST /api/valleys - create new valley (requires auth)
+    // POST /api/projects - create new project (requires auth)
     if (req.method === 'POST') {
       if (!user) {
-        return res.status(401).json({ error: 'Sign in to save valleys' });
+        return res.status(401).json({ error: 'Sign in to save projects' });
       }
 
-      console.log('[API Valleys] POST body:', JSON.stringify(req.body).substring(0, 200) + '...');
+      console.log('[API Projects] POST body:', JSON.stringify(req.body).substring(0, 200) + '...');
       const { title, emoji, text, rules, writingStyle, contextSessionId } = req.body;
 
       if (!text) {
         return res.status(400).json({ error: 'Text is required' });
       }
 
-      // Check tier limits
-      const { tier, limits } = await getUserTier(user.id, user.email);
-      console.log(`[API Valleys] User tier: ${tier}, Max valleys: ${limits.max_valleys}`);
-
-      // Free tier: cannot save valleys
-      if (tier === 'free') {
-        return res.status(403).json({
-          error: 'Upgrade to Pro to save valleys',
-          tier: 'free',
-          upgradeRequired: true
-        });
-      }
-
-      // Pro tier: check max valleys limit
-      const { count, error: countError } = await supabase
-        .from('valleys')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      if (countError) {
-        console.error('[API Valleys] Count error:', countError);
-      }
-
-      const currentCount = count || 0;
-      if (currentCount >= limits.max_valleys) {
-        return res.status(403).json({
-          error: `You've reached the maximum of ${limits.max_valleys} saved valleys`,
-          tier: 'pro',
-          limit: limits.max_valleys,
-          current: currentCount
-        });
-      }
+      // Check tier limits - REMOVED per previous instructions, allowing all users to save
 
       // Fetch file content if contextSessionId provided
       let filesData = {};
@@ -149,7 +117,7 @@ export default async function handler(req, res) {
           .single();
 
         if (contextError) {
-          console.error('[API Valleys] Context fetch error:', contextError);
+          console.error('[API Projects] Context fetch error:', contextError);
         }
 
         if (contextData) {
@@ -169,7 +137,7 @@ export default async function handler(req, res) {
       const now = new Date().toISOString();
 
       const { data, error } = await supabase
-        .from('valleys')
+        .from('valleys') // DB table name remains 'valleys'
         .insert({
           id,
           user_id: user.id,
@@ -185,7 +153,7 @@ export default async function handler(req, res) {
         .single();
 
       if (error) {
-        console.error('[API Valleys] Insert error:', error);
+        console.error('[API Projects] Insert error:', error);
         throw error;
       }
 
@@ -200,16 +168,18 @@ export default async function handler(req, res) {
       return res.status(200).json(responseData);
     }
 
-    // PUT /api/valleys - update existing valley
+    // PUT /api/projects - update existing project
     if (req.method === 'PUT') {
-      if (!valleyId) {
-        return res.status(400).json({ error: 'Valley ID is required' });
+      const projectId = req.query.id || urlParts[urlParts.length - 1]; // Ensure we get ID
+
+      if (!projectId) {
+        return res.status(400).json({ error: 'Project ID is required' });
       }
       if (!user) {
         return res.status(401).json({ error: 'Authentication required' });
       }
 
-      console.log(`[API Valleys] PUT request for valleyId: ${valleyId}`);
+      console.log(`[API Projects] PUT request for projectId: ${projectId}`);
 
       const { title, emoji, text, rules, writingStyle, contextSessionId } = req.body;
 
@@ -224,18 +194,18 @@ export default async function handler(req, res) {
 
       // Handle files/emoji update
       if (contextSessionId || emoji !== undefined) {
-        // Fetch current valley to merge files data
-        const { data: currentValley, error: fetchError } = await supabase
-          .from('valleys')
+        // Fetch current project to merge files data
+        const { data: currentProject, error: fetchError } = await supabase
+          .from('valleys') // DB table name remains 'valleys'
           .select('files')
-          .eq('id', valleyId)
+          .eq('id', projectId)
           .single();
 
         if (fetchError) {
-          console.error('[API Valleys] Fetch current valley error:', fetchError);
+          console.error('[API Projects] Fetch current project error:', fetchError);
         }
 
-        let filesData = currentValley?.files || {};
+        let filesData = currentProject?.files || {};
 
         if (contextSessionId) {
           const { data: contextData, error: contextError } = await supabase
@@ -245,7 +215,7 @@ export default async function handler(req, res) {
             .single();
 
           if (contextError) {
-            console.error('[API Valleys] Context fetch error:', contextError);
+            console.error('[API Projects] Context fetch error:', contextError);
           }
 
           if (contextData) {
@@ -266,15 +236,15 @@ export default async function handler(req, res) {
       }
 
       const { data, error } = await supabase
-        .from('valleys')
+        .from('valleys') // DB table name remains 'valleys'
         .update(updateData)
-        .eq('id', valleyId)
+        .eq('id', projectId)
         .eq('user_id', user.id)
         .select('id, title, created_at, files')
         .single();
 
       if (error) {
-        console.error('[API Valleys] Update error:', error);
+        console.error('[API Projects] Update error:', error);
         throw error;
       }
 
@@ -290,19 +260,20 @@ export default async function handler(req, res) {
       return res.status(200).json(responseData);
     }
 
-    // DELETE /api/valleys - delete valley (must belong to user)
+    // DELETE /api/projects - delete project (must belong to user)
     if (req.method === 'DELETE') {
-      if (!valleyId) {
-        return res.status(400).json({ error: 'Valley ID is required' });
+      const projectId = req.query.id || urlParts[urlParts.length - 1]; // Ensure we get ID
+      if (!projectId) {
+        return res.status(400).json({ error: 'Project ID is required' });
       }
       if (!user) {
         return res.status(401).json({ error: 'Authentication required' });
       }
 
       const { error } = await supabase
-        .from('valleys')
+        .from('valleys') // DB table name remains 'valleys'
         .delete()
-        .eq('id', valleyId)
+        .eq('id', projectId)
         .eq('user_id', user.id);
 
       if (error) throw error;
@@ -311,7 +282,7 @@ export default async function handler(req, res) {
 
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
-    console.error('[API Valleys] Unhandled API error:', error);
+    console.error('[API Projects] Unhandled API error:', error);
     return res.status(500).json({ error: error.message });
   }
 }

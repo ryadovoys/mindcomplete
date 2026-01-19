@@ -633,8 +633,8 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 60px;
-  padding: 0 20px;
+  height: 64px;
+  padding: 0 24px;
   z-index: var(--z-header);
   background: var(--background);
 }
@@ -645,7 +645,7 @@ h2 {
   top: 0;
   left: 0;
   right: 0;
-  height: 60px;
+  height: 64px;
   background: var(--background);
   z-index: var(--z-header-overlay);
   pointer-events: none;
@@ -1817,8 +1817,13 @@ body.selection-ready .select-confirm-btn {
   padding: 0 40px 40px 40px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 36px;
   overflow-y: auto;
+}
+
+.context-modal-header.close-only {
+  justify-content: flex-end;
+  padding: 0 4px 0 0;
 }
 
 /* Not full width modal on tablets and mobile anymore */
@@ -2112,29 +2117,29 @@ body.selection-ready .select-confirm-btn {
   vertical-align: middle;
 }
 
-/* Valleys List */
-.valleys-list {
+/* Projects List */
+.projects-list {
   display: flex;
   flex-direction: column;
   gap: 0;
   width: 100%;
 }
 
-.valleys-list:empty+.valleys-empty {
+.projects-list:empty+.projects-empty {
   display: block;
 }
 
-.valleys-list:not(:empty)+.valleys-empty {
+.projects-list:not(:empty)+.projects-empty {
   display: none;
 }
 
-.valleys-empty {
+.projects-empty {
   display: block;
   text-align: center;
   padding: 40px 0;
 }
 
-.valley-item {
+.project-item {
   display: flex;
   align-items: center;
   gap: 0;
@@ -2150,12 +2155,12 @@ body.selection-ready .select-confirm-btn {
 }
 
 @media (hover: hover) {
-  .valley-item:hover {
+  .project-item:hover {
     background: var(--background);
   }
 }
 
-.valley-item-content {
+.project-item-content {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -2163,7 +2168,7 @@ body.selection-ready .select-confirm-btn {
   transition: padding-right 0.3s ease;
 }
 
-.valley-item-title {
+.project-item-title {
   font-size: var(--font-body-small-size);
   font-weight: var(--font-body-small-weight);
   color: var(--text);
@@ -2173,13 +2178,13 @@ body.selection-ready .select-confirm-btn {
   text-align: left;
 }
 
-.valley-item-date {
+.project-item-date {
   font-size: var(--font-caption-size);
   font-weight: var(--font-caption-weight);
   color: var(--ghost);
 }
 
-.valley-item-delete {
+.project-item-delete {
   width: 32px;
   height: 32px;
   background: none;
@@ -2200,22 +2205,22 @@ body.selection-ready .select-confirm-btn {
 }
 
 @media (hover: hover) {
-  .valley-item:hover .valley-item-delete {
+  .project-item:hover .project-item-delete {
     opacity: 0.5;
     transform: translateX(0);
     pointer-events: auto;
   }
 
-  .valley-item:hover .valley-item-content {
+  .project-item:hover .project-item-content {
     padding-right: 32px;
   }
 
-  .valley-item-delete:hover {
+  .project-item-delete:hover {
     opacity: 1;
   }
 }
 
-.valley-item-delete .material-symbols-outlined {
+.project-item-delete .material-symbols-outlined {
   font-size: var(--icon-size-sm);
 }
 
@@ -2226,11 +2231,12 @@ body.selection-ready .select-confirm-btn {
   padding: 0;
   display: flex;
   flex-direction: column;
-  border-radius: 16px;
+  border-radius: 30px;
   background: var(--modal-background);
   border: 1px solid var(--modal-border);
   -webkit-backdrop-filter: blur(24px);
   backdrop-filter: blur(24px);
+  box-shadow: var(--modal-shadow);
 }
 
 .image-guidance-header {
@@ -2728,6 +2734,12 @@ body.selection-ready .select-confirm-btn {
   padding: 0;
   overflow: hidden;
   position: relative;
+  border-radius: 30px;
+  background: var(--modal-background);
+  border: 1px solid var(--modal-border);
+  box-shadow: var(--modal-shadow);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
 }
 
 .files-modal-close {
@@ -2985,10 +2997,19 @@ body.selection-ready .select-confirm-btn {
   max-width: 440px;
   padding: 0;
   overflow: hidden;
+  border-radius: 30px;
+  background: var(--modal-background);
+  border: 1px solid var(--modal-border);
+  box-shadow: var(--modal-shadow);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
 }
 
 .rules-modal-body {
-  padding: 24px;
+  padding: 0 40px 40px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
 }
 
 .rules-description {
@@ -3212,7 +3233,7 @@ body.selection-ready .select-confirm-btn {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 450;
+  z-index: 400;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
@@ -3575,7 +3596,7 @@ body.side-menu-open .side-menu {
 
   .side-menu-backdrop {
     background: rgba(0, 0, 0, 0.5);
-    z-index: 450;
+    z-index: 400;
   }
 }
 
@@ -4000,7 +4021,7 @@ body.side-menu-open .side-menu {
 
 /* Dashboard Content */
 .dashboard-content {
-  padding: 120px 48px 48px 48px;
+  padding: 40px 48px 48px 48px;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -4076,34 +4097,43 @@ body.side-menu-open .side-menu {
 /* Create Card Variant */
 .create-card {
   background: transparent;
-  border: 2px dashed rgba(255, 255, 255, 0.1);
+  /* Override project-card for transparent background */
   align-items: center;
   justify-content: center;
   gap: 16px;
 }
 
 .create-card:hover {
-  border-color: var(--accent);
-  background: rgba(195, 251, 80, 0.05);
-  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  /* Subtle hover background */
 }
 
 .create-icon-wrapper {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--btn-background);
+  background: var(--btn-primary-bg);
+  /* Primary Button Style */
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent);
+  color: var(--btn-primary-text);
+  /* Dark Text (#141319) */
   transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.create-icon-wrapper .material-symbols-outlined {
+  color: var(--btn-primary-text);
+  /* Enforce dark color on icon */
 }
 
 .create-card:hover .create-icon-wrapper {
-  background: var(--accent);
-  color: var(--text-btn);
   transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(195, 251, 80, 0.3);
 }
 
 .create-label {
@@ -4392,10 +4422,7 @@ body.side-menu-open .side-menu {
 
 /* Emoji Picker */
 .emoji-picker-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  margin-right: 8px;
+  display: none;
 }
 
 .project-emoji-btn {

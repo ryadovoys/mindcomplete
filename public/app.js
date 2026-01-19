@@ -46,7 +46,7 @@ const CONFIG = {
   API_PREDICT: '/api/predict',
   API_CONTEXT: '/api/context',
   API_CONTEXT_RESTORE: '/api/context/restore',
-  API_VALLEYS: '/api/valleys',
+  API_PROJECTS: '/api/projects',
   API_AUTH_DELETE: '/api/auth/delete-account',
   API_GENERATE_IMAGE: '/api/generate-image',
 };
@@ -1857,6 +1857,16 @@ class ContextManager {
     this.sideMenuBackdrop = document.getElementById('side-menu-backdrop');
     this.sideMenuClose = document.getElementById('side-menu-close');
 
+    // Side Menu Rules/Styles Elements (Critical for Editor Menu)
+    this.sideMenuRulesTextarea = document.getElementById('side-menu-rules-textarea');
+    this.sideMenuSaveRulesBtn = document.getElementById('side-menu-save-rules-btn');
+    this.sideMenuClearRulesBtn = document.getElementById('side-menu-clear-rules-btn');
+
+    this.sideMenuStyleDropdown = document.getElementById('side-menu-style-dropdown');
+    this.sideMenuCustomStyleTextarea = document.getElementById('side-menu-custom-style-textarea');
+    this.sideMenuSaveStyleBtn = document.getElementById('side-menu-save-style-btn');
+    this.sideMenuClearStyleBtn = document.getElementById('side-menu-clear-style-btn');
+
     // Legacy/Unused elements binding kept to prevent errors if elements missing
     this.filesModal = document.getElementById('files-modal');
     this.sideMenuFilesList = document.getElementById('side-menu-files-list');
@@ -2391,35 +2401,6 @@ class ContextManager {
     }
   }
 
-  openSideMenu() {
-    if (this.sideMenu) {
-      this.sideMenu.classList.add('visible');
-      document.body.classList.add('side-menu-open');
-      if (this.sideMenuBackdrop) this.sideMenuBackdrop.classList.add('visible');
-
-      // Notify BrainManager to refresh if needed
-      if (window.brainManager) {
-        window.brainManager.loadAnchors();
-      }
-    }
-  }
-
-  closeSideMenu() {
-    if (this.sideMenu) {
-      this.sideMenu.classList.remove('visible');
-      document.body.classList.remove('side-menu-open');
-      if (this.sideMenuBackdrop) this.sideMenuBackdrop.classList.remove('visible');
-    }
-  }
-
-  toggleSideMenu() {
-    if (this.sideMenu && this.sideMenu.classList.contains('visible')) {
-      this.closeSideMenu();
-    } else {
-      this.openSideMenu();
-    }
-  }
-
   // Legacy methods kept but decoupled from new Brain Panel UI
 
   openModal() {
@@ -2442,6 +2423,34 @@ class ContextManager {
   async handleFiles(fileList) {
     // Legacy logic - disabled to prevent interference with BrainManager
     console.warn('ContextManager.handleFiles is deprecated. Use BrainManager.');
+  }
+
+  async clearContext() {
+    // Clear rules
+    this.rulesText = '';
+    if (this.rulesTextarea) this.rulesTextarea.value = '';
+    if (this.rulesTextareaMobile) this.rulesTextareaMobile.value = '';
+    if (this.sideMenuRulesTextarea) this.sideMenuRulesTextarea.value = '';
+    localStorage.removeItem(CONFIG.STORAGE_RULES);
+
+    // Clear style
+    this.selectedStyle = 'none';
+    this.customStyleText = '';
+    if (this.styleDropdown) this.styleDropdown.value = 'none';
+    if (this.customStyleTextarea) this.customStyleTextarea.value = '';
+    localStorage.removeItem(CONFIG.STORAGE_STYLE);
+    localStorage.removeItem(CONFIG.STORAGE_CUSTOM_STYLE);
+
+    // Clear files
+    await this.clearFiles();
+
+    // Clear Brain anchors if available
+    if (window.brainManager) {
+      window.brainManager.anchors = [];
+      window.brainManager.renderAnchors();
+    }
+
+    this.updateUI();
   }
 
   async clearFiles() {
@@ -2521,17 +2530,18 @@ class ContextManager {
   }
 }
 
-// Valleys Manager - handles saving and loading valleys
-class ValleysManager {
+// Projects Manager - handles saving and loading projects
+class ProjectsManager {
   constructor() {
-    this.valleys = [];
-    this.tempValley = null;
-    this.modal = document.getElementById('valleys-modal');
-    this.listContainer = document.getElementById('valleys-list');
-    this.emptyState = document.getElementById('valleys-empty');
-    this.sidebarList = document.getElementById('sidebar-valleys-list');
-    this.sidebarEmpty = document.getElementById('sidebar-valleys-empty');
-    this.activeValleyId = null;
+    this.projects = [];
+    this.tempProject = null;
+    this.modal = document.getElementById('projects-modal');
+    this.listContainer = document.getElementById('projects-list');
+    this.emptyState = document.getElementById('projects-empty');
+    this.sidebarList = document.getElementById('sidebar-projects-list');
+    this.sidebarEmpty = document.getElementById('sidebar-projects-empty');
+    this.activeProjectId = null;
+    this.isLoading = false;
     this.autoSaveTimer = null;
     this.autoSaveDebounceMs = 2000;
     this.init();
@@ -2554,7 +2564,7 @@ class ValleysManager {
     }
 
     // Modal close button
-    const closeBtn = document.getElementById('valleys-modal-close');
+    const closeBtn = document.getElementById('projects-modal-close');
     if (closeBtn) {
       closeBtn.addEventListener('click', () => this.closeModal());
     }
@@ -2566,44 +2576,44 @@ class ValleysManager {
       });
     }
 
-    // New valley button
-    const newValleyBtn = document.getElementById('new-valley-btn');
-    if (newValleyBtn) {
-      newValleyBtn.addEventListener('click', () => this.newValley());
+    // New project button
+    const newProjectBtn = document.getElementById('new-project-btn');
+    if (newProjectBtn) {
+      newProjectBtn.addEventListener('click', () => this.newProject());
     }
 
     // Context Menu Handlers
-    this.contextMenu = document.getElementById('valley-context-menu');
+    this.contextMenu = document.getElementById('project-context-menu');
     if (this.contextMenu) {
       this.contextMenu.addEventListener('click', (e) => {
         if (e.target === this.contextMenu) this.closeContextMenu();
       });
 
-      const deleteBtn = this.contextMenu.querySelector('.delete-valley-btn');
+      const deleteBtn = this.contextMenu.querySelector('.delete-project-btn');
       if (deleteBtn) {
         deleteBtn.addEventListener('click', () => {
-          if (this.contextValleyId && confirm('Delete this valley?')) {
-            this.deleteValley(this.contextValleyId);
+          if (this.contextProjectId && confirm('Delete this project?')) {
+            this.deleteProject(this.contextProjectId);
             this.closeContextMenu();
           }
         });
       }
 
-      const renameBtn = this.contextMenu.querySelector('.rename-valley-btn');
+      const renameBtn = this.contextMenu.querySelector('.rename-project-btn');
       if (renameBtn) {
         renameBtn.addEventListener('click', () => {
-          if (this.contextValleyId) {
-            this.startRenaming(this.contextValleyId);
+          if (this.contextProjectId) {
+            this.startRenaming(this.contextProjectId);
             this.closeContextMenu();
           }
         });
       }
 
-      const shareBtn = this.contextMenu.querySelector('.share-valley-btn');
+      const shareBtn = this.contextMenu.querySelector('.share-project-btn');
       if (shareBtn) {
         shareBtn.addEventListener('click', () => {
-          if (this.contextValleyId) {
-            this.shareValley(this.contextValleyId);
+          if (this.contextProjectId) {
+            this.shareProject(this.contextProjectId);
             this.closeContextMenu();
           }
         });
@@ -2615,13 +2625,13 @@ class ValleysManager {
     if (this.contextMenu) {
       this.contextMenu.classList.remove('visible');
       this.contextMenu.classList.remove('menu-ready');
-      this.contextValleyId = null;
+      this.contextProjectId = null;
     }
   }
 
-  openContextMenu(valleyId, x, y) {
+  openContextMenu(projectId, x, y) {
     if (this.contextMenu) {
-      this.contextValleyId = valleyId;
+      this.contextProjectId = projectId;
       const content = this.contextMenu.querySelector('.menu-content');
 
       // Position the menu
@@ -2635,19 +2645,19 @@ class ValleysManager {
     }
   }
 
-  async shareValley(id) {
-    const valley = this.valleys.find(v => v.id === id) || (this.tempValley?.id === id ? this.tempValley : null);
-    if (!valley) return;
+  async shareProject(id) {
+    const project = this.projects.find(p => p.id === id) || (this.tempProject?.id === id ? this.tempProject : null);
+    if (!project) return;
 
     // If it's the active one, we might have fresher text in the editor
-    let textToShare = valley.text;
-    if (id === this.activeValleyId) {
+    let textToShare = project.text;
+    if (id === this.activeProjectId) {
       const editor = document.querySelector('.editor');
       if (editor) textToShare = editor.textContent;
     }
 
     const shareData = {
-      title: valley.title,
+      title: project.title,
       text: textToShare,
       url: window.location.href
     };
@@ -2657,7 +2667,7 @@ class ValleysManager {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(`${shareData.title}\n\n${shareData.text}`);
-        alert('Valley content copied to clipboard!');
+        alert('Project content copied to clipboard!');
       }
     } catch (err) {
       console.error('Error sharing:', err);
@@ -2665,11 +2675,11 @@ class ValleysManager {
   }
 
   startRenaming(id) {
-    const row = document.querySelector(`.sidebar-valley-card[data-id="${id}"]`) ||
-      document.querySelector(`.valley-item[data-id="${id}"]`);
+    const row = document.querySelector(`.sidebar-project-card[data-id="${id}"]`) ||
+      document.querySelector(`.project-item[data-id="${id}"]`);
     if (!row) return;
 
-    const titleSpan = row.querySelector('.valley-title') || row.querySelector('.valley-item-title');
+    const titleSpan = row.querySelector('.project-title') || row.querySelector('.project-item-title');
     if (!titleSpan) return;
 
     titleSpan.contentEditable = true;
@@ -2685,10 +2695,10 @@ class ValleysManager {
     const finishRenaming = async () => {
       titleSpan.contentEditable = false;
       const newTitle = titleSpan.textContent.trim();
-      if (newTitle && newTitle !== valley.title) {
-        await this.updateValleyTitle(id, newTitle);
+      if (newTitle && newTitle !== project.title) {
+        await this.updateProjectTitle(id, newTitle);
       } else {
-        titleSpan.textContent = valley.title; // Revert
+        titleSpan.textContent = project.title; // Revert
       }
       titleSpan.removeEventListener('blur', finishRenaming);
       titleSpan.removeEventListener('keydown', keyHandler);
@@ -2700,23 +2710,29 @@ class ValleysManager {
         titleSpan.blur();
       }
       if (e.key === 'Escape') {
-        titleSpan.textContent = valley.title;
+        titleSpan.textContent = project.title;
         titleSpan.blur();
       }
     };
 
-    const valley = this.valleys.find(v => v.id === id) || (this.tempValley?.id === id ? this.tempValley : null);
-    if (!valley) return;
+    const project = this.projects.find(p => p.id === id) || (this.tempProject?.id === id ? this.tempProject : null);
+    if (!project) return;
 
     titleSpan.addEventListener('blur', finishRenaming);
     titleSpan.addEventListener('keydown', keyHandler);
   }
 
-  async updateValleyTitle(id, newTitle) {
-    // If it's a temp valley, just update locally
-    if (id.startsWith('temp-')) {
-      if (this.tempValley) {
-        this.tempValley.title = newTitle;
+  async updateProjectTitle(id, newTitle) {
+    // For new project, title change triggers first save
+    if (!id) {
+      await this.saveProject(false);
+      return;
+    }
+
+    // If it's a temp project, just update locally
+    if (id.toString().startsWith('temp-')) {
+      if (this.tempProject) {
+        this.tempProject.title = newTitle;
         this.renderSidebarList();
       }
       return;
@@ -2724,7 +2740,7 @@ class ValleysManager {
 
     try {
       const token = await window.authManager.getAccessToken();
-      const response = await fetch(`${CONFIG.API_VALLEYS}?id=${id}`, {
+      const response = await fetch(`${CONFIG.API_PROJECTS}?id=${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2736,9 +2752,9 @@ class ValleysManager {
       if (!response.ok) throw new Error('Failed to update title');
 
       const data = await response.json();
-      const index = this.valleys.findIndex(v => v.id === id);
+      const index = this.projects.findIndex(p => p.id === id);
       if (index !== -1) {
-        this.valleys[index].title = newTitle;
+        this.projects[index].title = newTitle;
         this.renderSidebarList();
         this.renderList();
       }
@@ -2747,18 +2763,18 @@ class ValleysManager {
     }
   }
 
-  async updateValleyEmoji(id, newEmoji) {
-    // If it's a temp valley, just update locally
+  async updateProjectEmoji(id, newEmoji) {
+    // If it's a temp project, just update locally
     if (id.toString().startsWith('temp-')) {
-      if (this.tempValley) {
-        this.tempValley.emoji = newEmoji;
+      if (this.tempProject) {
+        this.tempProject.emoji = newEmoji;
       }
       return;
     }
 
     try {
       const token = await window.authManager.getAccessToken();
-      const response = await fetch(`${CONFIG.API_VALLEYS}?id=${id}`, {
+      const response = await fetch(`${CONFIG.API_PROJECTS}?id=${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2770,28 +2786,28 @@ class ValleysManager {
       if (!response.ok) throw new Error('Failed to update emoji');
 
       const data = await response.json();
-      const index = this.valleys.findIndex(v => v.id === id);
+      const index = this.projects.findIndex(p => p.id === id);
       if (index !== -1) {
-        this.valleys[index].emoji = newEmoji;
+        this.projects[index].emoji = newEmoji;
       }
     } catch (error) {
       console.error('Error updating emoji:', error);
     }
   }
 
-  async newValley() {
+  async newProject() {
     if (this.isLoading) return;
 
     // If we are currently saving, wait for it
     if (this.pendingSave) await this.pendingSave;
 
-    // Save current active valley before clearing
-    if (this.activeValleyId) {
+    // Save current active project before clearing
+    if (this.activeProjectId) {
       if (this.autoSaveTimer) {
         clearTimeout(this.autoSaveTimer);
         this.autoSaveTimer = null;
       }
-      await this.saveValley(true);
+      await this.saveProject(true);
     }
 
     const editor = document.querySelector('.editor');
@@ -2805,21 +2821,15 @@ class ValleysManager {
       await window.contextManager.clearContext();
     }
 
-    // Create temporary valley (requirement #1: visible in UI immediately)
-    this.tempValley = {
-      id: 'temp-' + Date.now(),
-      title: 'New valley',
-      emoji: this.getRandomEmoji ? this.getRandomEmoji() : '📝',
-      created_at: new Date().toISOString()
-    };
-
-    this.activeValleyId = this.tempValley.id;
+    // Requirement: New project should not save or show up until I change a name or content
+    this.tempProject = null;
+    this.activeProjectId = null;
     this.renderSidebarList(); // Updates list
 
     // Switch to Editor View
     if (window.dashboardManager) {
-      window.dashboardManager.showEditor(this.activeValleyId);
-      window.dashboardManager.updateHeader(this.tempValley.title, this.tempValley.emoji);
+      window.dashboardManager.showEditor(null);
+      window.dashboardManager.updateHeader('Untitled Project', '📝');
     }
 
     this.closeModal();
@@ -2831,28 +2841,20 @@ class ValleysManager {
     this.autoSaveTimer = setTimeout(() => {
       const editor = document.querySelector('.editor');
       if (editor && editor.textContent.trim().length > 0) {
-        this.saveValley(true);
+        this.saveProject(true);
       }
     }, this.autoSaveDebounceMs);
   }
 
-  generateTitle(text) {
-    const lines = text.split('\n');
-    let firstLine = lines.find(line => line.trim().length > 0) || '';
-    firstLine = firstLine.trim();
-    if (firstLine.length > 50) firstLine = firstLine.substring(0, 50).trim() + '...';
-    return firstLine || 'Untitled';
-  }
-
-  async saveValley(isAutoSave = false) {
-    // If already saving this specific content/valley, return the existing promise
+  async saveProject(isAutoSave = false) {
+    // If already saving this specific content/project, return the existing promise
     if (this.isSaving) return this.pendingSave;
 
     const editor = document.querySelector('.editor');
     if (!editor) return { success: false, error: 'Editor not found' };
 
     // Capture current state synchronously to avoid race conditions with editor clearing/switching
-    const idToSave = this.activeValleyId;
+    const idToSave = this.activeProjectId;
     const clone = editor.cloneNode(true);
     const predictionEl = clone.querySelector('.inline-prediction');
     if (predictionEl) predictionEl.remove();
@@ -2870,16 +2872,19 @@ class ValleysManager {
       if (!isAutoSave) {
         window.authManager?.openModal();
       }
-      return { success: false, error: 'Sign in to save valleys' };
+      return { success: false, error: 'Sign in to save projects' };
     }
 
-    // Determine title: Use UI value if custom, otherwise generate from content
+    // Determine title: Use UI value if custom
     let title = document.getElementById('project-title-input')?.value.trim();
-    const autoTitle = this.generateTitle(plainText);
 
-    if (!title || title === 'New valley' || title === 'Untitled Project') {
-      title = autoTitle;
+    // Default to 'Untitled Project' if empty
+    if (!title) {
+      title = 'Untitled Project';
     }
+
+
+
     const rules = window.contextManager?.getRulesText() || '';
     const writingStyle = window.contextManager?.getWritingStyleText() || '';
     const contextSessionId = window.contextManager?.getSessionId() || null;
@@ -2888,12 +2893,12 @@ class ValleysManager {
     this.pendingSave = (async () => {
       try {
         const token = await window.authManager.getAccessToken();
-        const isRealValley = idToSave && !idToSave.toString().startsWith('temp-');
-        const method = isRealValley ? 'PUT' : 'POST';
-        const url = isRealValley ? `${CONFIG.API_VALLEYS}?id=${idToSave}` : CONFIG.API_VALLEYS;
+        const isRealProject = idToSave && !idToSave.toString().startsWith('temp-');
+        const method = isRealProject ? 'PUT' : 'POST';
+        const url = isRealProject ? `${CONFIG.API_PROJECTS}?id=${idToSave}` : CONFIG.API_PROJECTS;
 
-        const currentValley = this.valleys.find(v => v.id === idToSave) || (this.tempValley?.id === idToSave ? this.tempValley : null);
-        const emoji = currentValley?.emoji || null;
+        const currentProject = this.projects.find(p => p.id === idToSave) || (this.tempProject?.id === idToSave ? this.tempProject : null);
+        const emoji = currentProject?.emoji || null;
 
         const response = await fetch(url, {
           method: method,
@@ -2906,12 +2911,13 @@ class ValleysManager {
 
         if (!response.ok) {
           const data = await response.json();
+          // Tier check was removed from backend, but keeping robust handling in case
           if (response.status === 403 && data.upgradeRequired) {
             if (!isAutoSave && confirm(data.error + '\n\nWould you like to upgrade to Pro now?')) {
               window.authManager.openAccountModal();
             }
           }
-          throw new Error(data.error || 'Failed to save valley');
+          throw new Error(data.error || 'Failed to save project');
         }
 
         const data = await response.json();
@@ -2920,30 +2926,30 @@ class ValleysManager {
           data.emoji = data.files.emoji;
         }
 
-        // Requirement #2: Promoting temp valley to real one on first save
+        // Requirement #2: Promoting temp project to real one on first save
         if (idToSave && idToSave.toString().startsWith('temp-')) {
-          this.tempValley = null;
-          // Only update active ID if we are still on the same valley
-          if (this.activeValleyId === idToSave) {
-            this.activeValleyId = data.id;
+          this.tempProject = null;
+          // Only update active ID if we are still on the same project
+          if (this.activeProjectId === idToSave) {
+            this.activeProjectId = data.id;
           }
-          this.valleys.unshift(data);
+          this.projects.unshift(data);
         } else if (!idToSave) {
-          this.activeValleyId = data.id;
-          this.valleys.unshift(data);
+          this.activeProjectId = data.id;
+          this.projects.unshift(data);
         } else {
-          const index = this.valleys.findIndex(v => v.id === idToSave);
+          const index = this.projects.findIndex(p => p.id === idToSave);
           if (index !== -1) {
-            this.valleys[index] = { ...this.valleys[index], ...data };
+            this.projects[index] = { ...this.projects[index], ...data };
           }
         }
 
         this.renderSidebarList();
         this.renderList();
 
-        return { success: true, valley: data };
+        return { success: true, project: data };
       } catch (error) {
-        console.error('Save valley error:', error);
+        console.error('Save project error:', error);
         return { success: false, error: error.message };
       } finally {
         this.isSaving = false;
@@ -2954,52 +2960,46 @@ class ValleysManager {
     return this.pendingSave;
   }
 
-  async loadValleys() {
+  async loadProjects() {
     try {
       const token = await window.authManager?.getAccessToken();
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-      const response = await fetch(CONFIG.API_VALLEYS, { headers });
-      if (!response.ok) throw new Error('Failed to load valleys');
+      const response = await fetch(CONFIG.API_PROJECTS, { headers });
+      if (!response.ok) throw new Error('Failed to load projects');
 
       const data = await response.json();
-      this.valleys = (data.valleys || []).map(v => {
-        if (!v.emoji) v.emoji = this.getRandomEmoji ? this.getRandomEmoji() : '📝';
-        return v;
+      this.projects = (data.projects || []).map(p => {
+        if (!p.emoji) p.emoji = this.getRandomEmoji ? this.getRandomEmoji() : '📝';
+        return p;
       });
       this.renderList();
-
-      // Always start with a new temp valley
-      this.createInitialTempValley();
     } catch (error) {
-      console.error('Load valleys error:', error);
-      this.valleys = [];
+      console.error('Load projects error:', error);
+      this.projects = [];
       this.renderList();
-
-      // Still create temp valley even if load fails
-      this.createInitialTempValley();
     }
   }
 
-  createInitialTempValley() {
-    // Create temporary valley visible in sidebar immediately
-    this.tempValley = {
+  createInitialTempProject() {
+    // Create temporary project visible in sidebar immediately
+    this.tempProject = {
       id: 'temp-' + Date.now(),
-      title: 'New valley',
+      title: 'New project',
       emoji: this.getRandomEmoji ? this.getRandomEmoji() : '📝',
       created_at: new Date().toISOString()
     };
 
-    this.activeValleyId = this.tempValley.id;
+    this.activeProjectId = this.tempProject.id;
     this.renderSidebarList();
   }
 
-  async loadValley(id) {
+  async loadProject(id) {
     if (this.isLoading) return;
     this.isLoading = true;
 
-    // Requirement #4: Save current valley before switching
-    if (this.activeValleyId && this.activeValleyId !== id) {
+    // Requirement #4: Save current project before switching
+    if (this.activeProjectId && this.activeProjectId !== id) {
       if (this.autoSaveTimer) {
         clearTimeout(this.autoSaveTimer);
         this.autoSaveTimer = null;
@@ -3008,36 +3008,36 @@ class ValleysManager {
       if (this.pendingSave) {
         await this.pendingSave;
       } else {
-        await this.saveValley(true);
+        await this.saveProject(true);
       }
     }
 
-    // Requirement #5: Clear temp valley if we switch away from it
-    if (this.tempValley && id !== this.tempValley.id) {
-      this.tempValley = null;
+    // Requirement #5: Clear temp project if we switch away from it
+    if (this.tempProject && id !== this.tempProject.id) {
+      this.tempProject = null;
       this.renderSidebarList();
     }
 
     try {
       // Clear editor immediately so user knows something is happening
       const editor = document.querySelector('.editor');
-      if (editor) editor.innerHTML = '<div class="loading-editor">Loading valley...</div>';
+      if (editor) editor.innerHTML = '<div class="loading-editor">Loading project...</div>';
 
       const token = await window.authManager?.getAccessToken();
-      const response = await fetch(`${CONFIG.API_VALLEYS}?id=${id}`, {
+      const response = await fetch(`${CONFIG.API_PROJECTS}?id=${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!response.ok) throw new Error('Failed to load valley');
+      if (!response.ok) throw new Error('Failed to load project');
 
-      const valley = await response.json();
+      const project = await response.json();
       // Flatten emoji from files if present
-      if (!valley.emoji && valley.files?.emoji) {
-        valley.emoji = valley.files.emoji;
+      if (!project.emoji && project.files?.emoji) {
+        project.emoji = project.files.emoji;
       }
 
       // Restore editor content
       if (editor) {
-        editor.innerHTML = valley.text;
+        editor.innerHTML = project.text;
         // Re-hydrate images
         editor.querySelectorAll('.editor-image-container').forEach(setupImageContainer);
       }
@@ -3045,23 +3045,23 @@ class ValleysManager {
       // Restore context (rules + files)
       if (window.contextManager) {
         // Restore rules
-        window.contextManager.rulesText = valley.rules || '';
+        window.contextManager.rulesText = project.rules || '';
         const textarea = document.getElementById('context-textarea');
-        if (textarea) textarea.value = valley.rules || '';
-        if (valley.rules) {
-          localStorage.setItem(CONFIG.STORAGE_RULES, valley.rules);
+        if (textarea) textarea.value = project.rules || '';
+        if (project.rules) {
+          localStorage.setItem(CONFIG.STORAGE_RULES, project.rules);
         } else {
           localStorage.removeItem(CONFIG.STORAGE_RULES);
         }
 
         // Restore writing style
         if (window.contextManager.restoreWritingStyle) {
-          window.contextManager.restoreWritingStyle(valley.writing_style || '');
+          window.contextManager.restoreWritingStyle(project.writing_style || '');
         }
 
         // Restore files
-        if (valley.files && valley.files.content) {
-          await this.restoreFilesFromValley(valley.files);
+        if (project.files && project.files.content) {
+          await this.restoreFilesFromProject(project.files);
         } else {
           await window.contextManager.clearFiles();
         }
@@ -3069,19 +3069,19 @@ class ValleysManager {
         window.contextManager.updateUI();
       }
 
-      this.activeValleyId = id;
-      this.highlightSidebarValleys();
+      this.activeProjectId = id;
+      this.highlightSidebarProjects();
       this.closeModal();
       if (editor) editor.focus();
 
       // Update Dashboard/Header
       if (window.dashboardManager) {
         window.dashboardManager.showEditor(id);
-        window.dashboardManager.updateHeader(valley.title, valley.emoji);
+        window.dashboardManager.updateHeader(project.title, project.emoji);
       }
 
     } catch (error) {
-      console.error('Load valley error:', error);
+      console.error('Load project error:', error);
       // Restore empty editor on error
       const editor = document.querySelector('.editor');
       if (editor && editor.querySelector('.loading-editor')) editor.innerHTML = '';
@@ -3091,7 +3091,7 @@ class ValleysManager {
     }
   }
 
-  async restoreFilesFromValley(filesData) {
+  async restoreFilesFromProject(filesData) {
     if (!filesData || !filesData.content) {
       await window.contextManager.clearFiles();
       return;
@@ -3131,22 +3131,22 @@ class ValleysManager {
     }
   }
 
-  async deleteValley(id) {
+  async deleteProject(id) {
     try {
       const token = await window.authManager?.getAccessToken();
-      const response = await fetch(`${CONFIG.API_VALLEYS}?id=${id}`, {
+      const response = await fetch(`${CONFIG.API_PROJECTS}?id=${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!response.ok) throw new Error('Failed to delete valley');
+      if (!response.ok) throw new Error('Failed to delete project');
 
-      this.valleys = this.valleys.filter((v) => v.id !== id);
-      if (this.activeValleyId === id) {
-        this.activeValleyId = null;
+      this.projects = this.projects.filter((p) => p.id !== id);
+      if (this.activeProjectId === id) {
+        this.activeProjectId = null;
       }
       this.renderList();
     } catch (error) {
-      console.error('Delete valley error:', error);
+      console.error('Delete project error:', error);
     }
   }
 
@@ -3155,39 +3155,39 @@ class ValleysManager {
       this.renderSidebarList();
       // Also update dashboard grid if possible
       if (window.dashboardManager) {
-        const displayValleys = this.tempValley ? [this.tempValley, ...this.valleys] : this.valleys;
-        window.dashboardManager.renderProjects(displayValleys);
+        const displayProjects = this.tempProject ? [this.tempProject, ...this.projects] : this.projects;
+        window.dashboardManager.renderProjects(displayProjects);
       }
       return;
     }
 
     if (this.emptyState) {
-      this.emptyState.style.display = (this.valleys.length || this.tempValley) ? 'none' : 'block';
+      this.emptyState.style.display = (this.projects.length || this.tempProject) ? 'none' : 'block';
     }
 
-    const displayValleys = this.tempValley ? [this.tempValley, ...this.valleys] : this.valleys;
+    const displayProjects = this.tempProject ? [this.tempProject, ...this.projects] : this.projects;
 
     // Sync with Dashboard Grid
     if (window.dashboardManager) {
-      window.dashboardManager.renderProjects(displayValleys);
+      window.dashboardManager.renderProjects(displayProjects);
     }
 
-    if (displayValleys.length === 0) {
+    if (displayProjects.length === 0) {
       if (this.listContainer) this.listContainer.innerHTML = '';
       this.renderSidebarList();
       return;
     }
 
     if (this.listContainer) {
-      this.listContainer.innerHTML = displayValleys
+      this.listContainer.innerHTML = displayProjects
         .map(
-          (valley) => `
-        <div class="valley-item ${valley.id.toString().startsWith('temp-') ? 'temp-item' : ''}" data-id="${valley.id}">
-          <div class="valley-item-content">
-            <span class="valley-item-title">${this.escapeHtml(valley.title)}</span>
-            <span class="valley-item-date">${this.formatDate(valley.created_at)}</span>
+          (project) => `
+        <div class="project-item ${project.id.toString().startsWith('temp-') ? 'temp-item' : ''}" data-id="${project.id}">
+          <div class="project-item-content">
+            <span class="project-item-title">${this.escapeHtml(project.title)}</span>
+            <span class="project-item-date">${this.formatDate(project.created_at)}</span>
           </div>
-          <button class="valley-item-delete" data-id="${valley.id}">
+          <button class="project-item-delete" data-id="${project.id}">
             <span class="material-symbols-outlined">more_vert</span>
           </button>
         </div>
@@ -3196,16 +3196,16 @@ class ValleysManager {
         .join('');
 
       // Add click handlers
-      this.listContainer.querySelectorAll('.valley-item').forEach((item) => {
+      this.listContainer.querySelectorAll('.project-item').forEach((item) => {
         item.addEventListener('click', (e) => {
-          const menuBtn = e.target.closest('.valley-item-delete');
+          const menuBtn = e.target.closest('.project-item-delete');
           if (menuBtn) {
             e.stopPropagation();
             const rect = menuBtn.getBoundingClientRect();
             this.openContextMenu(item.dataset.id, rect.left - 130, rect.top + 30);
             return;
           }
-          this.loadValley(item.dataset.id);
+          this.loadProject(item.dataset.id);
         });
       });
     }
@@ -3216,14 +3216,15 @@ class ValleysManager {
 
   renderSidebarList() {
     if (window.dashboardManager) {
-      window.dashboardManager.renderProjects(this.valleys);
+      const displayProjects = this.tempProject ? [this.tempProject, ...this.projects] : this.projects;
+      window.dashboardManager.renderProjects(displayProjects);
     }
   }
 
-  highlightSidebarValleys() {
+  highlightSidebarProjects() {
     if (!this.sidebarList) return;
-    this.sidebarList.querySelectorAll('.sidebar-valley-card').forEach((row) => {
-      row.classList.toggle('active', row.dataset.id === this.activeValleyId);
+    this.sidebarList.querySelectorAll('.sidebar-project-card').forEach((row) => {
+      row.classList.toggle('active', row.dataset.id === this.activeProjectId);
     });
   }
 
@@ -3247,7 +3248,7 @@ class ValleysManager {
   }
 
   openModal() {
-    this.loadValleys();
+    this.loadProjects();
     if (this.modal) this.modal.classList.add('visible');
   }
 
@@ -3277,8 +3278,8 @@ class DashboardManager {
 
     if (projectId) {
       // Wait for Auth to be ready before creating logic? 
-      // ValleysManager.loadValleys checks auth.
-      // We'll rely on global ValleysManager to handle data loading loop;
+      // ProjectsManager.loadProjects checks auth.
+      // We'll rely on global ProjectsManager to handle data loading loop;
       // Once loaded, we should open it.
       // But init runs before data is loaded.
       // We'll set a pending ID to open.
@@ -3287,13 +3288,13 @@ class DashboardManager {
       this.showDashboard();
     }
 
-    // Bind Back Button
+    // Bind Back Button - Auto save on exit and refresh dashboard
     if (this.backBtn) {
-      this.backBtn.addEventListener('click', () => {
-        if (window.valleysManager) {
-          window.valleysManager.saveValley(true).then(() => {
-            this.showDashboard();
-          });
+      this.backBtn.addEventListener('click', async () => {
+        if (window.projectsManager) {
+          // Force save before leaving
+          await window.projectsManager.saveProject(true);
+          this.showDashboard();
         } else {
           this.showDashboard();
         }
@@ -3308,19 +3309,6 @@ class DashboardManager {
         localStorage.setItem(CONFIG.STORAGE_THEME, isLight ? 'light' : 'dark');
         const icon = this.dashboardThemeBtn.querySelector('.material-symbols-outlined');
         if (icon) icon.textContent = isLight ? 'light_mode' : 'dark_mode';
-      });
-    }
-
-    // Bind Back Button - Auto save on exit
-    if (this.backBtn) {
-      this.backBtn.addEventListener('click', async () => {
-        if (window.valleysManager) {
-          // Force save before leaving
-          await window.valleysManager.saveValley(true);
-          this.showDashboard();
-        } else {
-          this.showDashboard();
-        }
       });
     }
 
@@ -3360,24 +3348,24 @@ class DashboardManager {
           this.emojiPicker.classList.remove('visible');
 
           // Save functionality
-          if (window.valleysManager && window.valleysManager.activeValleyId) {
-            // We need a specific method to update just the emoji, or reuse saveValley? 
-            // saveValley grabs emoji from activeValley object usually. 
+          if (window.projectsManager && window.projectsManager.activeProjectId) {
+            // We need a specific method to update just the emoji, or reuse saveProject? 
+            // saveProject grabs emoji from activeProject object usually. 
             // Let's update the local object directly first.
-            const valley = window.valleysManager.valleys.find(v => v.id === window.valleysManager.activeValleyId);
-            if (valley) {
-              if (!valley.files) valley.files = {};
-              valley.files.emoji = selectedEmoji;
-              valley.emoji = selectedEmoji; // Critical: Update root property for saveValley to pick it up
-              window.valleysManager.saveValley(false).then(() => {
+            const project = window.projectsManager.projects.find(p => p.id === window.projectsManager.activeProjectId);
+            if (project) {
+              if (!project.files) project.files = {};
+              project.files.emoji = selectedEmoji;
+              project.emoji = selectedEmoji; // Critical: Update root property for saveProject to pick it up
+              window.projectsManager.saveProject(false).then(() => {
                 showToast('Icon updated');
               });
             }
-          } else if (window.valleysManager && window.valleysManager.tempValley) {
-            // Update temp valley
-            if (!window.valleysManager.tempValley.files) window.valleysManager.tempValley.files = {};
-            window.valleysManager.tempValley.files.emoji = selectedEmoji;
-            window.valleysManager.tempValley.emoji = selectedEmoji; // Critical: Update root property
+          } else if (window.projectsManager && window.projectsManager.tempProject) {
+            // Update temp project
+            if (!window.projectsManager.tempProject.files) window.projectsManager.tempProject.files = {};
+            window.projectsManager.tempProject.files.emoji = selectedEmoji;
+            window.projectsManager.tempProject.emoji = selectedEmoji; // Critical: Update root property
             // No need to save to DB yet, will save on first edit or exit
           }
         }
@@ -3445,7 +3433,7 @@ class DashboardManager {
     const existingCreateCard = document.getElementById('create-project-card');
     if (existingCreateCard) {
       existingCreateCard.onclick = () => {
-        if (window.valleysManager) window.valleysManager.newValley();
+        if (window.projectsManager) window.projectsManager.newProject();
       };
     }
   }
@@ -3454,9 +3442,9 @@ class DashboardManager {
 
   commitTitleChange() {
     const newTitle = this.titleInput.value.trim();
-    if (newTitle && window.valleysManager && window.valleysManager.activeValleyId) {
+    if (newTitle && window.projectsManager) {
       this.titleDisplay.textContent = newTitle;
-      window.valleysManager.updateValleyTitle(window.valleysManager.activeValleyId, newTitle);
+      window.projectsManager.updateProjectTitle(window.projectsManager.activeProjectId, newTitle);
     } else {
       // Revert
       this.titleInput.value = this.titleDisplay.textContent;
@@ -3479,8 +3467,8 @@ class DashboardManager {
       window.history.pushState({ path: newurl }, '', newurl);
     }
 
-    if (window.valleysManager) {
-      this.renderProjects(window.valleysManager.valleys);
+    if (window.projectsManager) {
+      window.projectsManager.loadProjects(); // Refresh data from server
     }
   }
 
@@ -3494,14 +3482,14 @@ class DashboardManager {
     }
   }
 
-  renderProjects(valleys) {
+  renderProjects(projects) {
     // Check for pending project load from URL
-    if (this.pendingProjectId && valleys) {
+    if (this.pendingProjectId && projects) {
       const id = this.pendingProjectId;
-      const exists = valleys.find(v => v.id === id);
+      const exists = projects.find(p => p.id === id);
       if (exists) {
         this.pendingProjectId = null;
-        window.valleysManager.loadValley(id);
+        window.projectsManager.loadProject(id);
         return;
       }
     }
@@ -3514,18 +3502,18 @@ class DashboardManager {
     createCard.className = 'project-card create-card';
     createCard.innerHTML = `
         <div class="create-icon-wrapper"><span class="material-symbols-outlined">add</span></div>
-        <span class="create-label">Create new notebook</span>
+        <span class="create-label">Create new project</span>
      `;
-    createCard.onclick = () => window.valleysManager.newValley();
+    createCard.onclick = () => window.projectsManager.newProject();
     this.projectsGrid.appendChild(createCard);
 
-    // Valley Cards
-    if (valleys) {
+    // Project Cards
+    if (projects) {
       // Sort by updated_at desc
-      const sorted = [...valleys].sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
+      const sorted = [...projects].sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
 
-      sorted.forEach(v => {
-        const card = this.createProjectCard(v);
+      sorted.forEach(p => {
+        const card = this.createProjectCard(p);
         this.projectsGrid.appendChild(card);
       });
     }
@@ -3538,28 +3526,28 @@ class DashboardManager {
     return DashboardManager.PROJECT_EMOJIS[Math.floor(Math.random() * DashboardManager.PROJECT_EMOJIS.length)];
   }
 
-  createProjectCard(valley) {
+  createProjectCard(project) {
     const card = document.createElement('div');
     card.className = 'project-card';
-    const sourceCount = valley.sources_count !== undefined ? valley.sources_count : (valley.files ? (valley.files.files ? valley.files.files.length : 0) : 0);
+    const sourceCount = project.sources_count !== undefined ? project.sources_count : (project.files ? (project.files.files ? project.files.files.length : 0) : 0);
 
     // Assign random emoji if not set
-    if (!valley.emoji) {
-      valley.emoji = this.getRandomEmoji();
+    if (!project.emoji) {
+      project.emoji = this.getRandomEmoji();
     }
 
     // Determine if temp
-    if (valley.id.toString().startsWith('temp-')) {
-      card.classList.add('temp-valley');
+    if (project.id.toString().startsWith('temp-')) {
+      card.classList.add('temp-project');
     }
 
     card.innerHTML = `
         <div class="card-header">
-            <div class="card-emoji" data-valley-id="${valley.id}">${valley.emoji}</div>
+            <div class="card-emoji" data-project-id="${project.id}">${project.emoji}</div>
             <button class="card-menu-btn"><span class="material-symbols-outlined">more_vert</span></button>
         </div>
         <div class="card-content">
-            <h3 class="card-title">${this.escapeHtml(valley.title)}</h3>
+            <h3 class="card-title">${this.escapeHtml(project.title)}</h3>
             <div class="card-meta">
                 <span>${sourceCount} sources</span>
             </div>
@@ -3570,24 +3558,24 @@ class DashboardManager {
     const emojiEl = card.querySelector('.card-emoji');
     emojiEl.onclick = (e) => {
       e.stopPropagation();
-      this.showEmojiPicker(e, valley, emojiEl);
+      this.showEmojiPicker(e, project, emojiEl);
     };
 
     const menuBtn = card.querySelector('.card-menu-btn');
     menuBtn.onclick = (e) => {
       e.stopPropagation();
-      this.showCardContextMenu(e, valley, card);
+      this.showCardContextMenu(e, project, card);
     };
 
     card.onclick = (e) => {
       if (!e.target.closest('.card-menu-btn') && !e.target.closest('.card-emoji')) {
-        window.valleysManager.loadValley(valley.id);
+        window.projectsManager.loadProject(project.id);
       }
     };
     return card;
   }
 
-  showCardContextMenu(e, valley, card) {
+  showCardContextMenu(e, project, card) {
     // Remove any existing context menu
     const existingMenu = document.querySelector('.card-context-menu');
     if (existingMenu) existingMenu.remove();
@@ -3622,9 +3610,9 @@ class DashboardManager {
         menu.remove();
 
         if (action === 'rename') {
-          this.startInlineRename(valley, card);
+          this.startInlineRename(project, card);
         } else if (action === 'delete') {
-          this.deleteProject(valley);
+          this.deleteProject(project);
         }
       };
     });
@@ -3639,7 +3627,7 @@ class DashboardManager {
     setTimeout(() => document.addEventListener('click', closeMenu), 0);
   }
 
-  showEmojiPicker(e, valley, emojiEl) {
+  showEmojiPicker(e, project, emojiEl) {
     // Remove any existing emoji picker
     const existingPicker = document.querySelector('.emoji-picker');
     if (existingPicker) existingPicker.remove();
@@ -3659,8 +3647,8 @@ class DashboardManager {
       btn.onclick = (ev) => {
         ev.stopPropagation();
         emojiEl.textContent = emoji;
-        valley.emoji = emoji;
-        window.valleysManager.updateValleyEmoji(valley.id, emoji);
+        project.emoji = emoji;
+        window.projectsManager.updateProjectEmoji(project.id, emoji);
         picker.remove();
       };
       grid.appendChild(btn);
@@ -3686,11 +3674,11 @@ class DashboardManager {
     setTimeout(() => document.addEventListener('click', closePicker), 0);
   }
 
-  startInlineRename(valley, card) {
+  startInlineRename(project, card) {
     const titleEl = card.querySelector('.card-title');
     if (!titleEl) return;
 
-    const originalTitle = valley.title;
+    const originalTitle = project.title;
 
     // Make title editable
     titleEl.contentEditable = 'true';
@@ -3707,8 +3695,8 @@ class DashboardManager {
       titleEl.contentEditable = 'false';
       const newTitle = titleEl.textContent.trim();
       if (newTitle && newTitle !== originalTitle) {
-        window.valleysManager.updateValleyTitle(valley.id, newTitle);
-        valley.title = newTitle;
+        window.projectsManager.updateProjectTitle(project.id, newTitle);
+        project.title = newTitle;
       } else {
         titleEl.textContent = originalTitle;
       }
@@ -3727,13 +3715,13 @@ class DashboardManager {
     };
   }
 
-  async deleteProject(valley) {
-    if (!confirm(`Are you sure you want to delete "${valley.title}"? This cannot be undone.`)) {
+  async deleteProject(project) {
+    if (!confirm(`Are you sure you want to delete "${project.title}"? This cannot be undone.`)) {
       return;
     }
 
-    await window.valleysManager.deleteValley(valley.id);
-    this.renderProjects(window.valleysManager.valleys);
+    await window.projectsManager.deleteProject(project.id);
+    this.renderProjects(window.projectsManager.projects);
   }
 
   escapeHtml(str) {
@@ -3776,8 +3764,8 @@ function setupImageContainer(container) {
       if (next && next.tagName === 'BR') next.remove();
 
       // Trigger auto-save
-      if (window.valleysManager) {
-        window.valleysManager.handleAutoSave();
+      if (window.projectsManager) {
+        window.projectsManager.handleAutoSave();
       }
 
       requestAnimationFrame(() => {
@@ -3848,9 +3836,9 @@ class AuthManager {
       this.user = session.user;
       this.updateMenuState();
 
-      // Load valleys on initial session restore
-      if (window.valleysManager) {
-        window.valleysManager.loadValleys();
+      // Load projects on initial session restore
+      if (window.projectsManager) {
+        window.projectsManager.loadProjects();
       }
     }
 
@@ -3861,16 +3849,16 @@ class AuthManager {
 
       if (event === 'SIGNED_IN') {
         this.closeModal();
-        // Reload valleys if manager exists
-        if (window.valleysManager) {
-          window.valleysManager.loadValleys();
+        // Reload projects if manager exists
+        if (window.projectsManager) {
+          window.projectsManager.loadProjects();
         }
       }
       if (event === 'SIGNED_OUT') {
-        // Clear valleys list
-        if (window.valleysManager) {
-          window.valleysManager.valleys = [];
-          window.valleysManager.renderList();
+        // Clear projects list
+        if (window.projectsManager) {
+          window.projectsManager.projects = [];
+          window.projectsManager.renderList();
         }
       }
     });
@@ -4085,7 +4073,7 @@ class AuthManager {
   }
 
   async deleteAccount() {
-    if (!confirm('Are you sure you want to delete your account? This will delete all your valleys and cannot be undone.')) {
+    if (!confirm('Are you sure you want to delete your account? This will delete all your projects and cannot be undone.')) {
       return;
     }
 
@@ -4117,16 +4105,24 @@ class AuthManager {
     const profileLabel = profileBtn?.querySelector('.menu-label');
     const profileIcon = profileBtn?.querySelector('.material-symbols-outlined');
 
+    // Dashboard and Editor avatars
+    const dashboardAvatar = document.getElementById('dashboard-avatar');
+    const editorAvatar = document.getElementById('editor-avatar');
+
     if (this.user) {
       if (profileLabel) profileLabel.textContent = 'Account';
       if (profileIcon) profileIcon.textContent = 'account_circle';
       if (this.sidebarAccountName) this.sidebarAccountName.textContent = this.user.email;
       if (this.sidebarAvatar) this.sidebarAvatar.textContent = (this.user.email?.[0] || 'P').toUpperCase();
 
+      const userInitial = (this.user.email?.[0] || 'P').toUpperCase();
+      if (dashboardAvatar) dashboardAvatar.textContent = userInitial;
+      if (editorAvatar) editorAvatar.textContent = userInitial;
+
       // Update User Menu
       if (this.userMenuName) this.userMenuName.textContent = this.user.user_metadata?.full_name || this.user.email?.split('@')[0] || 'Account';
       if (this.userMenuEmail) this.userMenuEmail.textContent = this.user.email;
-      if (this.userMenuAvatar) this.userMenuAvatar.textContent = (this.user.email?.[0] || 'P').toUpperCase();
+      if (this.userMenuAvatar) this.userMenuAvatar.textContent = userInitial;
 
       if (this.signoutBtn) this.signoutBtn.textContent = 'Sign Out';
       if (this.deleteAccountBtn) this.deleteAccountBtn.disabled = false;
@@ -4135,6 +4131,9 @@ class AuthManager {
       if (profileIcon) profileIcon.textContent = 'person';
       if (this.sidebarAccountName) this.sidebarAccountName.textContent = 'Guest';
       if (this.sidebarAvatar) this.sidebarAvatar.textContent = 'PV';
+
+      if (dashboardAvatar) dashboardAvatar.innerHTML = '<span class="material-symbols-outlined">person</span>';
+      if (editorAvatar) editorAvatar.innerHTML = '<span class="material-symbols-outlined">person</span>';
 
       // Update User Menu (Guest)
       if (this.userMenuName) this.userMenuName.textContent = 'Guest';
@@ -4219,7 +4218,6 @@ class AuthManager {
     const priceEl = document.getElementById('subscription-price');
     const badgeEl = document.getElementById('subscription-badge');
     const imagesEl = document.getElementById('feature-images');
-    const valleysEl = document.getElementById('feature-valleys');
     const creditsEl = document.getElementById('feature-credits');
     const upgradeRow = document.getElementById('upgrade-row');
 
@@ -4231,7 +4229,6 @@ class AuthManager {
         badgeEl.style.background = 'var(--accent)';
       }
       if (imagesEl) imagesEl.textContent = '30/month';
-      if (valleysEl) valleysEl.textContent = '20 max';
       if (upgradeRow) upgradeRow.style.display = 'none';
     } else {
       if (tierEl) tierEl.textContent = 'Free Plan';
@@ -4241,7 +4238,6 @@ class AuthManager {
         badgeEl.style.background = '#666';
       }
       if (imagesEl) imagesEl.textContent = '0/month';
-      if (valleysEl) valleysEl.textContent = '0';
       if (upgradeRow) upgradeRow.style.display = 'flex';
     }
 
@@ -4309,10 +4305,11 @@ class AuthManager {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+  const editor = document.querySelector('.editor');
   window.brainManager = new BrainManager();
   window.contextManager = new ContextManager();
   window.predictionManager = new PredictionManager();
-  window.valleysManager = new ValleysManager();
+  window.projectsManager = new ProjectsManager();
   window.dashboardManager = new DashboardManager();
   window.authManager = new AuthManager();
 
@@ -4363,23 +4360,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // MENU FUNCTIONALITY
   const settingsBtn = document.getElementById('settings-btn');
+  const editorAccountBtn = document.getElementById('editor-account-btn');
 
   const rightMenuOverlay = document.querySelector('.right-menu-overlay');
   const userMenuOverlay = document.querySelector('.user-menu-overlay');
 
   const openMenu = (overlay) => {
     overlay.classList.add('visible');
+    setTimeout(() => overlay.classList.add('menu-ready'), 10);
   };
 
   const closeMenu = () => {
-    if (rightMenuOverlay) rightMenuOverlay.classList.remove('visible');
-    if (userMenuOverlay) userMenuOverlay.classList.remove('visible');
+    if (rightMenuOverlay) {
+      rightMenuOverlay.classList.remove('visible');
+      rightMenuOverlay.classList.remove('menu-ready');
+    }
+    if (userMenuOverlay) {
+      userMenuOverlay.classList.remove('visible');
+      userMenuOverlay.classList.remove('menu-ready');
+    }
   };
 
   const closeAllMenus = () => {
     closeMenu();
     window.contextManager?.closeSideMenu();
   };
+
+  if (editorAccountBtn) {
+    editorAccountBtn.addEventListener('click', () => {
+      if (window.authManager && window.authManager.isAuthenticated()) {
+        if (userMenuOverlay.classList.contains('visible')) {
+          closeMenu();
+        } else {
+          closeMenu();
+          openMenu(userMenuOverlay);
+        }
+      } else {
+        window.authManager?.openModal();
+      }
+    });
+  }
 
   settingsBtn.addEventListener('click', () => {
     if (window.predictionManager.selectModeActive) {
@@ -4446,11 +4466,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Edit Name Modal Logic
+  // Edit Name Modal Logic (Now Account Modal)
   const userMenuHeader = document.getElementById('user-menu-header');
   const editNameModal = document.getElementById('edit-name-modal');
   const editNameClose = document.getElementById('edit-name-close');
-  const editNameInput = document.getElementById('edit-user-name-input');
-  const saveNameBtn = document.getElementById('save-user-name-btn');
+  const editNameInput = document.getElementById('edit-name-input'); // Fixed ID mismatch if any
+  const saveNameBtn = document.getElementById('edit-name-save');
+  const accountEmailDisplay = document.getElementById('account-email-display');
 
   if (userMenuHeader) {
     userMenuHeader.addEventListener('click', () => {
@@ -4462,10 +4484,13 @@ document.addEventListener('DOMContentLoaded', () => {
       closeAllMenus();
       if (editNameModal) {
         editNameModal.classList.add('visible');
+        const user = window.authManager.user;
         if (editNameInput) {
-          const user = window.authManager.user;
           editNameInput.value = user.user_metadata?.full_name || user.email?.split('@')[0] || '';
-          editNameInput.focus();
+          // editNameInput.focus(); // Optional: might be annoying on mobile
+        }
+        if (accountEmailDisplay) {
+          accountEmailDisplay.value = user.email || '';
         }
       }
     });
@@ -4515,72 +4540,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (sidebarBackdrop) {
-    sidebarBackdrop.addEventListener('click', closeSidebarDrawer);
-  }
-
-  window.addEventListener('resize', () => {
-    if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX) {
-      closeSidebarDrawer();
-    }
-  });
-
-  // Swipe to open/close sidebar on mobile
-  (function initSidebarSwipe() {
-    let touchStartX = null;
-    let touchStartY = null;
-    let isSwiping = false;
-
-    const EDGE_THRESHOLD = 30; // pixels from left edge to trigger
-    const SWIPE_THRESHOLD = 50; // minimum swipe distance
-
-    document.addEventListener('touchstart', (e) => {
-      // Only enable swipe on mobile
-      if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX) return;
-
-      const touch = e.touches[0];
-      touchStartX = touch.clientX;
-      touchStartY = touch.clientY;
-
-      // Track swipes starting from left edge (to open) or anywhere when sidebar is open (to close)
-      const sidebarOpen = document.body.classList.contains('sidebar-open');
-      isSwiping = touchStartX <= EDGE_THRESHOLD || sidebarOpen;
-    }, { passive: true });
-
-    document.addEventListener('touchend', (e) => {
-      if (!isSwiping || touchStartX === null) return;
-
-      // Only process on mobile
-      if (window.innerWidth >= CONFIG.DESKTOP_BREAKPOINT_PX) {
-        touchStartX = null;
-        touchStartY = null;
-        isSwiping = false;
-        return;
-      }
-
-      const touch = e.changedTouches[0];
-      const deltaX = touch.clientX - touchStartX;
-      const deltaY = Math.abs(touch.clientY - touchStartY);
-
-      // Must be primarily horizontal swipe
-      if (Math.abs(deltaX) > deltaY && Math.abs(deltaX) > SWIPE_THRESHOLD) {
-        const sidebarOpen = document.body.classList.contains('sidebar-open');
-
-        if (deltaX > 0 && !sidebarOpen && touchStartX <= EDGE_THRESHOLD) {
-          // Swipe right from edge - open sidebar
-          openSidebarDrawer();
-        } else if (deltaX < 0 && sidebarOpen) {
-          // Swipe left - close sidebar
-          closeSidebarDrawer();
-        }
-      }
-
-      // Reset
-      touchStartX = null;
-      touchStartY = null;
-      isSwiping = false;
-    }, { passive: true });
-  })();
+  // Sidebar code removed - sidebar is no longer in use
 
   // Swipe to open/close right side menu on mobile
   (function initRightMenuSwipe() {
@@ -4733,6 +4693,8 @@ document.addEventListener('DOMContentLoaded', () => {
     closeAllMenus();
   });
 
+  const selectMenuButtons = document.querySelectorAll('.select-menu-btn');
+
   const updateSelectButtons = window.updateSelectButtons = () => {
     selectMenuButtons.forEach((btn) => {
       btn.classList.toggle('active', window.predictionManager.selectModeActive);
@@ -4761,7 +4723,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   bindMenuButtons('.copy-all-btn', async (_event, btn) => {
-    const editor = document.querySelector('.editor');
     if (!editor) return;
 
     // Clone to strip predictions before copying
@@ -4808,19 +4769,19 @@ document.addEventListener('DOMContentLoaded', () => {
     closeAllMenus();
   });
 
-  const sidebarNewValleyBtn = document.getElementById('sidebar-new-valley');
-  if (sidebarNewValleyBtn) {
-    sidebarNewValleyBtn.addEventListener('click', async () => {
-      await window.valleysManager.newValley();
+  const sidebarNewProjectBtn = document.getElementById('new-project-btn');
+  if (sidebarNewProjectBtn) {
+    sidebarNewProjectBtn.addEventListener('click', async () => {
+      await window.projectsManager.newProject();
       closeAllMenus();
     });
   }
 
-  // Close valleys modal on Escape
+  // Close projects modal on Escape
   document.addEventListener('keydown', (e) => {
-    const valleysModal = document.getElementById('valleys-modal');
-    if (e.key === 'Escape' && valleysModal?.classList.contains('visible')) {
-      window.valleysManager.closeModal();
+    const projectsModal = document.getElementById('projects-modal');
+    if (e.key === 'Escape' && projectsModal?.classList.contains('visible')) {
+      window.projectsManager.closeModal();
     }
   });
 
@@ -4879,23 +4840,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (response.status === 403) {
         const data = await response.json();
-        if (data.upgradeRequired) {
-          if (confirm(data.error + '\n\nWould you like to upgrade to Pro now?')) {
-            window.authManager.openAccountModal();
-          }
-        }
-        throw new Error(data.error || 'Upgrade required');
+        throw new Error(data.error || 'Daily limit reached');
       }
 
-      if (response.status === 429) {
-        const data = await response.json();
-        if (data.needsCredits) {
-          if (confirm(data.error + '\n\nWould you like to buy more credits?')) {
-            window.authManager.openAccountModal();
-          }
-        }
-        throw new Error(data.error || "You've reached your limit");
-      }
+      // 429 logic removed as credits are simplified out
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -4907,9 +4855,15 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('Image generation response data:', data);
 
       // Show remaining count if present
-      if (typeof data.remaining === 'number' && data.remaining < 5) {
-        console.log(`Images remaining today: ${data.remaining}`);
-        // Optional: show a small toast or notification
+      // Show remaining count
+      if (typeof data.remaining !== 'undefined') {
+        if (data.remaining > 100) {
+          showToast('Image created');
+        } else {
+          showToast(`Image created (${data.remaining} left today)`);
+        }
+      } else {
+        showToast('Image created');
       }
 
       // Remove placeholder
@@ -4945,8 +4899,8 @@ document.addEventListener('DOMContentLoaded', () => {
         editor.appendChild(document.createElement('br'));
 
         // Trigger auto-save since DOM was modified programmatically
-        if (window.valleysManager) {
-          window.valleysManager.handleAutoSave();
+        if (window.projectsManager) {
+          window.projectsManager.handleAutoSave();
         }
       }
     } catch (error) {

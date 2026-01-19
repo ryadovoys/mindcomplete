@@ -11,7 +11,7 @@ mindcomplete/
 │   ├── predict.js          # AI prediction endpoint
 │   ├── context.js          # Context management
 │   ├── context-anchor.js   # Persistent context anchors
-│   ├── valleys.js          # Document storage (Valleys)
+│   ├── projects.js         # Document storage (Projects)
 │   ├── generate-image.js   # AI image generation
 │   ├── checkout.js         # Stripe checkout
 │   └── process-input.js    # Input processing
@@ -25,7 +25,7 @@ mindcomplete/
 │   ├── screenshots/        # Debug/test screenshots
 │   ├── CLAUDE.md           # Claude AI instructions
 │   ├── SUPABASE_SETUP.md   # Database setup guide
-│   └── VALLEYS_STATUS.md   # Feature status tracking
+│   └── PROJECTS_STATUS.md   # Feature status tracking
 ├── figma-plugin/           # Mindcomplete Figma plugin
 ├── plans/                  # Implementation plans (archived)
 ├── sandbox/                # One-off projects (animations, demos, experiments)
@@ -56,9 +56,9 @@ mindcomplete/
 
 Manual testing loop:
 1. Exercise editor and inline prediction in browser
-2. Test Valleys save/load
+2. Test Projects save/load
 3. Ping `/api/health`
-4. Replay curl commands from `docs/VALLEYS_STATUS.md`
+4. Replay curl commands from `docs/PROJECTS_STATUS.md`
 
 ## Commits
 
