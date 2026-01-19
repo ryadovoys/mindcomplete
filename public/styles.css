@@ -45,20 +45,43 @@
 }
 
 :root {
-  /* Typography - Light weight (300) per Figma (px not pt!) */
+  /* Typography - Unified Design System */
+
+  /* Display (Landing Headlines) */
+  --font-display-xl-size: 60px;
+  --font-display-xl-weight: 500;
+  --font-display-xl-line-height: 1.0;
+
+  --font-display-lg-size: 48px;
+  --font-display-lg-weight: 500;
+  --font-display-lg-line-height: 1.1;
+
+  --font-display-md-size: 40px;
+  --font-display-md-weight: 500;
+  --font-display-md-line-height: 1.15;
+
+  --font-display-sm-size: 32px;
+  --font-display-sm-weight: 500;
+  --font-display-sm-line-height: 1.2;
+
+  /* Headings (≥22px = weight 500) */
   --font-h1-size: 22px;
-  --font-h1-weight: 300;
+  --font-h1-weight: 500;
   --font-h2-size: 20px;
-  --font-h2-weight: 300;
+  --font-h2-weight: 500;
+
+  /* Body (<22px = weight 400) */
+  --font-body-large-size: 18px;
+  --font-body-large-weight: 400;
   --font-body-size: 16px;
-  --font-body-weight: 300;
+  --font-body-weight: 400;
   --font-body-small-size: 14px;
-  --font-body-small-weight: 300;
+  --font-body-small-weight: 400;
   --font-caption-size: 12px;
-  --font-caption-weight: 300;
+  --font-caption-weight: 400;
 
   /* Icons */
-  --icon-weight: 200;
+  --icon-weight: 300;
   --icon-size-sm: 24px;
   --icon-size-lg: 40px;
 
@@ -1285,7 +1308,7 @@ body.select-mode-active .inline-prediction {
   display: inline;
   font-family: 'Google Sans Flex', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 200;
+  font-weight: var(--font-body-weight);
   color: var(--text-prediction);
   cursor: pointer;
   /* Prevent editing the prediction text */
@@ -1353,7 +1376,7 @@ body.mobile-touch:not(.select-mode-active) .inline-prediction {
   word-break: normal;
   hyphens: none;
   caret-color: var(--accent);
-  font-weight: 200;
+  font-weight: var(--font-body-weight);
 }
 
 .editor h1 {
