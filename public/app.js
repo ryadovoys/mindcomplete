@@ -3975,6 +3975,13 @@ class AuthManager {
     this.updateModalUI();
   }
 
+  switchTab(tab) {
+    if (tab === 'signup' || tab === 'signin') {
+      this.currentMode = tab;
+      this.updateModalUI();
+    }
+  }
+
   updateModalUI() {
     const signinLayout = document.getElementById('auth-signin-layout');
     const signupLayout = document.getElementById('auth-signup-layout');

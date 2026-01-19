@@ -399,6 +399,11 @@
   <!-- Image Guidance Modal -->
   <div class="modal" id="image-guidance-modal">
     <div class="modal-content image-guidance-modal-content">
+      <div class="context-modal-header close-only">
+        <button class="context-modal-close" id="image-guidance-close" aria-label="Close">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
       <!-- Authorized View -->
       <div class="image-guidance-body" id="image-guidance-auth-view">
         <div class="image-guidance-field">
@@ -432,7 +437,7 @@
             Join Mindcomplete to bring your thoughts to life.
           </p>
         </div>
-        <div class="image-guidance-buttons" style="flex-direction: column; width: 100%;">
+        <div class="image-guidance-buttons" style="flex-direction: column; width: 100%; gap: 12px;">
           <button class="btn-primary" id="image-unauth-signup-btn" style="width: 100%;">Join now</button>
           <button class="btn-secondary" id="image-unauth-signin-btn" style="width: 100%;">Sign in</button>
         </div>
