@@ -1382,14 +1382,19 @@ class BrainManager {
       // Auth handling: try to get session from supabase if available
       let headers = { 'Content-Type': 'application/json' };
 
-      if (window.supabase) {
-        const { data: { session } } = await window.supabase.auth.getSession();
-        if (session) {
-          headers['Authorization'] = `Bearer ${session.access_token}`;
-        }
+      const token = await window.authManager?.getAccessToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch('/api/context-anchor', { headers });
+      // Filter by current project if available
+      const projectId = window.projectsManager?.activeProjectId;
+      let url = '/api/context-anchor';
+      if (projectId) {
+        url += `?projectId=${projectId}`;
+      }
+
+      const response = await fetch(url, { headers });
       if (response.ok) {
         const data = await response.json();
         // API returns array if listing, or single object if ID passed (but we didn't pass ID)
@@ -1423,34 +1428,12 @@ class BrainManager {
     }
 
     this.brainContent.innerHTML = this.anchors.map(anchor => {
-      // items details
-      const items = anchor.items || [];
-      const imageCount = items.filter(i => i.type === 'image' || (i.type === 'text' && i.source === 'image_analysis')).length;
-      const urlCount = items.filter(i => i.type === 'url').length;
-      const fileCount = items.filter(i => i.type === 'file').length;
-
-      let metaText = [];
-      if (imageCount) metaText.push(`${imageCount} Image${imageCount > 1 ? 's' : ''}`);
-      if (urlCount) metaText.push(`${urlCount} URL${urlCount > 1 ? 's' : ''}`);
-      if (fileCount) metaText.push(`${fileCount} File${fileCount > 1 ? 's' : ''}`);
-
-      const metaString = metaText.join(' • ');
-
       return `
         <div class="brain-anchor-card" data-id="${anchor.id}">
-          <div class="brain-anchor-header">
-            <div class="brain-anchor-title">
-              <span class="material-symbols-outlined">lightbulb</span>
-              <span>Context Anchor</span>
-            </div>
-            <div class="brain-anchor-actions">
-               <button class="anchor-action-btn delete" onclick="window.brainManager.removeAnchor('${anchor.id}')" title="Delete Anchor">
-                <span class="material-symbols-outlined">delete</span>
-              </button>
-            </div>
-          </div>
           <div class="brain-anchor-summary">${this.escapeHtml(anchor.summary || 'No summary available')}</div>
-          ${metaString ? `<div class="context-item-meta" style="margin-top:8px">${metaString}</div>` : ''}
+          <button class="anchor-remove-btn" onclick="window.brainManager.removeAnchor('${anchor.id}')">
+            <span class="material-symbols-outlined">close</span>
+          </button>
         </div>
       `;
     }).join('');
@@ -1503,6 +1486,24 @@ class BrainManager {
     this.setLoading(true);
 
     try {
+      // Check if we need to save the project first (e.g. if it's a new/temp project)
+      let projectId = window.projectsManager?.activeProjectId;
+      
+      if (!projectId || projectId.toString().startsWith('temp-')) {
+        // Try to save the project first to get a real ID
+        if (window.projectsManager) {
+          console.log('[BrainManager] Saving project before creating anchor...');
+          const saveResult = await window.projectsManager.saveProject(false); // Force save
+          if (saveResult && saveResult.success && saveResult.project) {
+            projectId = saveResult.project.id;
+          } else {
+            throw new Error('Please save your project before adding context.');
+          }
+        } else {
+           throw new Error('Project manager not found.');
+        }
+      }
+
       let analysisResult = '';
       let contextItems = [];
 
@@ -1597,11 +1598,12 @@ class BrainManager {
         headers,
         body: JSON.stringify({
           items: contextItems,
+          projectId: projectId
           // We assume 'synthesizeContextAnchor' handles generating the summary from these items
         })
       });
 
-      if (!response.ok) throw new Error('Failed to create anchor');
+      if (!response.ok) throw new Error('Failed to create context source');
 
       // 3. Reset UI
       if (this.inputText) {
@@ -2307,23 +2309,10 @@ class ContextManager {
       const anchorEl = document.createElement('div');
       anchorEl.className = 'brain-anchor-item';
       anchorEl.innerHTML = `
-        <div class="anchor-icon">
-          <span class="material-symbols-outlined">description</span>
-        </div>
         <div class="anchor-info">
           <span class="anchor-name">${file.name || file}</span>
-          <span class="anchor-type">File</span>
         </div>
-        <button class="btn-icon-small anchor-remove" data-index="${index}">
-          <span class="material-symbols-outlined">close</span>
-        </button>
       `;
-
-      const removeBtn = anchorEl.querySelector('.anchor-remove');
-      removeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.removeFile(index);
-      });
 
       anchorsList.appendChild(anchorEl);
     });
@@ -3074,6 +3063,11 @@ class ProjectsManager {
       this.closeModal();
       if (editor) editor.focus();
 
+      // Trigger anchors load for this project
+      if (window.brainManager) {
+        window.brainManager.loadAnchors();
+      }
+
       // Update Dashboard/Header
       if (window.dashboardManager) {
         window.dashboardManager.showEditor(id);
@@ -3549,7 +3543,7 @@ class DashboardManager {
         <div class="card-content">
             <h3 class="card-title">${this.escapeHtml(project.title)}</h3>
             <div class="card-meta">
-                <span>${sourceCount} sources</span>
+                <span>${sourceCount} ${sourceCount === 1 ? 'source' : 'sources'}</span>
             </div>
         </div>
       `;

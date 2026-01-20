@@ -79,12 +79,31 @@ export default async function handler(req, res) {
           throw error;
         }
 
+        // Get context anchors counts per project (Unified Context)
+        const { data: counts, error: anchorsError } = await supabase
+          .from('context_anchors')
+          .select('project_id')
+          .eq('user_id', user.id);
+
+        if (anchorsError) {
+          console.warn('[API Projects] Failed to get anchors counts:', anchorsError);
+        }
+
+        // Map counts to project IDs
+        const projectCounts = (counts || []).reduce((acc, curr) => {
+          if (curr.project_id) {
+            acc[curr.project_id] = (acc[curr.project_id] || 0) + 1;
+          }
+          return acc;
+        }, {});
+
         const projects = (data || []).map(v => ({
           id: v.id,
           title: v.title,
           emoji: v.files?.emoji || null,
           created_at: v.created_at,
-          sources_count: v.files?.files?.length || 0
+          // Use project-specific anchors count if available, or fallback to legacy files count
+          sources_count: projectCounts[v.id] !== undefined ? projectCounts[v.id] : (v.files?.files?.length || 0)
         }));
 
         return res.status(200).json({ projects });

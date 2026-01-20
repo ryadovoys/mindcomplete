@@ -27,6 +27,7 @@ export default async function handler(req, res) {
     // GET - Retrieve existing anchor(s)
     if (req.method === 'GET') {
         const anchorId = req.query.id;
+        const projectId = req.query.projectId;
 
         try {
             // Get user ID if authenticated
@@ -55,10 +56,21 @@ export default async function handler(req, res) {
                     return res.status(401).json({ error: 'Authentication required to list anchors' });
                 }
 
-                const { data, error } = await supabase
+                let query = supabase
                     .from('context_anchors')
                     .select('*')
-                    .eq('user_id', userId)
+                    .eq('user_id', userId);
+
+                if (projectId) {
+                    query = query.eq('project_id', projectId);
+                } else {
+                    // If no projectId, we might want to return only global anchors 
+                    // or keep it as is. The user wants project-specific, 
+                    // so we should probably encourage passing projectId.
+                    // For now, if no projectId, return all (backwards compat)
+                }
+
+                const { data, error } = await query
                     .order('created_at', { ascending: false });
 
                 if (error) {
@@ -75,7 +87,7 @@ export default async function handler(req, res) {
 
     // POST - Create new anchor or generate clarifications
     if (req.method === 'POST') {
-        const { items, rules, writingStyle, preferences, action } = req.body;
+        const { items, rules, writingStyle, preferences, action, projectId } = req.body;
 
         // Generate clarifications only (no anchor creation yet)
         if (action === 'clarify') {
@@ -143,6 +155,7 @@ export default async function handler(req, res) {
                 .from('context_anchors')
                 .insert({
                     user_id: userId,
+                    project_id: projectId || null,
                     summary: anchorText,
                     items: items || [],
                     rules: rules || null,

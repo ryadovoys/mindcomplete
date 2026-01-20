@@ -50,26 +50,26 @@
   /* Typography - Unified Design System */
 
   /* Display (Landing Headlines) */
-  --font-display-xl-size: 60px;
+  --font-display-xl-size: 48px;
   --font-display-xl-weight: 500;
-  --font-display-xl-line-height: 1.0;
+  --font-display-xl-line-height: 1.1;
 
-  --font-display-lg-size: 48px;
+  --font-display-lg-size: 40px;
   --font-display-lg-weight: 500;
-  --font-display-lg-line-height: 1.1;
+  --font-display-lg-line-height: 1.15;
 
-  --font-display-md-size: 40px;
+  --font-display-md-size: 32px;
   --font-display-md-weight: 500;
-  --font-display-md-line-height: 1.15;
+  --font-display-md-line-height: 1.2;
 
-  --font-display-sm-size: 32px;
+  --font-display-sm-size: 24px;
   --font-display-sm-weight: 500;
-  --font-display-sm-line-height: 1.2;
+  --font-display-sm-line-height: 1.25;
 
   /* Headings (≥22px = weight 500) */
-  --font-h1-size: 22px;
+  --font-h1-size: 20px;
   --font-h1-weight: 500;
-  --font-h2-size: 20px;
+  --font-h2-size: 18px;
   --font-h2-weight: 500;
 
   /* Body (<22px = weight 400) */
@@ -834,15 +834,12 @@ body.sidebar-open .header-logo {
   border: none;
   cursor: pointer;
   padding: 0;
-  transition: opacity 0.2s;
   /* Reset default button styles */
   appearance: none;
   -webkit-appearance: none;
 }
 
-.logo-back-btn:hover {
-  opacity: 0.8;
-}
+
 
 .logo-back-btn:focus,
 .logo-back-btn:focus-visible {
@@ -3678,13 +3675,14 @@ body.side-menu-open .side-menu {
 .brain-anchor-card {
   background: rgba(var(--text-rgb), 0.02);
   border: 1px solid var(--modal-border);
-  border-radius: var(--radius-base);
-  padding: var(--space-lg);
+  border-radius: var(--radius-sm);
+  padding: 12px 40px 12px 12px;
   position: relative;
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  justify-content: center;
+  min-height: 48px;
 }
 
 .brain-anchor-card:hover {
@@ -3693,65 +3691,49 @@ body.side-menu-open .side-menu {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.brain-anchor-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.brain-anchor-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--accent);
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.brain-anchor-title .material-symbols-outlined {
-  font-size: 18px;
-}
-
 .brain-anchor-summary {
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.5;
   color: var(--text);
   margin: 0;
   white-space: pre-wrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
-.brain-anchor-actions {
-  display: flex;
-  gap: 4px;
-}
-
-.anchor-action-btn {
+.anchor-remove-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 28px;
   height: 28px;
-  border-radius: 6px;
-  border: none;
+  border-radius: 50%;
   background: transparent;
-  color: var(--ghost);
+  border: none;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  opacity: 0;
   transition: all 0.2s;
+  padding: 0;
 }
 
-.anchor-action-btn:hover {
-  background: rgba(var(--text-rgb), 0.08);
+.brain-anchor-card:hover .anchor-remove-btn {
+  opacity: 1;
+}
+
+.anchor-remove-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
   color: var(--text);
 }
 
-.anchor-action-btn.delete:hover {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
-}
-
-.anchor-action-btn .material-symbols-outlined {
+.anchor-remove-btn .material-symbols-outlined {
   font-size: 18px;
 }
 
@@ -3760,8 +3742,7 @@ body.side-menu-open .side-menu {
   flex-shrink: 0;
   background: var(--modal-background);
   /* Use modal background for contrast if needed, or normal bg */
-  border-top: 1px solid var(--modal-border);
-  padding: var(--space-lg) var(--space-xl);
+  padding: var(--space-lg) var(--space-xl) 40px var(--space-xl);
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -3773,11 +3754,11 @@ body.side-menu-open .side-menu {
   /* Reuse input styles */
   background: var(--input-background);
   border: 1px solid var(--modal-border);
-  border-radius: var(--radius-sm);
-  padding: var(--space-sm) var(--space-sm) var(--space-sm) var(--space-base);
+  border-radius: 30px;
+  padding: 8px 8px 8px 16px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: 8px;
   transition: border-color 0.2s;
 }
 
@@ -3841,7 +3822,7 @@ body.side-menu-open .side-menu {
 /* Input Controls (Textarea + Buttons) */
 .brain-input-controls {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--space-md);
   width: 100%;
 }
@@ -3850,7 +3831,7 @@ body.side-menu-open .side-menu {
   flex: 1;
   background: transparent;
   border: none;
-  padding: 8px 0;
+  padding: 10px 0;
   font-family: inherit;
   font-size: 15px;
   line-height: 1.5;
@@ -3910,8 +3891,8 @@ body.side-menu-open .side-menu {
 
 .brain-attach-btn {
   color: var(--ghost);
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border-radius: 50%;
   transition: all 0.2s;
@@ -4085,12 +4066,14 @@ body.side-menu-open .side-menu {
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+
 .project-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
   background: #2a2933;
   border-color: rgba(255, 255, 255, 0.1);
 }
+
 
 /* Create Card Variant */
 .create-card {
@@ -4100,6 +4083,8 @@ body.side-menu-open .side-menu {
   justify-content: center;
   gap: 16px;
 }
+
+
 
 .create-card:hover {
   border-color: rgba(255, 255, 255, 0.1);
@@ -4127,11 +4112,6 @@ body.side-menu-open .side-menu {
 .create-icon-wrapper .material-symbols-outlined {
   color: var(--btn-primary-text);
   /* Enforce dark color on icon */
-}
-
-.create-card:hover .create-icon-wrapper {
-  transform: scale(1.1);
-  box-shadow: 0 6px 16px rgba(195, 251, 80, 0.3);
 }
 
 .create-label {
@@ -4359,11 +4339,6 @@ body.side-menu-open .side-menu {
 #back-to-dashboard-btn {
   margin-right: 16px;
   color: var(--text-muted);
-}
-
-#back-to-dashboard-btn:hover {
-  color: var(--text);
-  background: var(--btn-background);
 }
 
 .project-title-container {
