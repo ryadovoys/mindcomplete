@@ -51,11 +51,11 @@ body {
   font-size: 15px;
 }
 
-.brand-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--ink);
+.brand-symbol {
+  display: block;
+  height: 22px;
+  width: auto;
+  flex-shrink: 0;
 }
 
 .brand-name {
