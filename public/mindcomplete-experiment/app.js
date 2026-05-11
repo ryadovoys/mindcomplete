@@ -74,6 +74,62 @@ function appendSuggestionToEditor(text) {
     editor.appendChild(state.suggestionEl);
   }
   state.suggestionEl.textContent = text;
+  scrollToBottomIfNeeded();
+}
+
+function getCaretRect() {
+  const sel = window.getSelection();
+  if (sel.rangeCount) {
+    const range = sel.getRangeAt(0).cloneRange();
+    const rect = range.getBoundingClientRect();
+    if (rect.top || rect.bottom) return rect;
+  }
+  const range = document.createRange();
+  let target = editor;
+  if (state.suggestionEl) {
+    target = state.suggestionEl;
+  } else if (editor.lastChild) {
+    target = editor.lastChild;
+  }
+  try {
+    range.selectNodeContents(target);
+    range.collapse(false);
+    return range.getBoundingClientRect();
+  } catch {
+    return editor.getBoundingClientRect();
+  }
+}
+
+function getSuggestionBottom() {
+  if (!state.suggestionEl) return null;
+  return state.suggestionEl.getBoundingClientRect().bottom;
+}
+
+function scrollToBottomIfNeeded() {
+  const stage = document.querySelector('.stage');
+  if (!stage) return;
+
+  const caret = getCaretRect();
+  const stageRect = stage.getBoundingClientRect();
+  const reservedBottom = window.innerHeight * 0.4;
+  const visibleTop = stageRect.top;
+  const visibleBottom = window.innerHeight - reservedBottom;
+
+  const targetCaretY = visibleTop + (visibleBottom - visibleTop) * 0.5;
+  let delta = Math.max(0, caret.top - targetCaretY);
+
+  const suggestionBottom = getSuggestionBottom();
+  if (suggestionBottom !== null) {
+    const overflow = suggestionBottom - visibleBottom + 32;
+    if (overflow > delta) delta = overflow;
+  } else {
+    const caretOverflow = caret.bottom - visibleBottom + 32;
+    if (caretOverflow > delta) delta = caretOverflow;
+  }
+
+  if (delta > 4) {
+    stage.scrollTop += delta;
+  }
 }
 
 function caretOffsetFromPoint(x, y) {
@@ -94,10 +150,11 @@ function caretOffsetFromPoint(x, y) {
 function onSuggestionMouseDown(e) {
   if (!state.suggestionText) return;
   e.preventDefault();
-  const offset = caretOffsetFromPoint(e.clientX, e.clientY);
-  if (offset === null) return;
-  const accepted = state.suggestionText.slice(0, offset);
-  if (!accepted) {
+  const rawOffset = caretOffsetFromPoint(e.clientX, e.clientY);
+  if (rawOffset === null) return;
+  const offset = extendOffsetToFollowingSpace(state.suggestionText, rawOffset);
+  const accepted = ensureTrailingSpace(state.suggestionText.slice(0, offset));
+  if (!accepted.trim()) {
     clearSuggestion();
     abortInflight();
     return;
@@ -108,6 +165,7 @@ function onSuggestionMouseDown(e) {
   editor.appendChild(textNode);
   placeCaretAtEnd(editor);
   editor.focus();
+  scrollToBottomIfNeeded();
   debouncedPredict();
 }
 
@@ -189,19 +247,36 @@ async function requestPrediction() {
 
 const debouncedPredict = debounce(requestPrediction, DEBOUNCE_MS);
 
+function ensureTrailingSpace(text) {
+  if (!text) return text;
+  if (/\s$/.test(text)) return text;
+  return text + ' ';
+}
+
+function extendOffsetToFollowingSpace(text, offset) {
+  let end = offset;
+  while (end < text.length && /\s/.test(text[end])) {
+    end++;
+  }
+  return end;
+}
+
 function acceptSuggestion() {
   if (!state.suggestionText) return false;
-  const text = state.suggestionText;
+  const text = ensureTrailingSpace(state.suggestionText);
   clearSuggestion();
   const textNode = document.createTextNode(text);
   editor.appendChild(textNode);
   placeCaretAtEnd(editor);
+  scrollToBottomIfNeeded();
+  debouncedPredict();
   return true;
 }
 
 editor.addEventListener('input', () => {
   clearSuggestion();
   abortInflight();
+  scrollToBottomIfNeeded();
   debouncedPredict();
 });
 
