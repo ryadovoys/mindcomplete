@@ -11,6 +11,14 @@
     {
       "source": "/app",
       "destination": "/editor.html"
+    },
+    {
+      "source": "/mindcomplete-experiment",
+      "destination": "/experiment/index.html"
+    },
+    {
+      "source": "/mindcomplete-experiment/",
+      "destination": "/experiment/index.html"
     }
   ],
   "functions": {

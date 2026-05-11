@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mindcomplete — experiment</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,300..700;1,7..72,300..700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/mindcomplete-favicon.png">
+  <link rel="stylesheet" href="/experiment/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span class="brand-name">Mindcomplete</span>
+      <span class="brand-tag">experiment</span>
+    </div>
+    <button id="context-toggle" class="context-toggle" aria-label="Toggle context panel">
+      <span class="context-toggle-label">Context</span>
+      <span id="context-count" class="context-count" hidden>0</span>
+    </button>
+  </header>
+
+  <main class="stage">
+    <div id="editor" class="editor" contenteditable="true" spellcheck="true" data-placeholder="Start typing. Pause, and the AI will continue your thought. Press Tab to accept."></div>
+    <div class="hint">
+      <kbd>Tab</kbd> accept · <kbd>Esc</kbd> dismiss · pause to suggest
+    </div>
+  </main>
+
+  <aside id="context-panel" class="context-panel" hidden>
+    <div class="context-header">
+      <h2>Context</h2>
+      <button id="context-close" class="icon-btn" aria-label="Close">×</button>
+    </div>
+    <p class="context-blurb">Drop a text file, paste a snippet, or write notes. Mindcomplete uses this as background while suggesting.</p>
+
+    <div id="drop-zone" class="drop-zone">
+      <input id="file-input" type="file" accept=".txt,.md,.json,.csv,.html,.htm,.xml,.log" hidden multiple>
+      <span class="drop-text">Drop file or click to upload</span>
+      <span class="drop-sub">.txt, .md, .json, .csv, .html, .xml, .log</span>
+    </div>
+
+    <textarea id="context-text" class="context-text" placeholder="Or paste / type context here…"></textarea>
+
+    <div id="context-files" class="context-files"></div>
+  </aside>
+
+  <script type="module" src="/experiment/app.js"></script>
+</body>
+</html>
