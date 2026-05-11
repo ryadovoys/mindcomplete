@@ -152,7 +152,8 @@ function onSuggestionMouseDown(e) {
   e.preventDefault();
   const rawOffset = caretOffsetFromPoint(e.clientX, e.clientY);
   if (rawOffset === null) return;
-  const offset = extendOffsetToFollowingSpace(state.suggestionText, rawOffset);
+  const wordEnd = snapOffsetToWordEnd(state.suggestionText, rawOffset);
+  const offset = extendOffsetToFollowingSpace(state.suggestionText, wordEnd);
   const accepted = ensureTrailingSpace(state.suggestionText.slice(0, offset));
   if (!accepted.trim()) {
     clearSuggestion();
@@ -256,6 +257,14 @@ function ensureTrailingSpace(text) {
 function extendOffsetToFollowingSpace(text, offset) {
   let end = offset;
   while (end < text.length && /\s/.test(text[end])) {
+    end++;
+  }
+  return end;
+}
+
+function snapOffsetToWordEnd(text, offset) {
+  let end = offset;
+  while (end < text.length && !/\s/.test(text[end])) {
     end++;
   }
   return end;
