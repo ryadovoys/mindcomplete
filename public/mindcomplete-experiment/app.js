@@ -1,6 +1,6 @@
 const DEBOUNCE_MS = 400;
 const MIN_CHARS = 6;
-const API = '/api/predict-public';
+const API = '/mindcomplete-experiment/api/predict';
 
 const editor = document.getElementById('editor');
 const contextToggle = document.getElementById('context-toggle');

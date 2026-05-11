@@ -14,11 +14,15 @@
     },
     {
       "source": "/mindcomplete-experiment",
-      "destination": "/experiment/index.html"
+      "destination": "/mindcomplete-experiment/index.html"
     },
     {
       "source": "/mindcomplete-experiment/",
-      "destination": "/experiment/index.html"
+      "destination": "/mindcomplete-experiment/index.html"
+    },
+    {
+      "source": "/mindcomplete-experiment/api/predict",
+      "destination": "/api/predict-public"
     }
   ],
   "functions": {
