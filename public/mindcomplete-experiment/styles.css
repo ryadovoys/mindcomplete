@@ -249,6 +249,18 @@ body {
   opacity: 0.5;
 }
 
+.credit {
+  color: var(--ink-soft);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+.credit:hover {
+  color: var(--ink);
+  opacity: 1;
+}
+
 .hint kbd {
   font-family: var(--font-ui);
   font-size: 11px;
@@ -452,6 +464,7 @@ body {
   }
 
   .hint,
+  .credit,
   .powered-by {
     display: none;
   }
