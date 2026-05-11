@@ -11,6 +11,7 @@
   --font-ui: 'Inter', -apple-system, system-ui, sans-serif;
   --footer-h: 56px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --keyboard-h: 0px;
 }
 
 * {
@@ -32,7 +33,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding-bottom: calc(var(--footer-h) + var(--safe-bottom));
+  padding-bottom: max(calc(var(--footer-h) + var(--safe-bottom)), var(--keyboard-h));
 }
 
 .topbar {
@@ -463,7 +464,8 @@ body {
   }
 
   .editor {
-    font-size: 22px;
+    font-size: 18px;
+    line-height: 1.55;
   }
 
   .context-panel {

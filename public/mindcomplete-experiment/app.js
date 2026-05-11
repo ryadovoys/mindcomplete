@@ -427,8 +427,25 @@ autocompleteToggleBtn.addEventListener('click', () => {
 
 editor.focus();
 
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', () => {
-    scrollToBottomIfNeeded();
-  });
+function syncKeyboardInset() {
+  if (!window.visualViewport) return;
+  const inset = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
+  document.documentElement.style.setProperty('--keyboard-h', `${Math.round(inset)}px`);
 }
+
+if (window.visualViewport) {
+  const onViewportChange = () => {
+    syncKeyboardInset();
+    scrollToBottomIfNeeded();
+  };
+  window.visualViewport.addEventListener('resize', onViewportChange);
+  window.visualViewport.addEventListener('scroll', onViewportChange);
+  syncKeyboardInset();
+}
+
+editor.addEventListener('focus', () => {
+  setTimeout(() => {
+    syncKeyboardInset();
+    scrollToBottomIfNeeded();
+  }, 250);
+});
