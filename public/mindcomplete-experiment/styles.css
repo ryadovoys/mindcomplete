@@ -447,7 +447,7 @@ body {
 
 @media (max-width: 720px) {
   .stage {
-    padding: 40px 20px 24px;
+    padding: 40px 20px 40vh;
   }
 
   .editor {
