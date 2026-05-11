@@ -1,30 +1,36 @@
 const CONFIG = {
   TEMPERATURE: 0.7,
-  MODEL: 'gemini-2.0-flash',
+  MODEL: 'gemini-2.5-flash',
 };
 
 function lengthSettings(rawLength) {
   const n = Math.max(0, Math.min(100, Number(rawLength) || 0));
   if (n < 33) {
-    return { maxTokens: 120, instruction: 'Write a short continuation, 1-2 sentences max' };
+    return { maxTokens: 120, instruction: 'Write a short continuation, 1-2 sentences max.' };
   }
   if (n < 66) {
-    return { maxTokens: 320, instruction: 'Write a continuation of about one paragraph' };
+    return { maxTokens: 320, instruction: 'Write a continuation of about one paragraph.' };
   }
-  return { maxTokens: 700, instruction: 'Write a longer continuation, up to two short paragraphs' };
+  return { maxTokens: 700, instruction: 'Write a longer continuation, up to two short paragraphs.' };
 }
 
-function buildBasePrompt(instruction) {
-  return `You are a seamless text continuation assistant. Your ONLY job is to continue the user's text from exactly where they stopped.
+function buildSystemInstruction(instruction, contextBlock) {
+  return `You are a writing autocomplete. Your only job is to continue the user's text from the exact point where it ends.
 
-CRITICAL RULES:
-- NEVER repeat, rephrase, or echo any part of the user's text
-- Start your response with the NEXT word that naturally follows their last word
-- ${instruction}, flowing directly from their ending
-- Match their tone, style, and vocabulary
-- No greetings, no commentary, no explanations
+ABSOLUTE RULES:
+- The user's existing text is wrapped in <user_text>...</user_text>. You MUST NOT output any part of what is inside <user_text>. Do not echo, paraphrase, or restart it. Do not include the tags.
+- Your output begins with the very next character (often a space) that would naturally follow the last character inside <user_text>. If the last character is a letter, start with a space.
+- ${instruction}
+- Match the user's tone, register, and vocabulary.
+- Do not address the user. Do not narrate. No "Sure", no "Here is", no quotes, no markdown.
+${contextBlock}
+EXAMPLE
+Input: <user_text>The morning was cold and</user_text>
+Output: quiet, with frost climbing the inside of the window.
 
-The user's text ends and your continuation begins immediately.`;
+EXAMPLE
+Input: <user_text>I built this because most AI tools feel like</user_text>
+Output: a separate room you have to walk into, ask, and leave. I wanted something that lives inside the writing itself.`;
 }
 
 export default async function handler(req, res) {
@@ -47,16 +53,18 @@ export default async function handler(req, res) {
 
   const { maxTokens, instruction } = lengthSettings(length);
 
-  let systemPrompt = buildBasePrompt(instruction);
+  let contextBlock = '';
   if (context && typeof context === 'string' && context.trim()) {
-    systemPrompt = `You are helping the user write content related to the following reference material:
-
-<reference_context>
+    contextBlock = `
+REFERENCE MATERIAL (background only, never quote verbatim):
+<reference>
 ${context.slice(0, 20000)}
-</reference_context>
-
-Based on this context, continue the user's thought from where they stopped. ${instruction}, naturally extending their idea. Match their tone and style. Do not repeat their text or add meta commentary.`;
+</reference>
+`;
   }
+
+  const systemInstruction = buildSystemInstruction(instruction, contextBlock);
+  const userMessage = `<user_text>${text}</user_text>`;
 
   try {
     const upstream = await fetch(
@@ -65,10 +73,13 @@ Based on this context, continue the user's thought from where they stopped. ${in
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: systemPrompt + '\n\n' + text }] }],
+          systemInstruction: { role: 'system', parts: [{ text: systemInstruction }] },
+          contents: [{ role: 'user', parts: [{ text: userMessage }] }],
           generationConfig: {
             maxOutputTokens: maxTokens,
             temperature: CONFIG.TEMPERATURE,
+            stopSequences: ['<user_text>', '</user_text>'],
+            thinkingConfig: { thinkingBudget: 0 },
           },
         }),
       }
