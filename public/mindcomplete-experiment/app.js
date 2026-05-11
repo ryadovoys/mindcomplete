@@ -105,15 +105,20 @@ function getSuggestionBottom() {
   return state.suggestionEl.getBoundingClientRect().bottom;
 }
 
+function getViewportHeight() {
+  return window.visualViewport?.height || window.innerHeight;
+}
+
 function scrollToBottomIfNeeded() {
   const stage = document.querySelector('.stage');
   if (!stage) return;
 
   const caret = getCaretRect();
   const stageRect = stage.getBoundingClientRect();
-  const reservedBottom = window.innerHeight * 0.4;
-  const visibleTop = stageRect.top;
-  const visibleBottom = window.innerHeight - reservedBottom;
+  const viewportH = getViewportHeight();
+  const reservedBottom = viewportH * 0.4;
+  const visibleTop = Math.max(stageRect.top, 0);
+  const visibleBottom = viewportH - reservedBottom;
 
   const targetCaretY = visibleTop + (visibleBottom - visibleTop) * 0.5;
   let delta = Math.max(0, caret.top - targetCaretY);
@@ -421,3 +426,9 @@ autocompleteToggleBtn.addEventListener('click', () => {
 });
 
 editor.focus();
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    scrollToBottomIfNeeded();
+  });
+}
