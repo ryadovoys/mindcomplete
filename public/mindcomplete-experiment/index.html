@@ -24,14 +24,21 @@
   </header>
 
   <main class="stage">
-    <div id="editor" class="editor" contenteditable="true" spellcheck="true" data-placeholder="Start typing. Pause, and the AI will continue your thought. Press Tab to accept."></div>
+    <div id="editor" class="editor" contenteditable="true" spellcheck="true" data-placeholder="Start writing and machine will pick it up.&#10;Add context for more precise results.&#10;The more you write, the better the predictions."></div>
   </main>
 
   <footer class="footer">
-    <div class="hint">
-      <kbd>Tab</kbd> accept · <kbd>Esc</kbd> dismiss · pause to suggest
+    <div class="footer-item hint">
+      <kbd>Tab</kbd> or click to accept
     </div>
-    <div class="powered-by" aria-label="Powered by Gemini">
+    <div class="footer-item length-control">
+      <span class="length-label">Length</span>
+      <input id="length-slider" class="length-slider" type="range" min="0" max="100" value="0" aria-label="Output length">
+    </div>
+    <button id="autocomplete-toggle" class="footer-item toggle" type="button" aria-pressed="true">
+      Autocomplete: <span id="autocomplete-state">On</span>
+    </button>
+    <div class="footer-item powered-by" aria-label="Powered by Gemini">
       <span>Powered by</span>
       <img src="/mindcomplete-experiment/gemini-logo.png" alt="Gemini">
     </div>

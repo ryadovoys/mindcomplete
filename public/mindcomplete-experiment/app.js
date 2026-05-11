@@ -11,6 +11,9 @@ const contextText = document.getElementById('context-text');
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
 const filesList = document.getElementById('context-files');
+const lengthSlider = document.getElementById('length-slider');
+const autocompleteToggleBtn = document.getElementById('autocomplete-toggle');
+const autocompleteStateEl = document.getElementById('autocomplete-state');
 
 const state = {
   files: [],
@@ -19,6 +22,8 @@ const state = {
   suggestionEl: null,
   suggestionText: '',
   isStreaming: false,
+  length: 0,
+  autocompleteOn: true,
 };
 
 function debounce(fn, ms) {
@@ -65,9 +70,45 @@ function appendSuggestionToEditor(text) {
     state.suggestionEl = document.createElement('span');
     state.suggestionEl.className = 'suggestion';
     state.suggestionEl.contentEditable = 'false';
+    state.suggestionEl.addEventListener('mousedown', onSuggestionMouseDown);
     editor.appendChild(state.suggestionEl);
   }
   state.suggestionEl.textContent = text;
+}
+
+function caretOffsetFromPoint(x, y) {
+  if (document.caretPositionFromPoint) {
+    const pos = document.caretPositionFromPoint(x, y);
+    if (pos && state.suggestionEl && state.suggestionEl.contains(pos.offsetNode)) {
+      return pos.offset;
+    }
+  } else if (document.caretRangeFromPoint) {
+    const range = document.caretRangeFromPoint(x, y);
+    if (range && state.suggestionEl && state.suggestionEl.contains(range.startContainer)) {
+      return range.startOffset;
+    }
+  }
+  return null;
+}
+
+function onSuggestionMouseDown(e) {
+  if (!state.suggestionText) return;
+  e.preventDefault();
+  const offset = caretOffsetFromPoint(e.clientX, e.clientY);
+  if (offset === null) return;
+  const accepted = state.suggestionText.slice(0, offset);
+  if (!accepted) {
+    clearSuggestion();
+    abortInflight();
+    return;
+  }
+  clearSuggestion();
+  abortInflight();
+  const textNode = document.createTextNode(accepted);
+  editor.appendChild(textNode);
+  placeCaretAtEnd(editor);
+  editor.focus();
+  debouncedPredict();
 }
 
 function getContextString() {
@@ -90,6 +131,7 @@ function updateContextCount() {
 }
 
 async function requestPrediction() {
+  if (!state.autocompleteOn) return;
   const text = getEditorText();
   if (text.length < MIN_CHARS) return;
 
@@ -101,7 +143,7 @@ async function requestPrediction() {
     const res = await fetch(API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, context: getContextString() }),
+      body: JSON.stringify({ text, context: getContextString(), length: state.length }),
       signal: state.abortCtrl.signal,
     });
 
@@ -277,6 +319,20 @@ window.addEventListener('drop', (e) => {
   if (e.dataTransfer?.files?.length) {
     contextPanel.hidden = false;
     handleFiles(e.dataTransfer.files);
+  }
+});
+
+lengthSlider.addEventListener('input', (e) => {
+  state.length = Number(e.target.value);
+});
+
+autocompleteToggleBtn.addEventListener('click', () => {
+  state.autocompleteOn = !state.autocompleteOn;
+  autocompleteToggleBtn.setAttribute('aria-pressed', String(state.autocompleteOn));
+  autocompleteStateEl.textContent = state.autocompleteOn ? 'On' : 'Off';
+  if (!state.autocompleteOn) {
+    clearSuggestion();
+    abortInflight();
   }
 });
 

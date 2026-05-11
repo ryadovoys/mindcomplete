@@ -120,8 +120,8 @@ body {
   max-width: 720px;
   min-height: 60vh;
   font-family: var(--font-serif);
-  font-size: 22px;
-  line-height: 1.55;
+  font-size: 28px;
+  line-height: 1.5;
   color: var(--ink);
   outline: none;
   white-space: pre-wrap;
@@ -133,12 +133,14 @@ body {
   content: attr(data-placeholder);
   color: var(--ink-dim);
   pointer-events: none;
+  white-space: pre-line;
 }
 
 .editor .suggestion {
   color: var(--suggestion);
   font-style: normal;
-  user-select: none;
+  user-select: text;
+  cursor: text;
 }
 
 .footer {
@@ -149,20 +151,102 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 24px 28px;
+  gap: 24px;
+  padding: 14px 24px 14px;
   background: linear-gradient(to top, var(--bg) 70%, rgba(250, 250, 247, 0));
   z-index: 3;
-  pointer-events: none;
   font-size: 12px;
   color: var(--ink-soft);
 }
 
-.hint {
+.footer-item {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   letter-spacing: 0.02em;
   opacity: 0.7;
+  pointer-events: auto;
+}
+
+.hint {
+  flex: 0 1 auto;
+}
+
+.length-control {
+  flex: 0 1 auto;
+}
+
+.length-label {
+  color: var(--ink-soft);
+}
+
+.length-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100px;
+  height: 14px;
+  background: transparent;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+}
+
+.length-slider::-webkit-slider-runnable-track {
+  height: 1px;
+  background: var(--ink);
+  border: none;
+}
+
+.length-slider::-moz-range-track {
+  height: 1px;
+  background: var(--ink);
+  border: none;
+}
+
+.length-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: none;
+  margin-top: -4.5px;
+  cursor: pointer;
+}
+
+.length-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: none;
+  cursor: pointer;
+}
+
+.length-slider:focus {
+  outline: none;
+}
+
+.toggle {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--ink-soft);
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: color 0.15s ease, opacity 0.15s ease;
+  opacity: 0.7;
+}
+
+.toggle:hover {
+  color: var(--ink);
+  opacity: 1;
+}
+
+.toggle[aria-pressed="false"] {
+  opacity: 0.5;
 }
 
 .hint kbd {
@@ -354,10 +438,21 @@ body {
   }
 
   .editor {
-    font-size: 19px;
+    font-size: 22px;
   }
 
   .context-panel {
     width: 100%;
+  }
+
+  .footer {
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 20px 12px;
+  }
+
+  .hint,
+  .powered-by {
+    display: none;
   }
 }

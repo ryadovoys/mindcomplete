@@ -1,19 +1,31 @@
 const CONFIG = {
-  MAX_TOKENS: 200,
   TEMPERATURE: 0.7,
   MODEL: 'gemini-2.0-flash',
 };
 
-const BASE_PROMPT = `You are a seamless text continuation assistant. Your ONLY job is to continue the user's text from exactly where they stopped.
+function lengthSettings(rawLength) {
+  const n = Math.max(0, Math.min(100, Number(rawLength) || 0));
+  if (n < 33) {
+    return { maxTokens: 120, instruction: 'Write a short continuation, 1-2 sentences max' };
+  }
+  if (n < 66) {
+    return { maxTokens: 320, instruction: 'Write a continuation of about one paragraph' };
+  }
+  return { maxTokens: 700, instruction: 'Write a longer continuation, up to two short paragraphs' };
+}
+
+function buildBasePrompt(instruction) {
+  return `You are a seamless text continuation assistant. Your ONLY job is to continue the user's text from exactly where they stopped.
 
 CRITICAL RULES:
 - NEVER repeat, rephrase, or echo any part of the user's text
 - Start your response with the NEXT word that naturally follows their last word
-- Write a short continuation, 1-2 sentences max, that flows directly from their ending
+- ${instruction}, flowing directly from their ending
 - Match their tone, style, and vocabulary
 - No greetings, no commentary, no explanations
 
 The user's text ends and your continuation begins immediately.`;
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -23,7 +35,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { text, context } = req.body || {};
+  const { text, context, length } = req.body || {};
   if (!text || typeof text !== 'string') {
     return res.status(400).json({ error: 'Text is required' });
   }
@@ -33,7 +45,9 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
-  let systemPrompt = BASE_PROMPT;
+  const { maxTokens, instruction } = lengthSettings(length);
+
+  let systemPrompt = buildBasePrompt(instruction);
   if (context && typeof context === 'string' && context.trim()) {
     systemPrompt = `You are helping the user write content related to the following reference material:
 
@@ -41,7 +55,7 @@ export default async function handler(req, res) {
 ${context.slice(0, 20000)}
 </reference_context>
 
-Based on this context, continue the user's thought from where they stopped. Write a short continuation, 1-2 sentences max, that naturally extends their idea. Match their tone and style. Do not repeat their text or add meta commentary.`;
+Based on this context, continue the user's thought from where they stopped. ${instruction}, naturally extending their idea. Match their tone and style. Do not repeat their text or add meta commentary.`;
   }
 
   try {
@@ -53,7 +67,7 @@ Based on this context, continue the user's thought from where they stopped. Writ
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: systemPrompt + '\n\n' + text }] }],
           generationConfig: {
-            maxOutputTokens: CONFIG.MAX_TOKENS,
+            maxOutputTokens: maxTokens,
             temperature: CONFIG.TEMPERATURE,
           },
         }),
